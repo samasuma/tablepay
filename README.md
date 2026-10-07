@@ -2,7 +2,7 @@
 
 A working MVP for restaurant digitisation in Kenya. Guests scan a QR code (or tap an NFC sticker) on their table and get a web app — no download — where they can browse the menu, order, call a waiter, see the live bill, split it and pay by M-Pesa STK push. Staff see everything live on a board at the bar. Every tab gets a shareable web receipt.
 
-Stack: Node 22 + TypeScript (run with `tsx`), Express, SQLite (`node:sqlite`, built in), plain HTML/JS PWA, Server-Sent Events for live updates. No build step.
+Stack: Node 22.13+ + TypeScript (run with `tsx`), Express, SQLite (`node:sqlite`, built in), plain HTML/JS PWA, Server-Sent Events for live updates. No build step.
 
 ## Run it
 

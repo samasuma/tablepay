@@ -9,7 +9,7 @@ services:
     healthCheckPath: /api/meta
     envVars:
       - key: NODE_VERSION
-        value: 22.12.0
+        value: 22.22.0
       - key: DB_PATH
         value: /var/data/tablepay.db
       - key: APP_SECRET
