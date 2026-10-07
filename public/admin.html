@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<title>Menu & tables</title>
+<link rel="stylesheet" href="/app.css" />
+<style>
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .head h1 { font-size: 22px; }
+  .seg { max-width: 360px; }
+  .cat { margin-top: 22px; }
+  .cat h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+  .irow { display: grid; grid-template-columns: 1fr 120px auto auto; gap: 10px; align-items: center; padding: 10px 14px; }
+  .irow + .irow { border-top: 1px solid var(--line); }
+  .irow input.field { min-height: 40px; padding: 8px 10px; }
+  .irow .desc { font-size: 13px; color: var(--muted); }
+  @media (max-width: 640px) { .irow { grid-template-columns: 1fr 96px; } .irow .acts { grid-column: 1 / -1; } }
+  @media (max-width: 640px) { .addgrid { grid-template-columns: 1fr 1fr !important; } }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .toggle input { width: 20px; height: 20px; accent-color: var(--ok); }
+  .qrgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .qrcard { padding: 16px; text-align: center; }
+  .qrcard svg { width: 100%; max-width: 180px; height: auto; background: #fff; padding: 6px; border-radius: 8px; }
+  .qrcard .label { font-size: 26px; font-weight: 800; margin: 6px 0 2px; }
+  .qrcard .cta { font-weight: 600; }
+  .url { font-family: var(--mono); font-size: 11px; color: var(--muted); word-break: break-all; margin-top: 6px; }
+  .login { max-width: 360px; margin: 10vh auto; padding: 24px; }
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .wrap { padding: 0; max-width: none; }
+    .qrgrid { grid-template-columns: repeat(2, 1fr); gap: 0; }
+    .qrcard { box-shadow: none; border: 1px dashed #999; border-radius: 0; break-inside: avoid; padding: 28px; color: #000; background: #fff; }
+    .qrcard svg { max-width: 220px; }
+    .qrcard .url { color: #555; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="/common.js"></script>
+<script>
+const { kes, esc, api, toast } = TP;
+let view = location.hash === "#tables" ? "tables" : "menu";
+let menu = [], tables = null;
+const isAdmin = () => localStorage.getItem("tp_role") === "admin";
+const restaurant = () => JSON.parse(localStorage.getItem("tp_restaurant") || "{}");
+
+function loginView() {
+  document.getElementById("app").innerHTML = `<form class="card login" id="f">
+    <h2>Manager sign in</h2>
+    <p class="muted small">Manager PIN can edit the menu and tables. Staff PIN can only mark items sold out.</p>
+    <input class="field num" id="pin" type="password" inputmode="numeric" placeholder="PIN" autofocus />
+    <button class="btn primary block" style="margin-top:12px">Sign in</button>
+    <p class="muted small">Demo manager PIN: 9999</p></form>`;
+  document.getElementById("f").onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api("/api/staff/login", { method: "POST", body: { pin: document.getElementById("pin").value } });
+      localStorage.setItem("tp_staff_token", r.token);
+      localStorage.setItem("tp_role", r.role);
+      localStorage.setItem("tp_restaurant", JSON.stringify(r.restaurant));
+      load();
+    } catch (err) { toast(err.message); }
+  };
+}
+
+async function load() {
+  try {
+    menu = await api("/api/admin/menu");
+    tables = await api("/api/admin/tables");
+    render();
+  } catch (e) {
+    if (e.status === 401) return loginView();
+    toast(e.message);
+  }
+}
+
+function render() {
+  const app = document.getElementById("app");
+  const admin = isAdmin();
+  app.innerHTML = `<div class="wrap">
+    <div class="head no-print">
+      <h1>${esc(restaurant().name || "")}</h1>
+      <div class="seg" style="flex:1">
+        <button data-v="menu" class="${view === "menu" ? "on" : ""}">Menu</button>
+        <button data-v="tables" class="${view === "tables" ? "on" : ""}">Tables & QR codes</button>
+      </div>
+      <a class="btn sm" href="/staff">← Live board</a>
+    </div>
+    ${!admin ? `<div class="banner warn no-print" style="background:var(--warn-soft);color:var(--warn);padding:10px 14px;border-radius:12px">
+      Signed in as staff: you can mark items sold out. Sign in with the manager PIN to edit prices or tables.</div>` : ""}
+    ${view === "menu" ? menuView(admin) : tablesView(admin)}
+  </div>`;
+  app.querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => { view = b.dataset.v; location.hash = view; render(); }));
+  bind(app);
+}
+
+function menuView(admin) {
+  return `
+  ${admin ? `<form class="card no-print" id="addItem" style="padding:14px;margin-top:14px">
+    <strong>Add an item</strong>
+    <div style="display:grid;grid-template-columns:1.4fr 1.6fr 100px 1fr auto;gap:8px;margin-top:10px" class="addgrid">
+      <input class="field" name="name" placeholder="Name" required />
+      <input class="field" name="description" placeholder="Short description" />
+      <input class="field num" name="price" inputmode="numeric" placeholder="Price" required />
+      <select class="field" name="category_id">${menu.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+      <button class="btn primary">Add</button>
+    </div>
+    <div class="row" style="margin-top:8px"><span class="muted small">New category:</span>
+      <input class="field" id="newCat" placeholder="e.g. Cocktails" style="max-width:220px;min-height:38px" />
+      <button class="btn sm" type="button" id="addCat">Add category</button></div>
+  </form>` : ""}
+  ${menu.map((c) => `<div class="cat"><h3>${esc(c.name)}</h3><div class="card">
+    ${c.items.length ? c.items.map((i) => `<div class="irow">
+      <div>${admin ? `<input class="field" data-f="name" data-id="${i.id}" value="${esc(i.name)}" />` : `<strong>${esc(i.name)}</strong>`}
+        ${i.description ? `<div class="desc">${esc(i.description)}</div>` : ""}</div>
+      ${admin ? `<input class="field num" data-f="price" data-id="${i.id}" inputmode="numeric" value="${i.price}" />` : `<span class="num">${kes(i.price)}</span>`}
+      <label class="toggle"><input type="checkbox" data-avail="${i.id}" ${i.available ? "checked" : ""}/> ${i.available ? "Available" : "Sold out"}</label>
+      <div class="acts">${admin ? `<button class="btn sm ghost danger" data-del="${i.id}">Remove</button>` : ""}</div>
+    </div>`).join("") : `<div class="empty">No items yet.</div>`}
+  </div></div>`).join("")}`;
+}
+
+function tablesView(admin) {
+  const local = /localhost|127\.0\.0\.1/.test(tables.publicUrl);
+  return `
+  <div class="row no-print" style="margin:14px 0;flex-wrap:wrap">
+    ${admin ? `<form id="addTable" class="row"><input class="field" name="label" placeholder="New table, e.g. T7" style="max-width:200px;min-height:44px"/><button class="btn">Add table</button></form>` : ""}
+    <button class="btn primary" onclick="print()" style="margin-left:auto">Print table cards</button>
+  </div>
+  ${local ? `<div class="banner no-print" style="background:var(--warn-soft);color:var(--warn);padding:10px 14px;border-radius:12px;margin-bottom:14px">
+    These codes point to <code>${esc(tables.publicUrl)}</code>, which phones can't reach. Set <code>PUBLIC_URL</code> to your live domain before printing.</div>` : ""}
+  <p class="muted small no-print">Each table has its own link. Print the QR card, or write the same link to an NFC sticker (NFC Tools app → Write → URL) so guests can tap instead of scan.</p>
+  <div class="qrgrid">${tables.tables.map((t) => `<div class="card qrcard">
+    <div class="muted small">${esc(restaurant().name || "")}</div>
+    <div class="label">${esc(t.label)}</div>
+    ${t.svg}
+    <div class="cta">Scan or tap to order, call a waiter & pay</div>
+    <div class="url">${esc(t.url)}</div>
+    <div class="row no-print" style="justify-content:center;margin-top:10px;flex-wrap:wrap;gap:6px">
+      <a class="btn sm" href="${esc(t.url)}" target="_blank">Open</a>
+      <button class="btn sm" data-copy="${esc(t.url)}">Copy link</button>
+      ${admin ? `<button class="btn sm ghost" data-regen="${t.id}" title="Use if a code was copied or misused">New code</button>
+                 <button class="btn sm ghost danger" data-rmt="${t.id}">Remove</button>` : ""}
+    </div></div>`).join("")}</div>`;
+}
+
+function bind(app) {
+  // inline edits save on change
+  app.querySelectorAll("[data-f]").forEach((inp) => (inp.onchange = async () => {
+    try { await api(`/api/admin/items/${inp.dataset.id}`, { method: "PATCH", body: { [inp.dataset.f]: inp.value } }); toast("Saved"); }
+    catch (e) { toast(e.message); load(); }
+  }));
+  app.querySelectorAll("[data-avail]").forEach((cb) => (cb.onchange = async () => {
+    try { await api(`/api/admin/items/${cb.dataset.avail}`, { method: "PATCH", body: { available: cb.checked } }); load(); }
+    catch (e) { toast(e.message); load(); }
+  }));
+  app.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
+    if (!confirm("Remove this item from the menu?")) return;
+    await api(`/api/admin/items/${b.dataset.del}`, { method: "DELETE" }); load();
+  }));
+  app.querySelector("#addItem")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    try { await api("/api/admin/items", { method: "POST", body: f }); toast("Item added"); load(); } catch (err) { toast(err.message); }
+  });
+  app.querySelector("#addCat")?.addEventListener("click", async () => {
+    const name = app.querySelector("#newCat").value.trim();
+    if (!name) return;
+    try { await api("/api/admin/categories", { method: "POST", body: { name } }); load(); } catch (err) { toast(err.message); }
+  });
+  app.querySelector("#addTable")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try { await api("/api/admin/tables", { method: "POST", body: Object.fromEntries(new FormData(e.target)) }); load(); } catch (err) { toast(err.message); }
+  });
+  app.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => navigator.clipboard.writeText(b.dataset.copy).then(() => toast("Link copied"))));
+  app.querySelectorAll("[data-regen]").forEach((b) => (b.onclick = async () => {
+    if (!confirm("Make a new code for this table? The old printed QR/NFC tag will stop working.")) return;
+    await api(`/api/admin/tables/${b.dataset.regen}/regenerate`, { method: "POST" }); load();
+  }));
+  app.querySelectorAll("[data-rmt]").forEach((b) => (b.onclick = async () => {
+    if (!confirm("Remove this table?")) return;
+    await api(`/api/admin/tables/${b.dataset.rmt}`, { method: "DELETE" }); load();
+  }));
+}
+
+localStorage.getItem("tp_staff_token") ? load() : loginView();
+</script>
+</body>
+</html>

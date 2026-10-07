@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<title>Receipt</title>
+<link rel="stylesheet" href="/app.css" />
+<style>
+  body { background: var(--bg); }
+  .status { position: sticky; top: 0; z-index: 2; color: #fff; text-align: center; font-weight: 800; letter-spacing: .04em; padding: 14px; }
+  .status.paid { background: var(--ok); }
+  .status.part { background: var(--warn); }
+  .receipt { max-width: 440px; margin: 0 auto 32px; background: var(--card); padding: 22px 22px 28px; box-shadow: var(--shadow);
+             border-radius: 0 0 14px 14px; }
+  .center { text-align: center; }
+  .rname { font-size: 22px; font-weight: 800; margin-top: 4px; }
+  .dash { border: 0; border-top: 1.5px dashed var(--line); margin: 16px 0; }
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+  .kv span:last-child, .line > span:last-child { white-space: nowrap; }
+  .kv span:first-child { color: var(--muted); }
+  .line { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+  .total { display: flex; justify-content: space-between; font-size: 22px; font-weight: 800; padding: 6px 0; }
+  .num-big { font-size: 30px; font-weight: 800; letter-spacing: .02em; font-family: var(--mono); }
+  .sec { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .actions { display: flex; gap: 8px; justify-content: center; margin-top: 18px; }
+  @media print { .actions, .status { position: static; } .actions { display: none; } .receipt { box-shadow: none; } }
+</style>
+</head>
+<body>
+<div id="app"><div style="padding:80px"><div class="spinner"></div></div></div>
+<script src="/common.js"></script>
+<script>
+const { kes, esc, api, dateTime } = TP;
+(async () => {
+  const token = location.pathname.split("/").pop();
+  let r;
+  try { r = await api(`/api/receipt/${token}`); }
+  catch { document.getElementById("app").innerHTML = `<div class="empty"><h2>Receipt not found</h2></div>`; return; }
+  document.title = `Receipt ${r.number} · ${r.restaurant.name}`;
+  const paidInFull = r.balance === 0 && r.subtotal > 0;
+  document.getElementById("app").innerHTML = `
+  <div class="status ${paidInFull ? "paid" : "part"}">${paidInFull ? "✓ PAID IN FULL" : `BALANCE DUE ${kes(r.balance)}`}</div>
+  <div class="receipt">
+    <div class="center">
+      <img src="/icon.svg" width="44" height="44" alt="" />
+      <div class="rname">${esc(r.restaurant.name)}</div>
+      ${r.restaurant.branch ? `<div style="font-weight:600">${esc(r.restaurant.branch)}</div>` : ""}
+      ${r.restaurant.tagline ? `<div class="muted small">${esc(r.restaurant.tagline)}</div>` : ""}
+      <div class="small" style="margin-top:6px">${esc(r.restaurant.phone || "")}${r.restaurant.email ? " · " + esc(r.restaurant.email) : ""}</div>
+    </div>
+    <hr class="dash" />
+    <div class="center"><div class="muted small">Receipt</div><div class="num-big">${r.number}</div></div>
+    <hr class="dash" />
+    <div class="kv"><span>Date</span><span>${dateTime(r.closed_at || r.opened_at)}</span></div>
+    <div class="kv"><span>Table</span><span>${esc(r.table)}</span></div>
+    <hr class="dash" />
+    <div class="sec">Items</div>
+    ${r.lines.map((l) => `<div class="line"><span>${l.qty} × ${esc(l.name)}<br><span class="muted small num">@ ${kes(l.unit_price)}</span></span><span class="num">${kes(l.total)}</span></div>`).join("") || `<div class="muted">No items</div>`}
+    <hr class="dash" />
+    <div class="total"><span>TOTAL</span><span class="num">${kes(r.subtotal)}</span></div>
+    <div class="muted small">Prices include VAT.</div>
+    ${r.payments.length ? `<hr class="dash" /><div class="sec">Payments</div>
+      ${r.payments.map((p) => `<div class="kv"><span>${p.method === "mpesa" ? "M-Pesa" : p.method === "card" ? "Card" : "Cash"}${p.provider_ref ? " · " + esc(p.provider_ref) : ""}${p.payer_label && p.method === "mpesa" ? " · " + esc(p.payer_label) : ""}</span><span class="num">${kes(p.amount)}</span></div>`).join("")}
+      ${r.tips ? `<div class="kv"><span>Tips (thank you!)</span><span class="num">${kes(r.tips)}</span></div>` : ""}` : ""}
+    <div class="kv" style="font-weight:800;margin-top:6px"><span style="color:inherit">Balance</span><span class="num">${kes(r.balance)}</span></div>
+    <div class="kv"><span>Status</span><span style="font-weight:800;color:${paidInFull ? "var(--ok)" : "var(--warn)"}">${paidInFull ? "PAID" : "PART PAID"}</span></div>
+    <hr class="dash" />
+    <p class="center muted small">Thank you for dining with us.</p>
+    <div class="actions">
+      <button class="btn sm" onclick="print()">Save as PDF</button>
+      <button class="btn sm" id="share">Share</button>
+    </div>
+  </div>`;
+  document.getElementById("share").onclick = () =>
+    navigator.share ? navigator.share({ title: document.title, url: location.href }) : navigator.clipboard.writeText(location.href).then(() => TP.toast("Link copied"));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<title>TablePay</title>
+<link rel="stylesheet" href="/app.css" />
+<style>
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 16px; }
+  h1 { font-size: 34px; letter-spacing: -.02em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .box { padding: 18px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row"><img src="/icon.svg" width="40" height="40" alt="" /><h1>TablePay</h1></div>
+  <p class="muted">Order, call a waiter and pay by M-Pesa from the table. No app download.</p>
+
+  <div class="card box">
+    <strong>1. Be a guest</strong>
+    <p class="muted small">Open a table on your phone (or a narrow browser window). Each table is what a QR code or NFC tag opens.</p>
+    <div class="grid" id="tables"><span class="muted small">Loading…</span></div>
+  </div>
+  <div class="card box">
+    <strong>2. Be the staff</strong>
+    <p class="muted small">Open on a tablet or laptop at the bar. Calls, orders and payments appear live, with a sound.</p>
+    <a class="btn primary" href="/staff" target="_blank">Open live board</a> <span class="muted small">PIN 1234</span>
+  </div>
+  <div class="card box">
+    <strong>3. Be the manager</strong>
+    <p class="muted small">Edit prices, mark items sold out, add tables and print QR cards.</p>
+    <a class="btn" href="/admin" target="_blank">Menu & tables</a> <span class="muted small">PIN 9999</span>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script>
+TP.api("/api/demo").then((d) => {
+  document.getElementById("tables").innerHTML = d.tables
+    .map((t) => `<a class="btn" href="/t/${t.code}" target="_blank">Table ${TP.esc(t.label)}</a>`).join("");
+}).catch(() => { document.getElementById("tables").innerHTML = '<span class="muted small">Demo links are hidden in live mode.</span>'; });
+</script>
+</body>
+</html>

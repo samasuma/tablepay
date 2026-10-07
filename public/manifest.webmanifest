@@ -1,0 +1,9 @@
+{
+  "name": "TablePay",
+  "short_name": "TablePay",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#dbe3ec",
+  "theme_color": "#19120c",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

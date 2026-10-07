@@ -1,0 +1,24 @@
+# One-click deploy on Render (render.com → New → Blueprint → pick this repo)
+services:
+  - type: web
+    name: tablepay
+    runtime: node
+    plan: starter            # paid plan keeps the disk; "free" works for a demo but data resets on redeploy
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/meta
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: DB_PATH
+        value: /var/data/tablepay.db
+      - key: APP_SECRET
+        generateValue: true
+      - key: MPESA_CALLBACK_SECRET
+        generateValue: true
+      - key: PUBLIC_URL
+        sync: false          # set to https://<your-service>.onrender.com or your domain
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#19120c" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<title>Staff board</title>
+<link rel="stylesheet" href="/app.css" />
+<style>
+  .bar { position: sticky; top: 0; z-index: 10; background: var(--bar); color: #fff; }
+  .bar .in { max-width: 1400px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .bar h1 { font-size: 18px; }
+  .stat { display: flex; flex-direction: column; line-height: 1.15; }
+  .stat b { font-size: 17px; }
+  .stat span { font-size: 11px; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+  .bar .btn { background: transparent; color: #fff; border-color: rgba(255,255,255,.25); }
+  .live { width: 9px; height: 9px; border-radius: 50%; background: #35b779; display: inline-block; margin-right: 6px; }
+  .live.off { background: #f0675c; }
+  .cols { max-width: 1400px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; align-items: start; }
+  @media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } }
+  .col h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 2px 10px; display: flex; align-items: center; gap: 8px; }
+  .count { background: var(--accent); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+  .tile { padding: 12px 14px; margin-bottom: 10px; }
+  .tile .tl { font-size: 20px; font-weight: 800; }
+  .tile.flash { animation: flash 1.2s ease 2; }
+  @keyframes flash { 50% { background: var(--accent-soft); } }
+  .req-waiter { border-left: 5px solid var(--accent); }
+  .req-bill { border-left: 5px solid var(--ok); }
+  .req.acknowledged { opacity: .65; }
+  .tab-tile { cursor: pointer; }
+  .tab-tile:hover { border-color: var(--accent); }
+  .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .progress i { display: block; height: 100%; background: var(--ok); }
+  .login { max-width: 360px; margin: 10vh auto; padding: 24px; text-align: center; }
+  .pin { font-size: 28px; letter-spacing: .5em; text-align: center; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  .keypad button { min-height: 58px; font-size: 22px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="/common.js"></script>
+<script>
+const { kes, esc, api, toast, sheet, closeSheet, ago, time, beep } = TP;
+let board = null, es = null, restaurant = JSON.parse(localStorage.getItem("tp_restaurant") || "null");
+const role = () => localStorage.getItem("tp_role");
+
+function loginView() {
+  let pin = "";
+  const app = document.getElementById("app");
+  const draw = () => {
+    app.innerHTML = `<div class="card login">
+      <h2>Staff sign in</h2><p class="muted">Enter your PIN</p>
+      <div class="pin num">${"•".repeat(pin.length) || "&nbsp;"}</div>
+      <div class="keypad">${[1,2,3,4,5,6,7,8,9,"⌫",0,"→"].map((k) => `<button class="btn" data-k="${k}">${k}</button>`).join("")}</div>
+      <p class="muted small" style="margin-top:16px">Demo: staff 1234 · manager 9999</p></div>`;
+    app.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => key(b.dataset.k)));
+  };
+  const key = async (k) => {
+    if (k === "⌫") pin = pin.slice(0, -1);
+    else if (k === "→") return submit();
+    else if (pin.length < 8) pin += k;
+    draw();
+  };
+  const submit = async () => {
+    try {
+      const r = await api("/api/staff/login", { method: "POST", body: { pin } });
+      localStorage.setItem("tp_staff_token", r.token);
+      localStorage.setItem("tp_role", r.role);
+      localStorage.setItem("tp_restaurant", JSON.stringify(r.restaurant));
+      restaurant = r.restaurant;
+      beep(); // unlocks audio on iOS/Android after a user tap
+      start();
+    } catch (e) { pin = ""; draw(); toast(e.message); }
+  };
+  document.onkeydown = (e) => { if (/^\d$/.test(e.key)) key(e.key); if (e.key === "Backspace") key("⌫"); if (e.key === "Enter") submit(); };
+  draw();
+}
+
+async function refresh() {
+  try {
+    board = await api("/api/staff/board");
+    render();
+  } catch (e) {
+    if (e.status === 401) { localStorage.removeItem("tp_staff_token"); es?.close(); loginView(); }
+  }
+}
+
+let flashKey = null;
+function start() {
+  document.onkeydown = null;
+  refresh();
+  es?.close();
+  es = new EventSource(`/api/staff/events?token=${encodeURIComponent(localStorage.getItem("tp_staff_token"))}`);
+  es.addEventListener("hello", () => setLive(true));
+  es.addEventListener("alert", (ev) => {
+    const a = JSON.parse(ev.data);
+    beep();
+    flashKey = a.table;
+    toast({ waiter: `🔔 ${a.table} is calling a waiter`, bill: `🧾 ${a.table} wants the bill`, order: `🍽 New order from ${a.table}` }[a.kind], 5000);
+    if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
+  });
+  es.addEventListener("change", (ev) => {
+    const c = JSON.parse(ev.data);
+    if (c.reason === "payment_paid") toast(`💸 Payment received on ${c.table}`);
+    refresh();
+  });
+  es.onerror = () => setLive(false);
+  setInterval(() => { if (board) render(); }, 30000); // keep "x min ago" fresh
+}
+function setLive(on) { document.getElementById("live")?.classList.toggle("off", !on); }
+
+function render() {
+  const b = board;
+  const app = document.getElementById("app");
+  const waiting = b.requests.filter((r) => r.status === "open").length;
+  app.innerHTML = `
+  <div class="bar"><div class="in">
+    <h1><span class="live" id="live"></span>${esc(restaurant?.name || "Staff board")}</h1>
+    <div class="stat"><b class="num">${kes(b.today.sales)}</b><span>Sales today</span></div>
+    <div class="stat"><b class="num">${kes(b.today.mpesa)}</b><span>M-Pesa</span></div>
+    <div class="stat"><b class="num">${kes(b.today.cash)}</b><span>Cash/card</span></div>
+    <div class="stat"><b class="num">${kes(b.today.tips)}</b><span>Tips</span></div>
+    <div style="margin-left:auto" class="row">
+      <a class="btn sm" href="/admin">Menu & tables</a>
+      <button class="btn sm" id="logout">Sign out</button>
+    </div>
+  </div></div>
+  <div class="cols">
+    <section class="col">
+      <h2>Calls ${waiting ? `<span class="count">${waiting}</span>` : ""}</h2>
+      ${b.requests.length ? b.requests.map((r) => `
+        <div class="card tile req req-${r.kind} ${r.status} ${flashKey === r.table_label ? "flash" : ""}">
+          <div class="row between"><span class="tl">${esc(r.table_label)}</span><span class="muted small">${ago(r.created_at)}</span></div>
+          <div style="margin:2px 0 10px;font-weight:600">${r.kind === "waiter" ? "🔔 Calling a waiter" : "🧾 Wants the bill"}
+            ${r.status === "acknowledged" ? '<span class="pill preparing">On the way</span>' : ""}</div>
+          <div class="row">
+            ${r.status === "open" ? `<button class="btn sm primary" data-ack="${r.id}">I'm going</button>` : ""}
+            <button class="btn sm" data-done="${r.id}">Done</button>
+            ${r.kind === "bill" ? `<button class="btn sm ghost" data-tab="${r.session_id}">Open bill</button>` : ""}
+          </div>
+        </div>`).join("") : `<div class="empty card">No one is calling.</div>`}
+    </section>
+
+    <section class="col">
+      <h2>Kitchen & bar ${b.orders.length ? `<span class="count">${b.orders.length}</span>` : ""}</h2>
+      ${b.orders.length ? b.orders.map((o) => `
+        <div class="card tile ${flashKey === o.table_label && o.status === "new" ? "flash" : ""}">
+          <div class="row between"><span class="tl">${esc(o.table_label)}</span>
+            <span class="row"><span class="muted small">${time(o.created_at)}</span><span class="pill ${o.status}">${o.status}</span></span></div>
+          ${o.guest_name ? `<div class="muted small">${esc(o.guest_name)}</div>` : ""}
+          <ul style="margin:8px 0;padding-left:18px">${o.items.map((i) => `<li><strong>${i.qty}×</strong> ${esc(i.name)}</li>`).join("")}</ul>
+          ${o.note ? `<div class="banner warn small" style="padding:6px 10px;margin-bottom:8px">${esc(o.note)}</div>` : ""}
+          <div class="row">
+            ${o.status === "new" ? `<button class="btn sm primary" data-order="${o.id}" data-status="preparing">Start</button>` : ""}
+            <button class="btn sm ok" data-order="${o.id}" data-status="served">Served</button>
+            <button class="btn sm ghost danger" data-order="${o.id}" data-status="cancelled" style="margin-left:auto">Cancel</button>
+          </div>
+        </div>`).join("") : `<div class="empty card">No open orders.</div>`}
+    </section>
+
+    <section class="col">
+      <h2>Open bills ${b.tabs.length ? `<span class="count">${b.tabs.length}</span>` : ""}</h2>
+      ${b.tabs.length ? b.tabs.map((t) => `
+        <div class="card tile tab-tile" data-tab="${t.id}">
+          <div class="row between"><span class="tl">${esc(t.label)}</span>
+            ${t.balance === 0 ? '<span class="pill paid">Paid</span>' : t.pending ? '<span class="pill pending">Paying…</span>' : ""}</div>
+          <div class="row between small" style="margin-top:4px"><span class="muted">${t.orders} order${t.orders === 1 ? "" : "s"} · opened ${time(t.opened_at)}</span>
+            <span class="num"><strong>${kes(t.balance)}</strong> <span class="muted">of ${kes(t.subtotal)}</span></span></div>
+          <div class="progress"><i style="width:${t.subtotal ? Math.round((t.paid / t.subtotal) * 100) : 0}%"></i></div>
+        </div>`).join("") : `<div class="empty card">No open bills.</div>`}
+    </section>
+  </div>`;
+  flashKey = null;
+
+  app.querySelector("#logout").onclick = () => { localStorage.removeItem("tp_staff_token"); es?.close(); loginView(); };
+  app.querySelectorAll("[data-ack]").forEach((x) => (x.onclick = () => act(`/api/staff/requests/${x.dataset.ack}`, { status: "acknowledged" })));
+  app.querySelectorAll("[data-done]").forEach((x) => (x.onclick = () => act(`/api/staff/requests/${x.dataset.done}`, { status: "done" })));
+  app.querySelectorAll("[data-order]").forEach((x) => (x.onclick = (e) => {
+    e.stopPropagation();
+    if (x.dataset.status === "cancelled" && !confirm("Cancel this order? It will be removed from the bill.")) return;
+    act(`/api/staff/orders/${x.dataset.order}`, { status: x.dataset.status });
+  }));
+  app.querySelectorAll("[data-tab]").forEach((x) => (x.onclick = () => openTab(Number(x.dataset.tab))));
+}
+
+async function act(path, body) {
+  try { await api(path, { method: "POST", body }); refresh(); } catch (e) { toast(e.message); }
+}
+
+async function openTab(id) {
+  const { session: s, bill: b } = await api(`/api/staff/sessions/${id}`);
+  const sh = sheet(`
+    <div class="row between"><h2>${esc(s.label)} · bill</h2><span class="muted small">opened ${time(s.opened_at)}</span></div>
+    <div style="margin-top:10px">${b.lines.map((l) => `<div class="row between" style="padding:5px 0"><span>${l.qty} × ${esc(l.name)}</span><span class="num">${kes(l.total)}</span></div>`).join("")}</div>
+    <div class="row between" style="border-top:1px solid var(--line);padding-top:8px;margin-top:6px;font-weight:700"><span>Total</span><span class="num">${kes(b.subtotal)}</span></div>
+    ${b.payments.filter((p) => p.status !== "failed").map((p) => `<div class="row between small" style="padding:4px 0">
+      <span>${p.method === "mpesa" ? "M-Pesa" : p.method} ${p.provider_ref ? `<span class="muted">${esc(p.provider_ref)}</span>` : ""} ${p.tip ? `<span class="muted">+ ${kes(p.tip)} tip</span>` : ""}</span>
+      <span><span class="pill ${p.status}">${p.status}</span> <span class="num">${kes(p.amount)}</span></span></div>`).join("")}
+    <div class="row between" style="font-size:22px;font-weight:800;margin-top:8px"><span>Balance</span><span class="num">${kes(b.balance)}</span></div>
+    ${b.balance > 0 ? `<label class="lbl" for="cash">Record cash or card payment</label>
+      <div class="row"><input class="field num" id="cash" inputmode="numeric" value="${b.balance}" style="flex:1" />
+        <button class="btn" data-m="cash">Cash</button><button class="btn" data-m="card">Card</button></div>` : ""}
+    <button class="btn ${b.balance > 0 ? "" : "primary"} lg block" id="close" style="margin-top:16px">
+      ${b.balance > 0 ? "Close table anyway" : "Close table & free it up"}</button>
+    <a class="btn ghost block" style="margin-top:8px" href="/r/${s.receipt_token}" target="_blank">Open receipt</a>`);
+  sh.querySelectorAll("[data-m]").forEach((x) => (x.onclick = async () => {
+    try {
+      await api(`/api/staff/sessions/${id}/cash`, { method: "POST", body: { amount: Number(sh.querySelector("#cash").value), method: x.dataset.m } });
+      toast("Payment recorded"); openTab(id); refresh();
+    } catch (e) { toast(e.message); }
+  }));
+  sh.querySelector("#close").onclick = async () => {
+    const force = b.balance > 0;
+    if (force && !confirm(`${kes(b.balance)} is unpaid. Close anyway?`)) return;
+    try { await api(`/api/staff/sessions/${id}/close`, { method: "POST", body: { force } }); closeSheet(); toast(`${s.label} closed`); refresh(); }
+    catch (e) { toast(e.message); }
+  };
+}
+
+localStorage.getItem("tp_staff_token") ? start() : loginView();
+</script>
+</body>
+</html>
