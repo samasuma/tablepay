@@ -232,7 +232,7 @@ const state = {
   cart: new Map(),
   view: "menu",          // menu | bill | pay | wait | result | closed
   searching: false, q: "",
-  pay: { mode: "all", people: 2, tip: 0, tipCustom: "" },
+  pay: { mode: "all", people: 2, tip: 0, tipCustom: "", custom: "" },
   payment: null,         // { id, total, phone, started }
   result: null,
   receiptToken: null,
@@ -351,8 +351,25 @@ function statusCards() {
   }).join("");
 }
 
+// Illustrated placeholder when the restaurant hasn't added a photo yet
+const ART_RULES = [
+  [/burger/i, "burger"], [/curry|stew/i, "curry"], [/pilau|rice|biryani/i, "rice"], [/samosa|bhajia|mandazi/i, "samosa"],
+  [/wrap|roll/i, "wrap"], [/chips|fries/i, "fries"], [/fish|tilapia|samaki/i, "fish"], [/wing|chicken|kuku/i, "chicken"],
+  [/choma|rib|steak|beef|goat|lamb|pork|sausage|meat|mishkaki/i, "grill"], [/sukuma|salad|kale|greens|veg/i, "greens"],
+  [/ugali|chapati|bread|naan/i, "staple"], [/tusker|beer|lager|cider|pilsner/i, "beer"], [/soda|coke|fanta|sprite|stoney/i, "soda"],
+  [/juice|smoothie|passion|mango|shake/i, "juice"], [/tea|coffee|chai|latte/i, "tea"], [/water/i, "water"],
+  [/dawa|cocktail|mojito|wine|gin|whisky|vodka/i, "cocktail"],
+];
+const CAT_RULES = [[/drink|bar|beverage/i, "soda"], [/side/i, "staple"], [/starter|snack/i, "samosa"], [/grill/i, "grill"]];
+function artFor(i) {
+  const hit = ART_RULES.find(([re]) => re.test(i.name));
+  if (hit) return hit[1];
+  const cat = state.data.menu.find((c) => c.id === i.category_id)?.name || "";
+  return (CAT_RULES.find(([re]) => re.test(cat)) || [0, "default"])[1];
+}
 function photo(i, extra = "") {
-  return `<div class="photo ${extra}">${i.image_url ? `<img src="${esc(i.image_url)}" alt="" loading="lazy">` : icon("dish", 24, 1.6)}${ctrl(i)}</div>`;
+  const src = i.image_url || `/img/dishes/${artFor(i)}.svg`;
+  return `<div class="photo ${extra}"><img src="${esc(src)}" alt="" loading="lazy">${ctrl(i)}</div>`;
 }
 function ctrl(i) {
   if (!i.available) return "";
@@ -469,7 +486,7 @@ function billView() {
     </section>
     <section class="card" style="padding:6px 18px">
       ${live.map((o, idx) => `${idx ? '<div class="sep"></div>' : ""}
-        <div class="grp-h"><span>${o.guest_name ? esc(o.guest_name) + "'s order" : "Order " + (idx + 1)}</span>
+        <div class="grp-h"><span>${o.guest_name ? esc(o.guest_name) + "'s order" : o.placed_by === "staff" ? "Added by staff" : "Order " + (idx + 1)}${o.placed_by === "staff" && o.guest_name ? ' <span class="rsub" style="font-weight:600">· by staff</span>' : ""}</span>
           <span class="status-pill ${o.status}">${o.status === "new" ? "Sent" : o.status}</span></div>
         ${o.items.map((i) => `<div class="line" ${o.status === "cancelled" ? 'style="opacity:.5;text-decoration:line-through"' : ""}><span><span class="q">${i.qty}×</span> ${esc(i.name)}</span><span>${(i.qty * i.unit_price).toLocaleString("en-KE")}</span></div>`).join("")}
         ${o.note ? `<div class="rsub" style="padding:0 0 8px">Note: ${esc(o.note)}</div>` : ""}`).join("")}
@@ -491,6 +508,7 @@ function payAmount() {
   const p = state.pay, b = state.bill, av = available();
   if (p.mode === "split") return Math.min(av, Math.ceil(b.balance / p.people));
   if (p.mode === "mine") return Math.min(av, myTotal());
+  if (p.mode === "custom") return Math.min(av, Math.max(0, Math.floor(Number(p.custom) || 0)));
   return av;
 }
 function payTip() {
@@ -524,6 +542,12 @@ function payView() {
       ${opt("split", "Split equally", Math.min(available(), Math.ceil(b.balance / p.people)),
         `<span class="os">between <span class="mini-step"><button type="button" data-people="-1" aria-label="Fewer people">−</button><b>${p.people}</b><button type="button" data-people="1" aria-label="More people">+</button></span> people</span>`)}
       ${mt ? opt("mine", "Only my items", Math.min(available(), mt), `<span class="os">What you ordered from this phone</span>`) : ""}
+      <label class="opt ${p.mode === "custom" ? "on" : ""}">
+        <input type="radio" name="amount" value="custom" ${p.mode === "custom" ? "checked" : ""}>
+        <span class="ot">Other amount<span class="os">${p.mode === "custom" ? `Up to ${kes(available())}` : "For shared dishes or a round of drinks"}</span></span>
+        ${p.mode === "custom" ? `<span class="field-row" style="height:44px;width:128px;padding:0 10px;flex:none"><span class="pre" style="font-size:13px">KES</span>
+          <input id="customAmt" inputmode="numeric" placeholder="0" aria-label="Amount you are paying" value="${esc(p.custom)}" style="font-size:15px"></span>` : ""}
+      </label>
     </fieldset>
     <fieldset>
       <legend>Add a tip for the team</legend>
@@ -699,7 +723,10 @@ function bind(app) {
   bindStatus(app);
 
   // pay page
-  app.querySelectorAll('input[name="amount"]').forEach((r) => (r.onchange = () => { state.pay.mode = r.value; render(); }));
+  app.querySelectorAll('input[name="amount"]').forEach((r) => (r.onchange = () => {
+    state.pay.mode = r.value; render();
+    if (r.value === "custom") document.getElementById("customAmt")?.focus();
+  }));
   app.querySelectorAll("[data-people]").forEach((b) => (b.onclick = (e) => {
     e.preventDefault();
     state.pay.mode = "split";
@@ -712,6 +739,15 @@ function bind(app) {
   }));
   const ph = app.querySelector("#phone");
   if (ph) ph.oninput = () => { state.pay.phone = ph.value; };
+  const ca = app.querySelector("#customAmt");
+  if (ca) {
+    ca.oninput = () => {
+      state.pay.custom = ca.value.replace(/\D/g, "");
+      if (Number(state.pay.custom) > available()) { state.pay.custom = String(available()); ca.value = state.pay.custom; }
+      document.getElementById("sumbox").innerHTML = summaryHtml();
+      document.getElementById("go").disabled = payAmount() < 1;
+    };
+  }
   const tipc = app.querySelector("#tipc");
   if (tipc) tipc.oninput = () => { state.pay.tipCustom = tipc.value.replace(/\D/g, ""); document.getElementById("sumbox").innerHTML = summaryHtml(); };
   app.querySelector("#go")?.addEventListener("click", submitPay);

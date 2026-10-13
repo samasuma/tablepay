@@ -85,7 +85,7 @@ function billFor(sessionId: number) {
   const tips = payments.filter((p: any) => p.status === "paid").reduce((s: number, p: any) => s + p.tip, 0);
   const pending = payments.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + p.amount, 0);
   const orders = all(
-    `SELECT o.id, o.guest_name, o.note, o.status, o.created_at,
+    `SELECT o.id, o.guest_name, o.note, o.status, o.created_at, o.placed_by,
             json_group_array(json_object('name', oi.name, 'qty', oi.qty, 'unit_price', oi.unit_price)) AS items
      FROM orders o JOIN order_items oi ON oi.order_id = o.id
      WHERE o.session_id = ? GROUP BY o.id ORDER BY o.id`,
@@ -161,6 +161,28 @@ function applyOutcome(o: StkCallbackOutcome) {
   notifySession(p.session_id, o.success ? "payment_paid" : "payment_failed");
 }
 
+// Privacy safety net: a fully paid tab that has gone quiet closes itself, so the next party at that
+// table starts a fresh bill even if staff forget to press "Close table". Empty tabs (someone only
+// looked at the menu) are tidied up after a few hours.
+const AUTO_CLOSE_MIN = Math.max(1, Number(process.env.AUTO_CLOSE_MINUTES || 15));
+setInterval(() => {
+  const open = all<{ id: number; idle_min: number; orders: number; paid: number }>(
+    `SELECT ts.id,
+       (julianday('now') - julianday(MAX(ts.opened_at,
+          COALESCE((SELECT MAX(created_at) FROM orders WHERE session_id = ts.id), ts.opened_at),
+          COALESCE((SELECT MAX(COALESCE(paid_at, created_at)) FROM payments WHERE session_id = ts.id), ts.opened_at),
+          COALESCE((SELECT MAX(created_at) FROM service_requests WHERE session_id = ts.id), ts.opened_at)))) * 1440 AS idle_min,
+       (SELECT COUNT(*) FROM orders WHERE session_id = ts.id AND status != 'cancelled') AS orders,
+       (SELECT COUNT(*) FROM payments WHERE session_id = ts.id AND status = 'paid') AS paid
+     FROM table_sessions ts WHERE ts.status = 'open'`
+  );
+  for (const s of open) {
+    if (!s.orders && !s.paid) { if (s.idle_min > 180) closeSession(s.id); continue; }
+    const b = billFor(s.id);
+    if (b.subtotal > 0 && b.balance === 0 && b.pending === 0 && s.idle_min >= AUTO_CLOSE_MIN) closeSession(s.id);
+  }
+}, 60000);
+
 // Callbacks sometimes never arrive. Sweep stale pending payments.
 setInterval(async () => {
   const stale = all<{ checkout_request_id: string; age: number }>(
@@ -216,16 +238,15 @@ app.get("/api/t/:code/events", wrap((req, res) => {
   subscribe(`session:${session.id}`, res);
 }));
 
-app.post("/api/t/:code/orders", wrap((req, res) => {
-  const { table, restaurant } = tableByCode(req.params.code);
-  const items: { id: number; qty: number }[] = Array.isArray(req.body?.items) ? req.body.items : [];
-  if (!items.length) throw new HttpError(400, "Your order is empty");
-  const guestName = String(req.body?.guestName || "").trim().slice(0, 40) || null;
-  const note = String(req.body?.note || "").trim().slice(0, 200) || null;
+function placeOrder(table: Table, restaurant: Restaurant, body: any, placedBy: "guest" | "staff") {
+  const items: { id: number; qty: number }[] = Array.isArray(body?.items) ? body.items : [];
+  if (!items.length) throw new HttpError(400, "The order is empty");
+  const guestName = String(body?.guestName || "").trim().slice(0, 40) || null;
+  const note = String(body?.note || "").trim().slice(0, 200) || null;
 
   const session = openSession(table.id, true)!;
   const orderId = tx(() => {
-    const o = run("INSERT INTO orders (session_id, guest_name, note) VALUES (?,?,?)", session.id, guestName, note);
+    const o = run("INSERT INTO orders (session_id, guest_name, note, placed_by) VALUES (?,?,?,?)", session.id, guestName, note, placedBy);
     const oid = Number(o.lastInsertRowid);
     for (const it of items) {
       const qty = Math.max(1, Math.min(50, Math.floor(Number(it.qty) || 0)));
@@ -240,8 +261,13 @@ app.post("/api/t/:code/orders", wrap((req, res) => {
     return oid;
   });
   notifySession(session.id, "order_placed");
-  publish(`staff:${restaurant.id}`, "alert", { kind: "order", table: table.label, orderId });
-  res.json({ ok: true, orderId });
+  if (placedBy === "guest") publish(`staff:${restaurant.id}`, "alert", { kind: "order", table: table.label, orderId });
+  return orderId;
+}
+
+app.post("/api/t/:code/orders", wrap((req, res) => {
+  const { table, restaurant } = tableByCode(req.params.code);
+  res.json({ ok: true, orderId: placeOrder(table, restaurant, req.body, "guest") });
 }));
 
 app.post("/api/t/:code/requests", wrap((req, res) => {
@@ -472,14 +498,36 @@ app.post("/api/staff/sessions/:id/cash", requireStaff(), wrap((req, res) => {
   res.json({ ok: true });
 }));
 
+function closeSession(id: number, reason = "closed") {
+  run("UPDATE table_sessions SET status='closed', closed_at=datetime('now') WHERE id=? AND status='open'", id);
+  run("UPDATE service_requests SET status='done', done_at=datetime('now') WHERE session_id=? AND status!='done'", id);
+  notifySession(id, reason);
+}
+
 app.post("/api/staff/sessions/:id/close", requireStaff(), wrap((req, res) => {
   const s = sessionForStaff(req);
   const bill = billFor(s.id);
   if (bill.balance > 0 && !req.body?.force) throw new HttpError(409, `KES ${bill.balance.toLocaleString()} is still unpaid`);
-  run("UPDATE table_sessions SET status='closed', closed_at=datetime('now') WHERE id=?", s.id);
-  run("UPDATE service_requests SET status='done', done_at=datetime('now') WHERE session_id=? AND status!='done'", s.id);
-  notifySession(s.id, "closed");
+  closeSession(s.id);
   res.json({ ok: true, receipt: `${PUBLIC_URL}/r/${s.receipt_token}` });
+}));
+
+// Waiter enters an order for a table (guests without phones, or ordering verbally)
+app.get("/api/staff/tables", requireStaff(), wrap((req, res) => {
+  const tables = all<Table>("SELECT * FROM dining_tables WHERE restaurant_id=? AND active=1 ORDER BY id", ridOf(req));
+  res.json(tables.map((t) => {
+    const s = openSession(t.id, false);
+    const b = s ? billFor(s.id) : null;
+    return { id: t.id, label: t.label, sessionId: s?.id ?? null, subtotal: b?.subtotal ?? 0, balance: b?.balance ?? 0 };
+  }));
+}));
+
+app.post("/api/staff/tables/:id/orders", requireStaff(), wrap((req, res) => {
+  const table = get<Table>("SELECT * FROM dining_tables WHERE id=? AND restaurant_id=? AND active=1", Number(req.params.id), ridOf(req));
+  if (!table) throw new HttpError(404, "Table not found");
+  const restaurant = get<Restaurant>("SELECT * FROM restaurants WHERE id=?", table.restaurant_id)!;
+  const orderId = placeOrder(table, restaurant, req.body, "staff");
+  res.json({ ok: true, orderId });
 }));
 
 // ================= ADMIN API =================
@@ -506,7 +554,7 @@ app.patch("/api/admin/items/:id", requireStaff(), wrap((req, res) => {
   if (b.tags !== undefined) fields.push(["tags", String(b.tags).trim() || null]);
   if (b.image_url !== undefined) {
     const u = String(b.image_url).trim();
-    if (u && !/^https:\/\/\S+$/i.test(u)) throw new HttpError(400, "Photo link must start with https://");
+    if (u && !/^(https:\/\/\S+|\/img\/[\w\/.-]+)$/i.test(u)) throw new HttpError(400, "Photo link must start with https://");
     fields.push(["image_url", u || null]);
   }
   if (b.available !== undefined) fields.push(["available", b.available ? 1 : 0]);

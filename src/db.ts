@@ -116,6 +116,7 @@ function addColumn(table: string, column: string, definition: string) {
 }
 addColumn("menu_items", "image_url", "TEXT");
 addColumn("service_requests", "note", "TEXT");
+addColumn("orders", "placed_by", "TEXT NOT NULL DEFAULT 'guest'");
 
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {

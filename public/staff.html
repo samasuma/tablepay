@@ -37,6 +37,22 @@
   .tab-tile:hover { border-color: var(--accent); }
   .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
   .progress i { display: block; height: 100%; background: var(--ok); }
+  .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .tbtn { min-height: 78px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 10px 14px; text-align: left; }
+  .tbtn b { font-size: 18px; }
+  .tbtn small { font-size: 12px; color: var(--muted); }
+  .tbtn.busy { border-color: var(--accent); background: var(--accent-soft); }
+  .no-cat { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+  .no-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .no-item .n { flex: 1; min-width: 0; }
+  .no-item .n b { display: block; font-size: 15px; }
+  .no-item .n span { font-size: 13px; color: var(--muted); }
+  .no-item.out { opacity: .45; }
+  .no-step { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 12px; }
+  .no-step button { width: 40px; height: 40px; border: 0; background: transparent; color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+  .no-step span { min-width: 22px; text-align: center; font-weight: 800; }
+  .no-add { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+  .no-foot { position: sticky; bottom: -20px; background: var(--card); padding: 12px 0 4px; border-top: 1px solid var(--line); margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
   .login { max-width: 360px; margin: 10vh auto; padding: 24px; text-align: center; }
   .pin { font-size: 28px; letter-spacing: .5em; text-align: center; }
   .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
@@ -130,6 +146,7 @@ function render() {
     <div class="stat"><b class="num">${kes(b.today.cash)}</b><span>Cash/card</span></div>
     <div class="stat"><b class="num">${kes(b.today.tips)}</b><span>Tips</span></div>
     <div style="margin-left:auto" class="row">
+      <button class="btn sm primary" id="newOrder" style="background:var(--accent);border-color:var(--accent);color:#fff">${TP.icon("plus", 16, 2.4)} New order</button>
       <a class="btn sm" href="/admin">Menu & tables</a>
       <button class="btn sm" id="logout">Sign out</button>
     </div>
@@ -183,6 +200,7 @@ function render() {
   </div>`;
   flashKey = null;
 
+  app.querySelector("#newOrder").onclick = () => newOrder();
   app.querySelector("#logout").onclick = () => { localStorage.removeItem("tp_staff_token"); es?.close(); loginView(); };
   app.querySelectorAll("[data-ack]").forEach((x) => (x.onclick = () => act(`/api/staff/requests/${x.dataset.ack}`, { status: "acknowledged" })));
   app.querySelectorAll("[data-done]").forEach((x) => (x.onclick = () => act(`/api/staff/requests/${x.dataset.done}`, { status: "done" })));
@@ -213,7 +231,9 @@ async function openTab(id) {
         <button class="btn" data-m="cash">Cash</button><button class="btn" data-m="card">Card</button></div>` : ""}
     <button class="btn ${b.balance > 0 ? "" : "primary"} lg block" id="close" style="margin-top:16px">
       ${b.balance > 0 ? "Close table anyway" : "Close table & free it up"}</button>
-    <a class="btn ghost block" style="margin-top:8px" href="/r/${s.receipt_token}" target="_blank">Open receipt</a>`);
+    <div class="row" style="margin-top:8px"><button class="btn block" data-additems style="flex:1">${TP.icon("plus", 16, 2.4)} Add items</button>
+      <a class="btn ghost block" style="flex:1" href="/r/${s.receipt_token}" target="_blank">Open receipt</a></div>`);
+  sh.querySelector("[data-additems]").onclick = () => newOrder(s.table_id);
   sh.querySelectorAll("[data-m]").forEach((x) => (x.onclick = async () => {
     try {
       await api(`/api/staff/sessions/${id}/cash`, { method: "POST", body: { amount: Number(sh.querySelector("#cash").value), method: x.dataset.m } });
@@ -226,6 +246,76 @@ async function openTab(id) {
     try { await api(`/api/staff/sessions/${id}/close`, { method: "POST", body: { force } }); closeSheet(); toast(`${s.label} closed`); refresh(); }
     catch (e) { toast(e.message); }
   };
+}
+
+// ---------- waiter enters an order ----------
+async function newOrder(presetTableId) {
+  let tables, menu;
+  try { [tables, menu] = await Promise.all([api("/api/staff/tables"), api("/api/admin/menu")]); }
+  catch (e) { return toast(e.message); }
+  const st = { tableId: presetTableId || null, cart: new Map(), q: "" };
+  const items = menu.flatMap((c) => c.items);
+  const total = () => [...st.cart].reduce((s, [id, q]) => s + (items.find((i) => i.id === id)?.price || 0) * q, 0);
+  const count = () => [...st.cart.values()].reduce((a, b) => a + b, 0);
+  const label = () => tables.find((t) => t.id === st.tableId)?.label || "";
+
+  const pickTable = () => {
+    const sh = sheet(`<div class="row between" style="margin-bottom:14px"><h2>New order · pick a table</h2>
+        <button class="btn sm ghost" data-x>${TP.icon("x", 16, 2.4)}</button></div>
+      <div class="tgrid">${tables.map((t) => `<button class="tbtn ${t.sessionId ? "busy" : ""}" data-t="${t.id}">
+        <b>${esc(t.label)}</b><small>${t.sessionId && t.subtotal ? `Open · ${kes(t.balance)} due` : "No open bill"}</small></button>`).join("")}</div>`);
+    sh.querySelector("[data-x]").onclick = closeSheet;
+    sh.querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { st.tableId = Number(b.dataset.t); pickItems(); }));
+  };
+
+  const listHtml = () => {
+    const q = st.q.trim().toLowerCase();
+    return menu.map((c) => {
+      const its = c.items.filter((i) => !q || i.name.toLowerCase().includes(q));
+      if (!its.length) return "";
+      return `<div class="no-cat">${esc(c.name)}</div>` + its.map((i) => {
+        const n = st.cart.get(i.id) || 0;
+        return `<div class="no-item ${i.available ? "" : "out"}"><div class="n"><b>${esc(i.name)}</b><span>${i.available ? kes(i.price) : "Sold out"}</span></div>
+          ${!i.available ? "" : n ? `<div class="no-step"><button data-d="${i.id}" aria-label="Remove one">${TP.icon("minus", 18, 2.4)}</button><span>${n}</span><button data-i="${i.id}" aria-label="Add one">${TP.icon("plus", 18, 2.4)}</button></div>`
+            : `<button class="no-add" data-i="${i.id}" aria-label="Add ${esc(i.name)}">${TP.icon("plus", 18, 2.4)}</button>`}</div>`;
+      }).join("");
+    }).join("") || `<div class="empty">No items match.</div>`;
+  };
+  const footHtml = () => `<input class="field" id="noName" maxlength="40" placeholder="Guest name (optional)" value="${esc(st.name || "")}" />
+    <input class="field" id="noNote" maxlength="200" placeholder="Note for the kitchen (optional)" value="${esc(st.note || "")}" />
+    <button class="btn primary lg block" id="noSend" ${count() ? "" : "disabled"}>${count() ? `Send ${count()} item${count() > 1 ? "s" : ""} to ${esc(label())} · ${kes(total())}` : "Add items to send"}</button>`;
+
+  const pickItems = () => {
+    const sh = sheet(`<div class="row between" style="margin-bottom:10px"><div><h2>New order · ${esc(label())}</h2>
+        <button class="btn sm ghost" data-change style="padding-left:0">Change table</button></div>
+        <button class="btn sm ghost" data-x>${TP.icon("x", 16, 2.4)}</button></div>
+      <input class="field" id="noQ" type="search" placeholder="Search the menu" value="${esc(st.q)}" />
+      <div id="noList">${listHtml()}</div>
+      <div class="no-foot" id="noFoot">${footHtml()}</div>`);
+    sh.querySelector("[data-x]").onclick = closeSheet;
+    sh.querySelector("[data-change]").onclick = pickTable;
+    const refreshParts = () => {
+      st.name = sh.querySelector("#noName")?.value; st.note = sh.querySelector("#noNote")?.value;
+      sh.querySelector("#noList").innerHTML = listHtml(); sh.querySelector("#noFoot").innerHTML = footHtml(); wire();
+    };
+    const wire = () => {
+      sh.querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => { const id = +b.dataset.i; st.cart.set(id, (st.cart.get(id) || 0) + 1); refreshParts(); }));
+      sh.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => { const id = +b.dataset.d, n = (st.cart.get(id) || 0) - 1; n > 0 ? st.cart.set(id, n) : st.cart.delete(id); refreshParts(); }));
+      sh.querySelector("#noSend").onclick = send;
+    };
+    sh.querySelector("#noQ").oninput = (e) => { st.q = e.target.value; refreshParts(); };
+    async function send() {
+      const btn = sh.querySelector("#noSend"); btn.disabled = true; btn.textContent = "Sending…";
+      try {
+        await api(`/api/staff/tables/${st.tableId}/orders`, { method: "POST", body: {
+          guestName: sh.querySelector("#noName").value, note: sh.querySelector("#noNote").value,
+          items: [...st.cart].map(([id, qty]) => ({ id, qty })) } });
+        closeSheet(); toast(`Order sent for ${label()}`, 3000, TP.icon("check", 18, 2.6)); refresh();
+      } catch (e) { btn.disabled = false; btn.textContent = "Try again"; toast(e.message); }
+    }
+    wire();
+  };
+  st.tableId ? pickItems() : pickTable();
 }
 
 localStorage.getItem("tp_staff_token") ? start() : loginView();
