@@ -1,7 +1,7 @@
 // Cache the app shell so pages open instantly on patchy restaurant Wi-Fi.
 // API calls always go to the network (bills and payments must be live).
-const CACHE = "tablepay-v2";
-const SHELL = ["/app.css", "/common.js", "/icon.svg", "/table.html", "/receipt.html"];
+const CACHE = "tablepay-v4";
+const SHELL = ["/app.css", "/common.js", "/icon.svg", "/table.html", "/receipt.html", "/fonts/jakarta-400.woff2", "/fonts/jakarta-600.woff2", "/fonts/jakarta-700.woff2", "/fonts/jakarta-800.woff2"];
 
 self.addEventListener("install", (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener("activate", (e) =>

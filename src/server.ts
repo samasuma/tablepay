@@ -59,7 +59,7 @@ function menuFor(restaurantId: number) {
   // Sold-out items are included (shown greyed out) so guests know they exist.
   const cats = all("SELECT id, name FROM categories WHERE restaurant_id = ? ORDER BY sort, id", restaurantId);
   const items = all(
-    `SELECT id, category_id, name, description, price, tags, available FROM menu_items
+    `SELECT id, category_id, name, description, price, tags, available, image_url FROM menu_items
      WHERE restaurant_id = ? AND deleted = 0 ORDER BY sort, id`,
     restaurantId
   );
@@ -246,12 +246,17 @@ app.post("/api/t/:code/orders", wrap((req, res) => {
 
 app.post("/api/t/:code/requests", wrap((req, res) => {
   const { table, restaurant } = tableByCode(req.params.code);
-  const kind = req.body?.kind === "bill" ? "bill" : "waiter";
+  const KINDS = ["waiter", "bill", "water", "other"];
+  const kind = KINDS.includes(req.body?.kind) ? req.body.kind : "waiter";
+  const note = String(req.body?.note || "").trim().slice(0, 140) || null;
+  if (kind === "other" && !note) throw new HttpError(400, "Write a short note for the team");
   const session = openSession(table.id, true)!;
-  // Don't stack duplicate open requests
-  const existing = get("SELECT id FROM service_requests WHERE session_id=? AND kind=? AND status != 'done'", session.id, kind);
-  if (!existing) run("INSERT INTO service_requests (session_id, kind) VALUES (?,?)", session.id, kind);
-  publish(`staff:${restaurant.id}`, "alert", { kind, table: table.label });
+  // Don't stack duplicate open requests (notes are always sent)
+  const existing = kind === "other"
+    ? undefined
+    : get("SELECT id FROM service_requests WHERE session_id=? AND kind=? AND status != 'done'", session.id, kind);
+  if (!existing) run("INSERT INTO service_requests (session_id, kind, note) VALUES (?,?,?)", session.id, kind, note);
+  publish(`staff:${restaurant.id}`, "alert", { kind, table: table.label, note });
   notifySession(session.id, "request");
   res.json({ ok: true, alreadyRequested: !!existing });
 }));
@@ -259,7 +264,24 @@ app.post("/api/t/:code/requests", wrap((req, res) => {
 app.get("/api/t/:code/requests", wrap((req, res) => {
   const { table } = tableByCode(req.params.code);
   const session = openSession(table.id, true)!;
-  res.json(all("SELECT kind, status FROM service_requests WHERE session_id=? AND status != 'done'", session.id));
+  res.json(all(
+    "SELECT id, kind, status, note, created_at, acknowledged_at FROM service_requests WHERE session_id=? AND status != 'done' ORDER BY id",
+    session.id
+  ));
+}));
+
+// Guest changed their mind
+app.post("/api/t/:code/requests/:id/cancel", wrap((req, res) => {
+  const { table } = tableByCode(req.params.code);
+  const session = openSession(table.id, false);
+  if (!session) throw new HttpError(409, "This tab is already closed");
+  const r = run(
+    "UPDATE service_requests SET status='done', done_at=datetime('now') WHERE id=? AND session_id=? AND status != 'done'",
+    Number(req.params.id), session.id
+  );
+  if (!r.changes) throw new HttpError(404, "Request not found");
+  notifySession(session.id, "request_cancelled");
+  res.json({ ok: true });
 }));
 
 app.post("/api/t/:code/pay", wrap(async (req, res) => {
@@ -366,7 +388,7 @@ app.get("/api/staff/events", requireStaff(), (req, res) => subscribe(`staff:${ri
 app.get("/api/staff/board", requireStaff(), wrap((req, res) => {
   const rid = ridOf(req);
   const requests = all(
-    `SELECT sr.id, sr.kind, sr.status, sr.created_at, dt.label AS table_label, ts.id AS session_id
+    `SELECT sr.id, sr.kind, sr.status, sr.note, sr.created_at, dt.label AS table_label, ts.id AS session_id
      FROM service_requests sr JOIN table_sessions ts ON ts.id = sr.session_id
      JOIN dining_tables dt ON dt.id = ts.table_id
      WHERE dt.restaurant_id = ? AND sr.status != 'done' ORDER BY sr.id`,
@@ -377,7 +399,7 @@ app.get("/api/staff/board", requireStaff(), wrap((req, res) => {
             json_group_array(json_object('name', oi.name, 'qty', oi.qty)) AS items
      FROM orders o JOIN order_items oi ON oi.order_id = o.id
      JOIN table_sessions ts ON ts.id = o.session_id JOIN dining_tables dt ON dt.id = ts.table_id
-     WHERE dt.restaurant_id = ? AND o.status IN ('new','preparing') GROUP BY o.id ORDER BY o.id`,
+     WHERE dt.restaurant_id = ? AND o.status IN ('new','preparing') AND ts.status = 'open' GROUP BY o.id ORDER BY o.id`,
     rid
   ).map((o: any) => ({ ...o, items: JSON.parse(o.items) }));
   const tabs = all<{ id: number; label: string; opened_at: string }>(
@@ -482,6 +504,11 @@ app.patch("/api/admin/items/:id", requireStaff(), wrap((req, res) => {
     fields.push(["price", p]);
   }
   if (b.tags !== undefined) fields.push(["tags", String(b.tags).trim() || null]);
+  if (b.image_url !== undefined) {
+    const u = String(b.image_url).trim();
+    if (u && !/^https:\/\/\S+$/i.test(u)) throw new HttpError(400, "Photo link must start with https://");
+    fields.push(["image_url", u || null]);
+  }
   if (b.available !== undefined) fields.push(["available", b.available ? 1 : 0]);
   if (b.category_id !== undefined) fields.push(["category_id", Number(b.category_id)]);
   if (fields.length) {
@@ -500,8 +527,9 @@ app.post("/api/admin/items", requireStaff("admin"), wrap((req, res) => {
   const price = Math.floor(Number(b.price));
   if (!name || !(price > 0)) throw new HttpError(400, "Name and price are required");
   const r = run(
-    "INSERT INTO menu_items (restaurant_id, category_id, name, description, price, tags, sort) VALUES (?,?,?,?,?,?,999)",
-    rid, cat.id, name.slice(0, 80), String(b.description || "").slice(0, 200), price, String(b.tags || "") || null
+    "INSERT INTO menu_items (restaurant_id, category_id, name, description, price, tags, image_url, sort) VALUES (?,?,?,?,?,?,?,999)",
+    rid, cat.id, name.slice(0, 80), String(b.description || "").slice(0, 200), price, String(b.tags || "") || null,
+    /^https:\/\/\S+$/i.test(String(b.image_url || "")) ? String(b.image_url) : null
   );
   res.json({ ok: true, id: Number(r.lastInsertRowid) });
 }));

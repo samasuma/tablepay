@@ -3,255 +3,805 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#19120c" />
+<meta name="theme-color" content="#ffffff" />
 <link rel="manifest" href="/manifest.webmanifest" />
 <link rel="icon" href="/icon.svg" type="image/svg+xml" />
 <title>Menu</title>
 <link rel="stylesheet" href="/app.css" />
 <style>
-  body { padding-bottom: 150px; }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
-  header.top { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 14px 0 10px; border-bottom: 1px solid var(--line); }
-  .brand h1 { font-size: 20px; letter-spacing: -.01em; }
-  .tbl { background: var(--bar); color: #fff; border-radius: 10px; padding: 6px 10px; font-weight: 800; font-size: 14px; white-space: nowrap; }
-  .views { margin-top: 12px; }
-  .cats { margin-top: 10px; }
-  .cat-title { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 800; margin: 22px 0 8px; scroll-margin-top: 200px; }
-  .item { display: flex; gap: 12px; padding: 14px; align-items: flex-start; }
-  .item + .item { border-top: 1px solid var(--line); }
-  .item .info { flex: 1; min-width: 0; }
-  .item .name { font-weight: 700; }
-  .item .desc { color: var(--muted); font-size: 14px; margin-top: 2px; }
-  .item .price { font-weight: 700; margin-top: 6px; }
-  .item.out { opacity: .5; }
-  .tag { font-size: 11px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; margin-left: 6px; vertical-align: 2px; }
-  .add { width: 38px; height: 38px; border-radius: 12px; border: 0; background: var(--accent-soft); color: var(--accent); font-size: 22px; font-weight: 800; cursor: pointer; }
+  :root { --ph: #d5dee8; --ph-ink: #7b8896; --tag-ink: #a14a00; --tag-bg: #fdf0e1; --blue-tint: #f3f8ff; }
+  @media (prefers-color-scheme: dark) { :root { --ph: #233040; --ph-ink: #6f7d8c; --tag-ink: #f0a868; --tag-bg: #3a2614; --blue-tint: #15233a; } }
+  html, body { background: var(--page); }
+  body { font-variant-numeric: tabular-nums; }
+  .shell { max-width: 520px; margin: 0 auto; min-height: 100vh; position: relative; }
+  .pad-dock { padding-bottom: 110px; }
 
-  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--bg) 70%, transparent); }
-  .dock .inner { max-width: 640px; margin: 0 auto; }
-  .dock .two { display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; }
-  .cartbar { margin-bottom: 10px; }
+  /* header */
+  .hdr { background: var(--card); padding: 18px 16px 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--bar); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 20px; }
+  .bt { flex: 1; min-width: 0; }
+  .rname { font-size: 17px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rsub { font-size: 13px; color: var(--muted); }
+  .tchip { background: var(--bar); color: #fff; border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .acts { display: flex; align-items: center; gap: 8px; }
+  .hp { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .hp svg { color: var(--accent); }
+  .hp .sub { color: var(--muted); font-weight: 600; }
+  .hp.called { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .hp.ontheway { border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 6%, transparent); } }
+  .iconbtn { width: 40px; height: 40px; flex: none; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+  .iconbtn.plain { border: 0; background: transparent; width: 44px; height: 44px; }
+  .iconbtn.soft { border: 0; background: var(--field); }
+  .acts .iconbtn { margin-left: auto; }
+  .searchrow { display: flex; align-items: center; gap: 10px; }
+  .searchbox { flex: 1; height: 44px; border-radius: 12px; background: var(--field); border: 1px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 12px; color: var(--muted); }
+  .searchbox input { border: 0; outline: none; background: transparent; flex: 1; min-width: 0; font-size: 15px; color: var(--ink); }
+  .linkbtn { border: 0; background: transparent; color: var(--accent); font-weight: 700; font-size: 14px; padding: 10px 4px; cursor: pointer; }
 
-  .bill-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
-  .total-row { display: flex; justify-content: space-between; padding: 8px 0; font-weight: 700; }
-  .balance { font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
-  .order-card { padding: 12px 14px; }
-  .order-card + .order-card { margin-top: 10px; }
-  .banner { border-radius: var(--radius); padding: 12px 14px; font-weight: 600; }
-  .banner.ok { background: var(--ok-soft); color: var(--ok); }
-  .banner.warn { background: var(--warn-soft); color: var(--warn); }
-  .tipchips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .tipchips .chip { text-align: center; }
-  .paybox { background: var(--bg); border-radius: 12px; padding: 12px 14px; margin-top: 14px; }
-  .bigtick { width: 64px; height: 64px; border-radius: 50%; background: var(--ok); color: #fff; display: grid; place-items: center; font-size: 34px; margin: 6px auto 10px; }
-  .closed { text-align: center; padding: 60px 20px; }
+  /* status cards */
+  .status { margin: 12px 16px 0; background: var(--card); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+  .status-row { display: flex; align-items: center; gap: 12px; }
+  .status-ic { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; color: #fff; background: var(--accent); }
+  .status.ack .status-ic { background: var(--ok); }
+  .status-t { font-size: 15px; font-weight: 800; }
+  .status-s { font-size: 13px; color: var(--muted); }
+  .status-note { font-size: 13px; background: var(--field); border-radius: 10px; padding: 8px 10px; }
+  .steps3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .steps3 div { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .steps3 i { height: 4px; border-radius: 2px; background: var(--line); }
+  .steps3 .on { color: var(--ink); }
+  .steps3 .on i { background: var(--accent); }
+  .status.ack .steps3 .on i { background: var(--ok); }
+  .btn-sm { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
+
+  /* chips */
+  .chips { position: sticky; top: 0; z-index: 15; background: var(--page); display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .chip.on { background: var(--bar); border-color: var(--bar); color: #fff; font-weight: 700; }
+
+  /* menu */
+  .sec { padding: 6px 16px 10px; display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 64px; }
+  .sec h2 { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin: 6px 0 2px; }
+  .picks { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 4px; }
+  .picks::-webkit-scrollbar { display: none; }
+  .pick { width: 172px; flex: none; background: var(--card); border-radius: 18px; overflow: hidden; }
+  .pick .photo { width: 100%; height: 112px; border-radius: 0; }
+  .pick .ctrl { right: 8px; bottom: 8px; }
+  .pick-b { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; font-weight: 700; }
+  .pick-b .p { color: var(--muted); }
+  .item { background: var(--card); border-radius: 18px; padding: 14px; display: flex; gap: 14px; }
+  .item.out { opacity: .55; }
+  .item-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .item-n { font-size: 15px; font-weight: 700; }
+  .item-d { font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .item-p { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 15px; font-weight: 700; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 2px 6px; color: var(--muted); background: var(--field); }
+  .tag.spicy { color: var(--tag-ink); background: var(--tag-bg); }
+  .tag.chef { color: var(--accent); background: var(--accent-soft); }
+  .photo { width: 92px; height: 92px; flex: none; border-radius: 14px; background: var(--ph); color: var(--ph-ink); position: relative; display: grid; place-items: center; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+  .ctrl { position: absolute; right: -6px; bottom: -6px; }
+  .add { width: 36px; height: 36px; border-radius: 999px; border: 0; background: var(--card); color: var(--accent); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(17,24,39,.18); cursor: pointer; }
+  .stepper-d { height: 36px; border-radius: 999px; background: var(--bar); color: #fff; display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+  .stepper-d button { width: 28px; height: 28px; border: 0; background: transparent; color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .stepper-d span { min-width: 16px; text-align: center; font-size: 14px; font-weight: 800; }
+  .soldout { font-size: 13px; font-weight: 700; margin-top: 4px; }
+
+  /* dock */
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--page); padding: 12px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .dock-in { max-width: 488px; margin: 0 auto; display: flex; gap: 10px; }
+  .bar { flex: 1; height: 60px; border: 0; border-radius: 18px; color: #fff; display: flex; align-items: center; gap: 12px; padding: 0 18px; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; }
+  .bar.dark { background: var(--bar); box-shadow: 0 8px 24px rgba(17,24,39,.25); }
+  .bar.blue { background: var(--accent); box-shadow: 0 8px 24px rgba(26,115,231,.3); }
+  .bar.green { background: var(--ok); justify-content: center; }
+  .bar.center { justify-content: center; }
+  .bar .amt { margin-left: auto; }
+  .badge { width: 28px; height: 28px; border-radius: 999px; background: var(--accent); display: grid; place-items: center; font-size: 14px; font-weight: 800; }
+  .bar-2 { height: 60px; padding: 0 20px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); color: var(--ink); display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .bar:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* inner pages */
+  .top { position: sticky; top: 0; z-index: 20; background: var(--card); padding: 12px 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); }
+  .top .tt { flex: 1; min-width: 0; }
+  .top h1 { font-size: 17px; font-weight: 800; }
+  .toplink { font-size: 14px; font-weight: 700; padding: 10px 8px; text-decoration: none; }
+  .page { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--card); border-radius: 20px; padding: 18px; border: 0; box-shadow: none; }
+  .lbl-s { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .big { font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+  .progress { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--ok); border-radius: 4px; }
+  .payrow { display: flex; align-items: center; gap: 10px; background: var(--ok-soft); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+  .payrow.pending { background: var(--warn-soft); }
+  .tick { width: 24px; height: 24px; flex: none; border-radius: 999px; background: var(--ok); color: #fff; display: grid; place-items: center; }
+  .payrow.pending .tick { background: var(--warn); }
+  .grp-h { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 8px; font-size: 14px; font-weight: 800; }
+  .line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 14px; }
+  .line .q { color: var(--muted); }
+  .sep { height: 1px; background: var(--line); margin: 6px 0; }
+  .status-pill { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 3px 7px; background: var(--accent-soft); color: var(--accent); }
+  .status-pill.preparing { background: var(--warn-soft); color: var(--warn); }
+  .status-pill.served { background: var(--ok-soft); color: var(--ok); }
+  .status-pill.cancelled { background: var(--danger-soft); color: var(--danger); text-decoration: line-through; }
+  .fine { font-size: 12px; color: var(--muted); text-align: center; }
+  .warnbox { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 600; }
+
+  /* pay */
+  fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  legend, .h3 { font-size: 14px; font-weight: 800; padding: 0; margin-bottom: 10px; }
+  .opt { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 0 14px; min-height: 60px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .opt.on { background: var(--blue-tint); border: 1.5px solid var(--accent); }
+  .opt input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); flex: none; }
+  .opt .ot { flex: 1; display: flex; flex-direction: column; font-size: 15px; font-weight: 600; padding: 10px 0; }
+  .opt .os { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
+  .opt .oa { font-size: 15px; font-weight: 700; }
+  .mini-step { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+  .mini-step button { width: 30px; height: 28px; border: 0; background: transparent; color: var(--accent); font-weight: 800; font-size: 16px; cursor: pointer; }
+  .mini-step b { min-width: 16px; text-align: center; color: var(--ink); }
+  .tips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .tipb { height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
+  .tipb.on { background: var(--bar); border-color: var(--bar); color: #fff; }
+  .field-row { height: 52px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; }
+  .field-row:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .field-row input { border: 0; outline: none; background: transparent; font-size: 16px; font-weight: 600; flex: 1; min-width: 0; color: var(--ink); }
+  .field-row .pre { font-size: 15px; color: var(--muted); font-weight: 600; }
+  .field-row .vr { width: 1px; height: 22px; background: var(--line); }
+  .summary { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--card); border-radius: 24px 24px 0 0; box-shadow: 0 -6px 24px rgba(17,24,39,.08); padding: 18px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .summary-in { max-width: 488px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .sumline { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
+  .sumtotal { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; padding-top: 4px; }
+  .primary { height: 58px; border: 0; border-radius: 16px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; width: 100%; text-decoration: none; }
+  .primary:disabled { opacity: .5; cursor: not-allowed; }
+  .secondary { height: 56px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+  .ghost-danger { height: 44px; border: 0; background: transparent; color: var(--danger); font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+
+  /* waiting + result */
+  .full { min-height: 100vh; background: var(--card); display: flex; flex-direction: column; max-width: 520px; margin: 0 auto; }
+  .full-top { padding: 14px 12px 0; }
+  .full-mid { display: flex; flex-direction: column; align-items: center; padding: 10px 28px 0; gap: 22px; text-align: center; }
+  .full-bot { margin-top: auto; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; }
+  .phone-ill { width: 150px; height: 240px; border-radius: 30px; border: 6px solid var(--bar); background: var(--page); padding: 26px 12px 0; position: relative; }
+  .phone-ill::before { content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 6px; margin-left: -20px; border-radius: 3px; background: var(--bar); }
+  .prompt { background: #fff; color: #111; border-radius: 14px; padding: 12px 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 6px 18px rgba(17,24,39,.18); font-size: 9px; line-height: 1.35; text-align: left; }
+  .pins { display: flex; gap: 6px; justify-content: center; }
+  .pins i { width: 9px; height: 9px; border-radius: 999px; border: 1.5px solid #9aa6b4; animation: pin 2.4s infinite; }
+  .pins i:nth-child(2) { animation-delay: .3s; } .pins i:nth-child(3) { animation-delay: .6s; } .pins i:nth-child(4) { animation-delay: .9s; }
+  @keyframes pin { 30%, 70% { background: #19120c; border-color: #19120c; } }
+  .prompt .okb { height: 22px; border-radius: 7px; background: var(--accent); }
+  .h-big { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+  .lead { font-size: 15px; line-height: 1.5; color: var(--muted); margin: 0; }
+  .lead strong { color: var(--ink); }
+  .wsteps { list-style: none; margin: 0; padding: 16px; width: 100%; background: var(--field); border-radius: 18px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+  .wsteps li { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
+  .wsteps .todo { color: var(--muted); }
+  .ring { width: 26px; height: 26px; flex: none; border-radius: 999px; border: 3px solid var(--accent); border-right-color: var(--line); animation: spin 1s linear infinite; }
+  .circle { width: 26px; height: 26px; flex: none; border-radius: 999px; border: 2px solid var(--line); }
+  .wsteps .tick { width: 26px; height: 26px; }
+  .big-tick { width: 72px; height: 72px; border-radius: 999px; background: var(--ok); color: #fff; display: grid; place-items: center; }
+  .big-alert { width: 72px; height: 72px; border-radius: 999px; background: var(--danger-soft); color: var(--danger); display: grid; place-items: center; }
+  .refbox { width: 100%; background: var(--field); border-radius: 16px; padding: 4px 16px; }
+  .refbox .line { padding: 10px 0; }
+  .refbox .line + .line { border-top: 1px solid var(--line); }
+
+  /* sheets */
+  .sheet h2 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+  .sheet-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+  .sheet-h > div { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tile { min-height: 112px; border-radius: 18px; border: 1px solid var(--line); background: var(--field); padding: 14px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 10px; text-align: left; color: var(--ink); cursor: pointer; }
+  .tile .ti { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .tile.primary-t { border: 1.5px solid var(--accent); background: var(--blue-tint); }
+  .tile.primary-t .ti { background: var(--accent); color: #fff; }
+  .tile.sent { border-color: var(--ok); background: var(--ok-soft); }
+  .tile.sent .ti { background: var(--ok); color: #fff; }
+  .tile b { font-size: 15px; display: block; }
+  .tile small { font-size: 12px; color: var(--muted); }
+  .rowlink { display: flex; align-items: center; gap: 14px; padding: 4px 0; border: 0; background: transparent; text-align: left; color: var(--ink); width: 100%; cursor: pointer; }
+  .rowlink .ri { width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; }
+  .rowlink b { font-size: 15px; display: block; }
+  .rowlink small { font-size: 13px; color: var(--muted); }
+  .cart-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .cart-line .n { font-weight: 700; }
+  .stepper-l { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 12px; }
+  .stepper-l button { width: 40px; height: 40px; border: 0; background: transparent; color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+  .stepper-l span { min-width: 22px; text-align: center; font-weight: 800; }
+  textarea.field { min-height: 88px; resize: vertical; }
+
+  .closed { text-align: center; padding: 80px 24px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .empty-card { text-align: center; padding: 32px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--muted); }
+  .empty-card .ei { width: 56px; height: 56px; border-radius: 18px; background: var(--field); display: grid; place-items: center; }
+  body.has-summary .toast { bottom: 250px; }
+  @media (min-width: 560px) { .shell { box-shadow: 0 0 0 1px var(--line); } }
 </style>
 </head>
 <body>
-<div id="app"><div class="wrap" style="padding-top:80px"><div class="spinner"></div></div></div>
+<div id="app"><div style="padding-top:120px"><div class="spinner"></div></div></div>
 
 <script src="/common.js"></script>
 <script>
-const { kes, esc, api, toast, sheet, closeSheet, time } = TP;
+const { kes, esc, api, toast, sheet, closeSheet, ago, time, icon } = TP;
 const code = location.pathname.split("/").pop();
 const LS = { name: "tp_guest_name", phone: "tp_guest_phone" };
 
 const state = {
-  data: null,          // restaurant, table, session, menu
-  bill: null,
-  cart: new Map(),     // itemId -> qty
-  view: "menu",
-  cat: null,
-  closed: false,
+  data: null, bill: null, requests: [],
+  cart: new Map(),
+  view: "menu",          // menu | bill | pay | wait | result | closed
+  searching: false, q: "",
+  pay: { mode: "all", people: 2, tip: 0, tipCustom: "" },
+  payment: null,         // { id, total, phone, started }
+  result: null,
   receiptToken: null,
-  requests: [],
 };
 
-const itemById = (id) => {
-  for (const c of state.data.menu) for (const i of c.items) if (i.id === id) return i;
-};
+// ---------- helpers ----------
+const allItems = () => state.data.menu.flatMap((c) => c.items);
+const itemById = (id) => allItems().find((i) => i.id === id);
 const cartCount = () => [...state.cart.values()].reduce((a, b) => a + b, 0);
-const cartTotal = () => [...state.cart].reduce((s, [id, q]) => s + itemById(id).price * q, 0);
+const cartTotal = () => [...state.cart].reduce((s, [id, q]) => s + (itemById(id)?.price || 0) * q, 0);
+const tableName = () => {
+  const l = state.data.table.label;
+  return /^T\d+$/i.test(l) ? "Table " + l.slice(1) : l;
+};
+const mineKey = () => `tp_mine_${state.data.session.id}`;
+const mine = () => { try { return JSON.parse(localStorage.getItem(mineKey()) || "[]"); } catch { return []; } };
+const addMine = (orderId) => { try { localStorage.setItem(mineKey(), JSON.stringify([...mine(), orderId])); } catch {} };
+const myTotal = () => {
+  const ids = mine();
+  return state.bill.orders.filter((o) => ids.includes(o.id) && o.status !== "cancelled")
+    .reduce((s, o) => s + o.items.reduce((a, i) => a + i.qty * i.unit_price, 0), 0);
+};
+const available = () => Math.max(0, state.bill.balance - state.bill.pending);
+const okIcon = icon("check", 18, 2.6);
+const errIcon = icon("alert", 18, 2.2);
 
+function setView(v) { state.view = v; render(); window.scrollTo(0, 0); }
+
+// ---------- data ----------
 async function load() {
   try {
     const d = await api(`/api/t/${code}`);
     state.data = d;
     state.bill = d.bill;
     state.receiptToken = d.session.receipt_token;
-    state.cat = d.menu[0]?.id;
-    document.title = `${d.restaurant.name} · ${d.table.label}`;
+    document.title = `${d.restaurant.name} · ${tableName()}`;
     state.requests = await api(`/api/t/${code}/requests`);
     render();
     listen();
-  } catch (e) {
-    document.getElementById("app").innerHTML =
-      `<div class="closed"><h2>Table not found</h2><p class="muted">This code may have been replaced. Please ask a staff member for help.</p></div>`;
+    window.addEventListener("scroll", spy, { passive: true });
+    setInterval(() => { if (state.view === "menu" && state.requests.length) renderStatusOnly(); }, 30000);
+  } catch {
+    document.getElementById("app").innerHTML = `<div class="closed"><div class="big-alert">${icon("alert", 34)}</div>
+      <h2>Table not found</h2><p class="lead">This code may have been replaced. Please ask a staff member for help.</p></div>`;
   }
+}
+
+async function refreshRequests() {
+  try { state.requests = await api(`/api/t/${code}/requests`); } catch {}
+  if (state.view === "menu") render();
 }
 
 function listen() {
   const es = new EventSource(`/api/t/${code}/events`);
   es.addEventListener("bill", (ev) => {
     const d = JSON.parse(ev.data);
-    const prevReq = state.requests;
     state.bill = d.bill;
-    if (d.status === "closed") { state.closed = true; state.receiptToken = d.receipt_token; es.close(); closeSheet(); }
-    if (d.reason === "request_acknowledged") toast("A staff member is on the way 👋", 3500);
-    if (d.reason === "order_preparing") toast("Your order is being prepared 🍳");
-    if (d.reason === "order_served") toast("Order served. Enjoy!");
-    if (d.reason.startsWith("request")) api(`/api/t/${code}/requests`).then((r) => { state.requests = r; render(); });
+    if (d.status === "closed") {
+      state.receiptToken = d.receipt_token;
+      es.close(); closeSheet();
+      return setView("closed");
+    }
+    if (d.reason === "request_acknowledged") toast("The team has seen your request", 3500, icon("bell", 18));
+    if (d.reason === "order_preparing") toast("Your order is being prepared", 3000, okIcon);
+    if (d.reason === "order_served") toast("Order served. Enjoy!", 3000, okIcon);
+    if (d.reason.startsWith("request")) return refreshRequests();
     window.dispatchEvent(new CustomEvent("tp-bill", { detail: d }));
-    render();
+    if (["menu", "bill"].includes(state.view)) render();
   });
-  es.onerror = () => {}; // EventSource retries on its own
 }
 
-// ---------- rendering ----------
+// ---------- render ----------
 function render() {
-  const { data, bill } = state;
   const app = document.getElementById("app");
-  if (state.closed) {
-    app.innerHTML = `<div class="closed wrap">
-      <div class="bigtick">✓</div>
-      <h2>Thank you for visiting ${esc(data.restaurant.name)}</h2>
-      <p class="muted">This table's bill has been closed.</p>
-      <a class="btn primary lg" href="/r/${state.receiptToken}">View receipt</a>
+  const v = state.view;
+  app.innerHTML = v === "menu" ? menuView() : v === "bill" ? billView() : v === "pay" ? payView()
+    : v === "wait" ? waitView() : v === "result" ? resultView() : closedView();
+  bind(app);
+  document.body.classList.toggle("has-summary", v === "pay");
+  if (v === "menu") spy();
+}
+
+function renderStatusOnly() {
+  const box = document.getElementById("statusBox");
+  if (box) { box.innerHTML = statusCards(); bindStatus(box); }
+}
+
+// ----- menu -----
+function servicePill() {
+  const open = state.requests;
+  if (open.some((r) => r.status === "acknowledged")) return `<button class="hp ontheway" data-act="service"><span class="dot"></span>On the way</button>`;
+  if (open.length) return `<button class="hp called" data-act="service"><span class="dot"></span>Called</button>`;
+  return `<button class="hp" data-act="service">${icon("bell", 18)}Service</button>`;
+}
+
+const REQ = {
+  waiter: { ic: "bell", open: "Waiter called", ack: "A waiter is on the way" },
+  bill: { ic: "receipt", open: "Bill requested", ack: "Your bill is on the way" },
+  water: { ic: "water", open: "Water requested", ack: "Water is on the way" },
+  other: { ic: "message", open: "Message sent", ack: "The team has seen your message" },
+};
+function statusCards() {
+  return state.requests.map((r) => {
+    const m = REQ[r.kind] || REQ.waiter;
+    const ack = r.status === "acknowledged";
+    return `<div class="status ${ack ? "ack" : ""}" role="status">
+      <div class="status-row">
+        <span class="status-ic">${icon(m.ic, 22)}</span>
+        <div style="flex:1;min-width:0"><div class="status-t">${ack ? m.ack : m.open}</div>
+          <div class="status-s">${ack ? `Seen by the team ${ago(r.acknowledged_at)}` : `Sent ${ago(r.created_at)} · waiting for the team`}</div></div>
+        <button class="btn-sm" data-cancel="${r.id}">Cancel</button>
+      </div>
+      ${r.note ? `<div class="status-note">“${esc(r.note)}”</div>` : ""}
+      <div class="steps3"><div class="on"><i></i>Sent</div><div class="${ack ? "on" : ""}"><i></i>Seen</div><div><i></i>${r.kind === "other" ? "Sorted" : "At your table"}</div></div>
     </div>`;
-    return;
-  }
-
-  const waiterOpen = state.requests.some((r) => r.kind === "waiter");
-  app.innerHTML = `
-  <header class="top"><div class="wrap">
-    <div class="row between">
-      <div class="brand"><h1>${esc(data.restaurant.name)}</h1>
-        <div class="muted small">${esc(data.restaurant.branch || data.restaurant.tagline || "")}</div></div>
-      <span class="tbl">Table ${esc(data.table.label.replace(/^T/, ""))}</span>
-    </div>
-    <div class="seg views">
-      <button data-view="menu" class="${state.view === "menu" ? "on" : ""}">Menu</button>
-      <button data-view="tab" class="${state.view === "tab" ? "on" : ""}">Our bill${bill.subtotal ? " · " + kes(bill.balance) : ""}</button>
-    </div>
-    ${state.view === "menu" ? `<div class="chips cats">${data.menu.map((c) =>
-      `<button class="chip ${c.id === state.cat ? "on" : ""}" data-cat="${c.id}">${esc(c.name)}</button>`).join("")}</div>` : ""}
-  </div></header>
-  <main class="wrap">${state.view === "menu" ? menuHtml() : tabHtml()}</main>
-  <div class="dock"><div class="inner">
-    ${cartCount() ? `<button class="btn primary lg block cartbar" id="openCart">
-       <span>View order · ${cartCount()} item${cartCount() > 1 ? "s" : ""}</span><span class="num" style="margin-left:auto">${kes(cartTotal())}</span></button>` : ""}
-    <div class="two">
-      <button class="btn lg" id="callWaiter" ${waiterOpen ? "disabled" : ""}>${waiterOpen ? "Waiter called ✓" : "🔔 Call waiter"}</button>
-      <button class="btn lg ${bill.balance > 0 && !cartCount() ? "primary" : ""}" id="payBtn" ${bill.balance > 0 ? "" : "disabled"}>
-        ${bill.balance > 0 ? "Pay " + kes(bill.balance) : bill.subtotal ? "Fully paid ✓" : "Pay bill"}</button>
-    </div>
-  </div></div>`;
-  bind();
+  }).join("");
 }
 
-function menuHtml() {
-  return state.data.menu.map((c) => `
-    <h3 class="cat-title" id="cat-${c.id}">${esc(c.name)}</h3>
-    <div class="card">${c.items.map((i) => {
-      const q = state.cart.get(i.id) || 0;
-      const tags = (i.tags || "").split(",").filter(Boolean).map((t) =>
-        `<span class="tag">${{ veg: "VEG", spicy: "🌶 SPICY", chef: "★ CHEF'S PICK" }[t] || esc(t.toUpperCase())}</span>`).join("");
-      return `<div class="item ${i.available ? "" : "out"}">
-        <div class="info">
-          <div class="name">${esc(i.name)}${tags}</div>
-          ${i.description ? `<div class="desc">${esc(i.description)}</div>` : ""}
-          <div class="price num">${i.available ? kes(i.price) : "Sold out"}</div>
-        </div>
-        ${!i.available ? "" : q
-          ? `<div class="stepper"><button data-dec="${i.id}" aria-label="Remove one">−</button><span>${q}</span><button data-inc="${i.id}" aria-label="Add one">+</button></div>`
-          : `<button class="add" data-inc="${i.id}" aria-label="Add ${esc(i.name)}">+</button>`}
-      </div>`;
-    }).join("")}</div>`).join("");
+function photo(i, extra = "") {
+  return `<div class="photo ${extra}">${i.image_url ? `<img src="${esc(i.image_url)}" alt="" loading="lazy">` : icon("dish", 24, 1.6)}${ctrl(i)}</div>`;
+}
+function ctrl(i) {
+  if (!i.available) return "";
+  const q = state.cart.get(i.id) || 0;
+  return `<div class="ctrl">${q
+    ? `<div class="stepper-d"><button data-dec="${i.id}" aria-label="Remove one ${esc(i.name)}">${icon("minus", 16, 2.4)}</button><span>${q}</span><button data-inc="${i.id}" aria-label="Add one ${esc(i.name)}">${icon("plus", 16, 2.4)}</button></div>`
+    : `<button class="add" data-inc="${i.id}" aria-label="Add ${esc(i.name)}">${icon("plus", 18, 2.4)}</button>`}</div>`;
+}
+const TAGS = { veg: "Veg", spicy: "Spicy", chef: "Chef's pick" };
+function itemCard(i) {
+  const tags = (i.tags || "").split(",").filter(Boolean).map((t) => `<span class="tag ${t}">${esc(TAGS[t] || t)}</span>`).join("");
+  return `<article class="item ${i.available ? "" : "out"}">
+    <div class="item-b">
+      <div class="item-n">${esc(i.name)}</div>
+      ${i.description ? `<div class="item-d">${esc(i.description)}</div>` : ""}
+      ${i.available ? `<div class="item-p"><span>${kes(i.price)}</span>${tags}</div>` : `<div class="soldout">Sold out today</div>`}
+    </div>
+    ${photo(i)}
+  </article>`;
+}
+function pickCard(i) {
+  return `<article class="pick">${photo(i)}<div class="pick-b"><span>${esc(i.name)}</span><span class="p">${kes(i.price)}</span></div></article>`;
 }
 
-function tabHtml() {
+function menuView() {
+  const d = state.data, b = state.bill;
+  const picks = allItems().filter((i) => (i.tags || "").includes("chef") && i.available);
+  const q = state.q.trim().toLowerCase();
+  const results = q ? allItems().filter((i) => (i.name + " " + (i.description || "")).toLowerCase().includes(q)) : [];
+  return `<div class="shell pad-dock">
+  <header class="hdr">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">${esc(d.restaurant.name.trim()[0] || "R")}</div>
+      <div class="bt"><div class="rname">${esc(d.restaurant.name)}</div><div class="rsub">${esc(d.restaurant.branch || d.restaurant.tagline || "")}</div></div>
+      <div class="tchip">${esc(tableName())}</div>
+    </div>
+    ${state.searching ? `<div class="searchrow">
+      <label class="searchbox">${icon("search", 18)}<input id="q" type="search" placeholder="Search dishes and drinks" aria-label="Search dishes and drinks" value="${esc(state.q)}" autocomplete="off"></label>
+      <button class="linkbtn" data-act="search-close">Cancel</button></div>`
+    : `<div class="acts">
+      ${servicePill()}
+      <button class="hp" data-go="bill">${icon("receipt", 18)}Bill${b.subtotal ? `<span class="sub">${kes(b.balance)}</span>` : ""}</button>
+      <button class="iconbtn" data-act="search" aria-label="Search the menu">${icon("search", 18)}</button>
+    </div>`}
+  </header>
+  <div id="statusBox">${statusCards()}</div>
+  ${state.searching ? `<main class="sec" style="padding-top:14px">
+      ${q ? (results.length ? results.map(itemCard).join("") : `<div class="empty-card card"><div class="ei">${icon("search", 24)}</div>No dishes match “${esc(state.q)}”.</div>`)
+          : `<p class="fine" style="margin:20px 0">Type a dish or drink, e.g. “chicken” or “juice”.</p>`}
+    </main>`
+  : `<nav class="chips" aria-label="Menu sections">
+      ${picks.length ? `<button class="chip" data-cat="picks">Popular</button>` : ""}
+      ${d.menu.filter((c) => c.items.length).map((c) => `<button class="chip" data-cat="${c.id}">${esc(c.name)}</button>`).join("")}
+    </nav>
+    <main>
+      ${picks.length ? `<section class="sec" id="sec-picks" data-sec="picks"><h2>Chef's picks</h2><div class="picks">${picks.map(pickCard).join("")}</div></section>` : ""}
+      ${d.menu.filter((c) => c.items.length).map((c) => `<section class="sec" id="sec-${c.id}" data-sec="${c.id}"><h2>${esc(c.name)}</h2>${c.items.map(itemCard).join("")}</section>`).join("")}
+    </main>`}
+  ${dock()}
+  </div>`;
+}
+
+function dock() {
+  if (cartCount()) return `<div class="dock"><div class="dock-in"><button class="bar dark" data-act="cart">
+    <span class="badge">${cartCount()}</span><span>View order</span><span class="amt">${kes(cartTotal())}</span></button></div></div>`;
+  if (state.bill.balance > 0) return `<div class="dock"><div class="dock-in"><button class="bar blue" data-go="bill">
+    ${icon("phone", 22)}<span>Pay the bill</span><span class="amt">${kes(state.bill.balance)}</span></button></div></div>`;
+  return "";
+}
+
+// keep the category chip in sync with scrolling
+function spy() {
+  if (state.view !== "menu" || state.searching) return;
+  const secs = [...document.querySelectorAll("[data-sec]")];
+  if (!secs.length) return;
+  let cur = secs[0].dataset.sec;
+  for (const s of secs) if (s.getBoundingClientRect().top <= innerHeight * 0.35) cur = s.dataset.sec;
+  document.querySelectorAll(".chip").forEach((c) => {
+    const on = c.dataset.cat === String(cur);
+    if (on && !c.classList.contains("on")) c.scrollIntoView({ inline: "nearest", block: "nearest" });
+    c.classList.toggle("on", on);
+  });
+}
+
+// ----- bill -----
+function billView() {
   const b = state.bill;
-  if (!b.orders.length && !b.payments.length) {
-    return `<div class="empty"><p>Nothing ordered on this table yet.</p>
-      <button class="btn" data-view="menu">Browse the menu</button></div>`;
-  }
-  const billRequested = state.requests.some((r) => r.kind === "bill");
-  return `
-  <div class="card" style="padding:16px;margin-top:16px">
-    <div class="muted small">Balance due</div>
-    <div class="balance num">${kes(b.balance)}</div>
-    ${b.pending ? `<div class="banner warn small" style="margin-top:8px">A payment of ${kes(b.pending)} is in progress…</div>` : ""}
-    ${b.balance === 0 && b.subtotal > 0 ? `<div class="banner ok" style="margin-top:8px">Paid in full. Thank you!</div>` : ""}
-    <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
-      ${b.lines.map((l) => `<div class="bill-line"><span>${l.qty} × ${esc(l.name)}</span><span class="num">${kes(l.total)}</span></div>`).join("")}
-      <div class="total-row" style="border-top:1px solid var(--line);margin-top:6px"><span>Total</span><span class="num">${kes(b.subtotal)}</span></div>
-      ${b.paid ? `<div class="bill-line muted"><span>Paid so far</span><span class="num">− ${kes(b.paid)}</span></div>` : ""}
-    </div>
-    <div class="row" style="margin-top:12px">
-      <a class="btn sm ghost" href="/r/${state.receiptToken}" target="_blank">View receipt</a>
-      ${b.balance > 0 ? `<button class="btn sm ghost" id="askBill" ${billRequested ? "disabled" : ""} style="margin-left:auto">
-        ${billRequested ? "Bill requested ✓" : "Ask for bill at table"}</button>` : ""}
-    </div>
-  </div>
-
-  ${b.payments.filter((p) => p.status !== "failed").length ? `<h3 class="cat-title">Payments</h3><div class="card" style="padding:4px 14px">
-    ${b.payments.filter((p) => p.status !== "failed").map((p) => `<div class="bill-line">
-      <span>${esc(p.payer_label || (p.method === "mpesa" ? "M-Pesa" : p.method))}${p.phone_masked ? ` <span class="muted small">${p.phone_masked}</span>` : ""}</span>
-      <span><span class="pill ${p.status}">${p.status}</span> <span class="num">${kes(p.amount)}</span></span></div>`).join("")}
-  </div>` : ""}
-
-  <h3 class="cat-title">Orders</h3>
-  ${b.orders.map((o) => `<div class="card order-card">
-    <div class="row between"><strong>${o.guest_name ? esc(o.guest_name) : "Order #" + o.id}</strong>
-      <span class="row"><span class="muted small">${time(o.created_at)}</span><span class="pill ${o.status}">${o.status}</span></span></div>
-    <div class="small" style="margin-top:6px">${o.items.map((i) => `${i.qty} × ${esc(i.name)}`).join(" · ")}</div>
-    ${o.note ? `<div class="small muted" style="margin-top:4px">Note: ${esc(o.note)}</div>` : ""}
-  </div>`).join("")}`;
+  const empty = !b.orders.length && !b.payments.length;
+  const live = b.orders;
+  const payments = b.payments.filter((p) => p.status !== "failed");
+  const pct = b.subtotal ? Math.min(100, Math.round((b.paid / b.subtotal) * 100)) : 0;
+  return `<div class="shell ${b.balance > 0 || b.subtotal ? "pad-dock" : ""}">
+  <header class="top">
+    <button class="iconbtn plain" data-go="menu" aria-label="Back to menu">${icon("back", 22, 2.2)}</button>
+    <div class="tt"><h1>${esc(tableName())} bill</h1><div class="rsub">Shared by everyone at this table</div></div>
+    ${!empty ? `<a class="toplink" href="/r/${state.receiptToken}" target="_blank">Receipt</a>` : ""}
+  </header>
+  <main class="page">
+  ${empty ? `<div class="card empty-card"><div class="ei">${icon("receipt", 26)}</div>
+      <div><strong style="color:var(--ink)">Nothing ordered yet</strong><br>Orders from everyone at this table will show here.</div>
+      <button class="secondary" style="max-width:220px;height:48px" data-go="menu">Browse the menu</button></div>`
+  : `
+    <section class="card" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+        <div><div class="lbl-s">${b.balance ? "Left to pay" : "Paid in full"}</div><div class="big">${kes(b.balance)}</div></div>
+        <div class="rsub" style="padding-bottom:6px">of ${kes(b.subtotal)}</div>
+      </div>
+      <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Amount paid"><i style="width:${pct}%"></i></div>
+      ${payments.map((p) => `<div class="payrow ${p.status === "pending" ? "pending" : ""}">
+        <span class="tick">${p.status === "pending" ? icon("phone", 13, 2.4) : icon("check", 14, 3)}</span>
+        <span style="flex:1"><strong>${esc(p.payer_label && p.payer_label !== "Recorded by staff" ? p.payer_label : "Someone")}</strong> ${p.status === "pending" ? "is paying" : "paid"} ${kes(p.amount)}</span>
+        <span class="rsub" style="font-size:12px">${p.method === "mpesa" ? "M‑Pesa" : p.method === "card" ? "Card" : "Cash"}${p.paid_at ? " · " + time(p.paid_at) : ""}</span>
+      </div>`).join("")}
+    </section>
+    <section class="card" style="padding:6px 18px">
+      ${live.map((o, idx) => `${idx ? '<div class="sep"></div>' : ""}
+        <div class="grp-h"><span>${o.guest_name ? esc(o.guest_name) + "'s order" : "Order " + (idx + 1)}</span>
+          <span class="status-pill ${o.status}">${o.status === "new" ? "Sent" : o.status}</span></div>
+        ${o.items.map((i) => `<div class="line" ${o.status === "cancelled" ? 'style="opacity:.5;text-decoration:line-through"' : ""}><span><span class="q">${i.qty}×</span> ${esc(i.name)}</span><span>${(i.qty * i.unit_price).toLocaleString("en-KE")}</span></div>`).join("")}
+        ${o.note ? `<div class="rsub" style="padding:0 0 8px">Note: ${esc(o.note)}</div>` : ""}`).join("")}
+      <div class="sep"></div>
+      <div class="line" style="font-size:15px;font-weight:800;padding:12px 0"><span>Total</span><span>${kes(b.subtotal)}</span></div>
+    </section>
+    <p class="fine">Prices include VAT. Your receipt updates as each person pays.</p>`}
+  </main>
+  ${b.balance > 0 ? `<div class="dock"><div class="dock-in">
+      <button class="bar-2" data-pay="split">${icon("users", 20)}Split</button>
+      <button class="bar blue center" data-pay="all" ${available() < 1 ? "disabled" : ""}>Pay ${kes(available())}</button>
+    </div></div>`
+  : b.subtotal ? `<div class="dock"><div class="dock-in"><a class="bar green" href="/r/${state.receiptToken}">${icon("check", 20, 2.6)}Paid in full · View receipt</a></div></div>` : ""}
+  </div>`;
 }
 
-function bind() {
-  document.querySelectorAll("[data-view]").forEach((b) => (b.onclick = () => { state.view = b.dataset.view; render(); scrollTo(0, 0); }));
-  document.querySelectorAll("[data-cat]").forEach((b) => (b.onclick = () => {
-    state.cat = Number(b.dataset.cat);
-    document.getElementById("cat-" + b.dataset.cat)?.scrollIntoView({ behavior: "smooth" });
-    document.querySelectorAll("[data-cat]").forEach((x) => x.classList.toggle("on", x === b));
+// ----- pay -----
+function payAmount() {
+  const p = state.pay, b = state.bill, av = available();
+  if (p.mode === "split") return Math.min(av, Math.ceil(b.balance / p.people));
+  if (p.mode === "mine") return Math.min(av, myTotal());
+  return av;
+}
+function payTip() {
+  const p = state.pay;
+  return p.tip === -1 ? Math.max(0, Math.floor(Number(p.tipCustom) || 0)) : Math.round((payAmount() * p.tip) / 100);
+}
+function summaryHtml() {
+  const a = payAmount(), t = payTip();
+  return `<div class="sumline"><span>Towards the bill</span><span>${kes(a)}</span></div>
+    ${t ? `<div class="sumline"><span>Tip${state.pay.tip > 0 ? ` (${state.pay.tip}%)` : ""}</span><span>${kes(t)}</span></div>` : ""}
+    <div class="sumtotal"><span>You pay</span><span>${kes(a + t)}</span></div>`;
+}
+function payView() {
+  const b = state.bill, p = state.pay, mt = myTotal();
+  if (p.mode === "mine" && !mt) p.mode = "all";
+  if (p.phone === undefined) p.phone = (localStorage.getItem(LS.phone) || "").replace(/^\+?254/, "").replace(/^0/, "");
+  const savedPhone = p.phone;
+  const opt = (mode, title, amount, sub = "") => `<label class="opt ${p.mode === mode ? "on" : ""}">
+      <input type="radio" name="amount" value="${mode}" ${p.mode === mode ? "checked" : ""}>
+      <span class="ot">${title}${sub}</span><span class="oa">${kes(amount)}</span></label>`;
+  return `<div class="shell" style="padding-bottom:230px">
+  <header class="top">
+    <button class="iconbtn plain" data-go="bill" aria-label="Back to bill">${icon("back", 22, 2.2)}</button>
+    <div class="tt"><h1>Pay with M‑Pesa</h1><div class="rsub">${esc(tableName())} · ${kes(b.balance)} left to pay</div></div>
+  </header>
+  <main class="page" style="gap:18px;padding-top:16px">
+    ${b.pending ? `<div class="warnbox">${kes(b.pending)} is being paid by someone at your table right now.</div>` : ""}
+    <fieldset>
+      <legend>How much are you paying?</legend>
+      ${opt("all", "Everything left", available())}
+      ${opt("split", "Split equally", Math.min(available(), Math.ceil(b.balance / p.people)),
+        `<span class="os">between <span class="mini-step"><button type="button" data-people="-1" aria-label="Fewer people">−</button><b>${p.people}</b><button type="button" data-people="1" aria-label="More people">+</button></span> people</span>`)}
+      ${mt ? opt("mine", "Only my items", Math.min(available(), mt), `<span class="os">What you ordered from this phone</span>`) : ""}
+    </fieldset>
+    <fieldset>
+      <legend>Add a tip for the team</legend>
+      <div class="tips">
+        ${[0, 5, 10].map((t) => `<button type="button" class="tipb ${p.tip === t ? "on" : ""}" data-tip="${t}" aria-pressed="${p.tip === t}">${t ? t + "%" : "No tip"}</button>`).join("")}
+        <button type="button" class="tipb ${p.tip === -1 ? "on" : ""}" data-tip="-1" aria-pressed="${p.tip === -1}">Other</button>
+      </div>
+      ${p.tip === -1 ? `<div class="field-row" style="margin-top:4px"><span class="pre">KES</span><span class="vr"></span>
+        <input id="tipc" inputmode="numeric" placeholder="Tip amount" aria-label="Tip amount" value="${esc(p.tipCustom)}"></div>` : ""}
+    </fieldset>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label for="phone" class="h3" style="margin:0">M‑Pesa number</label>
+      <div class="field-row"><span class="pre">+254</span><span class="vr"></span>
+        <input id="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="712 345 678" value="${esc(savedPhone)}"></div>
+    </div>
+  </main>
+  <div class="summary"><div class="summary-in">
+    <div id="sumbox" style="display:flex;flex-direction:column;gap:6px">${summaryHtml()}</div>
+    <button class="primary" id="go" ${payAmount() < 1 ? "disabled" : ""}>${icon("phone", 20)}Send M‑Pesa prompt</button>
+    ${state.data.mockPayments ? `<p class="fine" style="margin:0">Demo mode: no real money moves.</p>` : ""}
+  </div></div>
+  </div>`;
+}
+
+async function submitPay() {
+  const btn = document.getElementById("go");
+  const raw = document.getElementById("phone").value.replace(/\D/g, "");
+  const phone = raw.length === 9 ? "0" + raw : raw;
+  const amount = payAmount(), tip = payTip();
+  btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:22px;height:22px;border-width:3px;margin:0"></span>Sending prompt…`;
+  try {
+    const r = await api(`/api/t/${code}/pay`, { method: "POST", body: { phone, amount, tip, payerLabel: localStorage.getItem(LS.name) || "" } });
+    localStorage.setItem(LS.phone, phone);
+    state.payment = { id: r.paymentId, total: amount + tip, phone, started: Date.now() };
+    setView("wait");
+    watchPayment();
+  } catch (e) {
+    btn.disabled = false; btn.innerHTML = `${icon("phone", 20)}Send M‑Pesa prompt`;
+    toast(e.message, 4500, errIcon);
+  }
+}
+
+// ----- waiting -----
+function prettyPhone(p) { return p.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3"); }
+function waitView() {
+  const p = state.payment;
+  return `<div class="full">
+    <div class="full-top"><button class="iconbtn soft" data-act="wait-close" aria-label="Close">${icon("x", 18, 2.2)}</button></div>
+    <div class="full-mid">
+      <div class="phone-ill" aria-hidden="true"><div class="prompt">
+        <div>Pay <strong>${kes(p.total)}</strong> to ${esc(state.data.restaurant.name.toUpperCase())}? Enter your PIN</div>
+        <div class="pins"><i></i><i></i><i></i><i></i></div><div class="okb"></div></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h1 class="h-big">Check your phone</h1>
+        <p class="lead">Enter your M‑Pesa PIN on <strong>${esc(prettyPhone(p.phone))}</strong> to pay <strong>${kes(p.total)}</strong>.</p>
+      </div>
+      <ol class="wsteps">
+        <li><span class="tick">${icon("check", 14, 3)}</span>Prompt sent to your phone</li>
+        <li style="font-weight:700"><span class="ring"></span>Waiting for your PIN<span id="wtimer" class="rsub" style="margin-left:auto">0:00</span></li>
+        <li class="todo"><span class="circle"></span>Payment confirmed and receipt ready</li>
+      </ol>
+      <p class="fine" style="margin:0">Keep this page open. It updates by itself.${state.data.mockPayments ? "<br>Demo mode: this completes in a few seconds." : ""}</p>
+    </div>
+    <div class="full-bot">
+      <button class="secondary" data-act="no-prompt">I didn't get the prompt</button>
+      <button class="ghost-danger" data-act="wait-close">Cancel payment</button>
+    </div>
+  </div>`;
+}
+
+let watchTimer, tickTimer;
+function stopWatching() { clearInterval(watchTimer); clearInterval(tickTimer); window.removeEventListener("tp-bill", onBillDuringWait); }
+function onBillDuringWait(e) { if (e.detail.reason.startsWith("payment_")) checkPayment(); }
+function watchPayment() {
+  stopWatching();
+  const tick = () => {
+    const el = document.getElementById("wtimer");
+    if (!el) return;
+    const s = Math.floor((Date.now() - state.payment.started) / 1000);
+    el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  };
+  tickTimer = setInterval(tick, 1000);
+  watchTimer = setInterval(checkPayment, 3000);
+  window.addEventListener("tp-bill", onBillDuringWait);
+}
+async function checkPayment() {
+  if (!state.payment) return;
+  try {
+    const p = await api(`/api/t/${code}/payments/${state.payment.id}`);
+    if (p.status === "pending") return;
+    stopWatching();
+    try { state.bill = (await api(`/api/t/${code}/bill`)).bill; } catch {}
+    state.result = p;
+    if (state.view === "wait") setView("result");
+    else toast(p.status === "paid" ? `Payment of ${kes(p.amount + p.tip)} received` : "Your M‑Pesa payment didn't go through", 4000, p.status === "paid" ? okIcon : errIcon);
+  } catch {}
+}
+
+// ----- result -----
+function resultView() {
+  const r = state.result;
+  if (r.status === "paid") {
+    return `<div class="full">
+      <div class="full-mid" style="padding-top:70px">
+        <div class="big-tick">${icon("check", 38, 2.6)}</div>
+        <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h-big">Payment received</h1>
+          <p class="lead">${state.bill.balance > 0 ? `Thanks! <strong>${kes(state.bill.balance)}</strong> is still left on the table's bill.` : "The bill is fully paid. Thank you!"}</p></div>
+        <div class="refbox">
+          <div class="line"><span class="rsub">Amount</span><strong>${kes(r.amount + r.tip)}</strong></div>
+          ${r.tip ? `<div class="line"><span class="rsub">Includes tip</span><span>${kes(r.tip)}</span></div>` : ""}
+          <div class="line"><span class="rsub">M‑Pesa reference</span><strong style="font-family:var(--mono)">${esc(r.provider_ref || "—")}</strong></div>
+        </div>
+      </div>
+      <div class="full-bot">
+        <a class="primary" href="/r/${state.receiptToken}">${icon("receipt", 20)}View receipt</a>
+        <button class="secondary" style="margin-top:6px" data-go="menu">Back to menu</button>
+      </div></div>`;
+  }
+  return `<div class="full">
+    <div class="full-mid" style="padding-top:70px">
+      <div class="big-alert">${icon("alert", 36)}</div>
+      <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h-big">Payment not completed</h1>
+        <p class="lead">${esc(r.failure_reason || "The request was cancelled or timed out.")}<br>No money has left your account.</p></div>
+    </div>
+    <div class="full-bot">
+      <button class="primary" data-go="pay">Try again</button>
+      <button class="secondary" style="margin-top:6px" data-go="bill">Back to the bill</button>
+    </div></div>`;
+}
+
+function closedView() {
+  return `<div class="shell"><div class="closed">
+    <div class="big-tick">${icon("check", 38, 2.6)}</div>
+    <h1 class="h-big">Thanks for visiting ${esc(state.data.restaurant.name)}</h1>
+    <p class="lead">This table's bill has been closed.</p>
+    <a class="primary" style="max-width:280px" href="/r/${state.receiptToken}">${icon("receipt", 20)}View receipt</a>
+  </div></div>`;
+}
+
+// ---------- events ----------
+function bind(app) {
+  app.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => {
+    const to = b.dataset.go;
+    if (to === "pay") state.pay.mode = "all";
+    stopWatching();
+    setView(to);
   }));
-  document.querySelectorAll("[data-inc]").forEach((b) => (b.onclick = () => { const id = Number(b.dataset.inc); state.cart.set(id, (state.cart.get(id) || 0) + 1); render(); }));
-  document.querySelectorAll("[data-dec]").forEach((b) => (b.onclick = () => {
-    const id = Number(b.dataset.dec); const q = (state.cart.get(id) || 0) - 1;
+  app.querySelectorAll("[data-pay]").forEach((b) => (b.onclick = () => { state.pay.mode = b.dataset.pay; setView("pay"); }));
+  app.querySelectorAll("[data-inc]").forEach((b) => (b.onclick = () => { const id = +b.dataset.inc; state.cart.set(id, (state.cart.get(id) || 0) + 1); render(); }));
+  app.querySelectorAll("[data-dec]").forEach((b) => (b.onclick = () => {
+    const id = +b.dataset.dec, q = (state.cart.get(id) || 0) - 1;
     q > 0 ? state.cart.set(id, q) : state.cart.delete(id); render();
   }));
-  document.getElementById("openCart")?.addEventListener("click", openCart);
-  document.getElementById("callWaiter")?.addEventListener("click", () => request("waiter"));
-  document.getElementById("askBill")?.addEventListener("click", () => request("bill"));
-  document.getElementById("payBtn")?.addEventListener("click", openPay);
-}
+  app.querySelectorAll("[data-cat]").forEach((b) => (b.onclick = () => {
+    const el = document.getElementById("sec-" + b.dataset.cat);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 62, behavior: "smooth" });
+  }));
+  const act = (name, fn) => app.querySelectorAll(`[data-act="${name}"]`).forEach((b) => (b.onclick = fn));
+  act("service", openService);
+  act("cart", openCart);
+  act("search", () => { state.searching = true; render(); document.getElementById("q")?.focus(); });
+  act("search-close", () => { state.searching = false; state.q = ""; render(); });
+  act("wait-close", () => {
+    stopWatching(); setView("bill");
+    toast("If you already entered your PIN, the payment will still show on the bill.", 4500);
+  });
+  act("no-prompt", () => openNoPrompt());
+  const q = app.querySelector("#q");
+  if (q) q.oninput = () => {
+    state.q = q.value; const pos = q.selectionStart;
+    render(); const nq = document.getElementById("q"); nq.focus(); nq.setSelectionRange(pos, pos);
+  };
+  bindStatus(app);
 
-async function request(kind) {
-  try {
-    await api(`/api/t/${code}/requests`, { method: "POST", body: { kind } });
-    state.requests = await api(`/api/t/${code}/requests`);
-    toast(kind === "waiter" ? "Waiter called. Someone will be with you shortly." : "Bill requested.");
+  // pay page
+  app.querySelectorAll('input[name="amount"]').forEach((r) => (r.onchange = () => { state.pay.mode = r.value; render(); }));
+  app.querySelectorAll("[data-people]").forEach((b) => (b.onclick = (e) => {
+    e.preventDefault();
+    state.pay.mode = "split";
+    state.pay.people = Math.max(2, Math.min(20, state.pay.people + Number(b.dataset.people)));
     render();
-  } catch (e) { toast(e.message); }
+  }));
+  app.querySelectorAll("[data-tip]").forEach((b) => (b.onclick = () => {
+    state.pay.tip = Number(b.dataset.tip); render();
+    if (state.pay.tip === -1) document.getElementById("tipc")?.focus();
+  }));
+  const ph = app.querySelector("#phone");
+  if (ph) ph.oninput = () => { state.pay.phone = ph.value; };
+  const tipc = app.querySelector("#tipc");
+  if (tipc) tipc.oninput = () => { state.pay.tipCustom = tipc.value.replace(/\D/g, ""); document.getElementById("sumbox").innerHTML = summaryHtml(); };
+  app.querySelector("#go")?.addEventListener("click", submitPay);
 }
 
-// ---------- cart ----------
-function openCart() {
-  const lines = [...state.cart].map(([id, q]) => ({ item: itemById(id), q }));
+function bindStatus(root) {
+  root.querySelectorAll("[data-cancel]").forEach((b) => (b.onclick = async () => {
+    b.disabled = true;
+    try { await api(`/api/t/${code}/requests/${b.dataset.cancel}/cancel`, { method: "POST" }); toast("Request cancelled", 2500); }
+    catch (e) { toast(e.message, 3500, errIcon); }
+    refreshRequests();
+  }));
+}
+
+// ---------- sheets ----------
+function openService() {
+  const sent = (k) => state.requests.some((r) => r.kind === k);
+  const tile = (kind, ic, title, sub, primary) => `<button class="tile ${sent(kind) ? "sent" : primary ? "primary-t" : ""}" data-kind="${kind}">
+      <span class="ti">${icon(sent(kind) ? "check" : ic, 20, sent(kind) ? 2.6 : 2)}</span>
+      <span><b>${title}</b><small>${sent(kind) ? "Sent · tap to remind" : sub}</small></span></button>`;
   const sh = sheet(`
-    <div class="row between"><h2>Your order</h2><span class="muted">Table ${esc(state.data.table.label)}</span></div>
-    <div style="margin-top:10px">${lines.map(({ item, q }) => `
-      <div class="row between" style="padding:10px 0;border-bottom:1px solid var(--line)">
-        <div><div style="font-weight:700">${esc(item.name)}</div><div class="muted small num">${kes(item.price)} each</div></div>
-        <div class="stepper"><button data-cdec="${item.id}">−</button><span>${q}</span><button data-cinc="${item.id}">+</button></div>
+    <div class="sheet-h"><div><h2>How can we help?</h2><span class="rsub" style="font-size:14px">${esc(tableName())} · the team is alerted at the bar right away</span></div>
+      <button class="iconbtn soft" data-close aria-label="Close">${icon("x", 18, 2.2)}</button></div>
+    <div class="tiles">
+      ${tile("waiter", "bell", "Call a waiter", "Someone comes to your table", true)}
+      ${tile("bill", "receipt", "Bring the bill", "Paper bill or card machine")}
+      ${tile("water", "water", "Water or ice", "Bottled, tap or a jug of ice")}
+      ${tile("other", "message", "Something else", "Write a short note")}
+    </div>
+    ${state.bill.balance > 0 ? `<div class="sep" style="margin:18px 0 14px"></div>
+    <button class="rowlink" data-paynow><span class="ri">${icon("phone", 20)}</span>
+      <span style="flex:1"><b>Skip the wait, pay on your phone</b><small>M‑Pesa · split with your table</small></span>${icon("chevron", 20)}</button>` : ""}`);
+  sh.querySelector("[data-close]").onclick = closeSheet;
+  sh.querySelector("[data-paynow]")?.addEventListener("click", () => { closeSheet(); setView("bill"); });
+  sh.querySelectorAll("[data-kind]").forEach((b) => (b.onclick = () => b.dataset.kind === "other" ? openNote() : sendRequest(b.dataset.kind)));
+}
+
+function openNote() {
+  const sh = sheet(`
+    <div class="sheet-h"><div><h2>Message the team</h2><span class="rsub" style="font-size:14px">${esc(tableName())} · keep it short</span></div>
+      <button class="iconbtn soft" data-close aria-label="Close">${icon("x", 18, 2.2)}</button></div>
+    <label class="lbl" for="note" style="margin-top:0">What do you need?</label>
+    <textarea class="field" id="note" maxlength="140" placeholder="e.g. Extra napkins, please. Or: could we move to a bigger table?"></textarea>
+    <button class="primary" id="sendNote" style="margin-top:14px">Send to the team</button>`);
+  sh.querySelector("[data-close]").onclick = closeSheet;
+  const ta = sh.querySelector("#note"); ta.focus();
+  sh.querySelector("#sendNote").onclick = () => {
+    if (!ta.value.trim()) { ta.focus(); return toast("Write a short note first", 2500); }
+    sendRequest("other", ta.value.trim());
+  };
+}
+
+async function sendRequest(kind, note) {
+  try {
+    const r = await api(`/api/t/${code}/requests`, { method: "POST", body: { kind, note } });
+    closeSheet();
+    toast(r.alreadyRequested ? "Already sent. We've reminded the team." : { waiter: "Waiter called", bill: "Bill requested", water: "Water requested", other: "Message sent" }[kind] + ". The team has been alerted.", 3200, okIcon);
+    if (state.view !== "menu") setView("menu");
+    refreshRequests();
+  } catch (e) { toast(e.message, 3500, errIcon); }
+}
+
+function openNoPrompt() {
+  const sh = sheet(`
+    <div class="sheet-h"><div><h2>No prompt yet?</h2></div><button class="iconbtn soft" data-close aria-label="Close">${icon("x", 18, 2.2)}</button></div>
+    <ul style="margin:0 0 18px;padding-left:20px;display:flex;flex-direction:column;gap:8px;line-height:1.45">
+      <li>Check the number is right: <strong>${esc(prettyPhone(state.payment.phone))}</strong></li>
+      <li>Make sure your phone is unlocked and has signal.</li>
+      <li>Prompts expire after about a minute. After that you can send a new one.</li>
+    </ul>
+    <button class="secondary" data-close>Keep waiting</button>`);
+  sh.querySelectorAll("[data-close]").forEach((b) => (b.onclick = closeSheet));
+}
+
+function openCart() {
+  const lines = [...state.cart].map(([id, q]) => ({ item: itemById(id), q })).filter((l) => l.item);
+  const sh = sheet(`
+    <div class="sheet-h"><div><h2>Your order</h2><span class="rsub" style="font-size:14px">${esc(tableName())} · goes straight to the kitchen</span></div>
+      <button class="iconbtn soft" data-close aria-label="Close">${icon("x", 18, 2.2)}</button></div>
+    <div>${lines.map(({ item, q }) => `<div class="cart-line">
+        <div><div class="n">${esc(item.name)}</div><div class="rsub">${kes(item.price * q)}</div></div>
+        <div class="stepper-l"><button data-cdec="${item.id}" aria-label="Remove one ${esc(item.name)}">${icon("minus", 18, 2.4)}</button><span>${q}</span><button data-cinc="${item.id}" aria-label="Add one ${esc(item.name)}">${icon("plus", 18, 2.4)}</button></div>
       </div>`).join("")}</div>
-    <label class="lbl" for="gname">Your name (so we know whose order it is)</label>
-    <input class="field" id="gname" maxlength="40" placeholder="Optional" value="${esc(localStorage.getItem(LS.name) || "")}" />
+    <label class="lbl" for="gname">Your name</label>
+    <input class="field" id="gname" maxlength="40" placeholder="So the table knows whose order it is" value="${esc(localStorage.getItem(LS.name) || "")}" />
     <label class="lbl" for="gnote">Notes for the kitchen</label>
-    <input class="field" id="gnote" maxlength="200" placeholder="e.g. no onions, meat well done" />
-    <button class="btn primary lg block" id="placeOrder" style="margin-top:16px">Send order · ${kes(cartTotal())}</button>
-    <p class="muted small" style="text-align:center;margin:10px 0 0">You'll pay at the end. Your order goes straight to the kitchen.</p>`);
+    <input class="field" id="gnote" maxlength="200" placeholder="e.g. No onions, meat well done" />
+    <button class="primary" id="placeOrder" style="margin-top:18px"><span>Send order</span><span style="opacity:.75">·</span><span>${kes(cartTotal())}</span></button>
+    <p class="fine" style="margin:10px 0 0">You pay at the end, from your phone or with the waiter.</p>`);
+  sh.querySelector("[data-close]").onclick = closeSheet;
   sh.querySelectorAll("[data-cinc],[data-cdec]").forEach((b) => (b.onclick = () => {
     const id = Number(b.dataset.cinc || b.dataset.cdec);
     const q = (state.cart.get(id) || 0) + (b.dataset.cinc ? 1 : -1);
@@ -265,128 +815,21 @@ function openCart() {
     const guestName = sh.querySelector("#gname").value.trim();
     if (guestName) localStorage.setItem(LS.name, guestName);
     try {
-      await api(`/api/t/${code}/orders`, { method: "POST", body: {
+      const r = await api(`/api/t/${code}/orders`, { method: "POST", body: {
         guestName, note: sh.querySelector("#gnote").value, items: [...state.cart].map(([id, qty]) => ({ id, qty })),
       }});
+      addMine(r.orderId);
       state.cart.clear();
       closeSheet();
-      state.view = "tab";
+      try { state.bill = (await api(`/api/t/${code}/bill`)).bill; } catch {}
       render();
-      toast("Order sent to the kitchen ✓");
+      toast("Order sent to the kitchen", 3000, okIcon);
     } catch (e) {
       btn.disabled = false; btn.textContent = "Try again";
-      toast(e.message);
+      toast(e.message, 4000, errIcon);
       if (e.status === 409) { const d = await api(`/api/t/${code}`); state.data.menu = d.menu; render(); }
     }
   };
-}
-
-// ---------- pay ----------
-function openPay() {
-  const b = state.bill;
-  const available = Math.max(0, b.balance - b.pending);
-  if (!available) return toast(b.pending ? "A payment is already in progress" : "Nothing to pay");
-  const p = { mode: "full", people: 2, custom: "", tipPct: 0, tipCustom: "" };
-
-  const amount = () => {
-    if (p.mode === "full") return available;
-    if (p.mode === "split") return Math.min(available, Math.ceil(b.balance / p.people));
-    return Math.min(available, Math.max(0, Math.floor(Number(p.custom) || 0)));
-  };
-  const tip = () => (p.tipPct === -1 ? Math.max(0, Math.floor(Number(p.tipCustom) || 0)) : Math.round((amount() * p.tipPct) / 100));
-
-  const draw = () => {
-    const sh = sheet(`
-      <div class="row between"><h2>Pay with M-Pesa</h2><span class="muted num">Due ${kes(b.balance)}</span></div>
-      <div class="seg" style="margin-top:14px">
-        <button data-mode="full" class="${p.mode === "full" ? "on" : ""}">Whole bill</button>
-        <button data-mode="split" class="${p.mode === "split" ? "on" : ""}">Split equally</button>
-        <button data-mode="custom" class="${p.mode === "custom" ? "on" : ""}">My share</button>
-      </div>
-      ${p.mode === "split" ? `<div class="row between" style="margin-top:14px"><span>Splitting between</span>
-        <div class="stepper"><button id="pDec">−</button><span>${p.people}</span><button id="pInc">+</button></div></div>` : ""}
-      ${p.mode === "custom" ? `<label class="lbl" for="custom">Amount you're paying</label>
-        <input class="field num" id="custom" inputmode="numeric" placeholder="e.g. 1500" value="${esc(p.custom)}" />` : ""}
-      <label class="lbl">Add a tip for the team?</label>
-      <div class="tipchips">${[0, 5, 10].map((t) => `<button class="chip ${p.tipPct === t ? "on" : ""}" data-tip="${t}">${t ? t + "%" : "No tip"}</button>`).join("")}
-        <button class="chip ${p.tipPct === -1 ? "on" : ""}" data-tip="-1">Other</button></div>
-      ${p.tipPct === -1 ? `<input class="field num" id="tipc" inputmode="numeric" placeholder="Tip amount" value="${esc(p.tipCustom)}" style="margin-top:8px"/>` : ""}
-      <label class="lbl" for="phone">M-Pesa number</label>
-      <input class="field num" id="phone" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" value="${esc(localStorage.getItem(LS.phone) || "")}" />
-      <div class="paybox">
-        <div class="bill-line"><span>Towards bill</span><span class="num">${kes(amount())}</span></div>
-        ${tip() ? `<div class="bill-line"><span>Tip</span><span class="num">${kes(tip())}</span></div>` : ""}
-        <div class="total-row" style="border-top:1px solid var(--line)"><span>You pay</span><span class="num">${kes(amount() + tip())}</span></div>
-      </div>
-      <button class="btn primary lg block" id="go" style="margin-top:14px" ${amount() < 1 ? "disabled" : ""}>Send M-Pesa prompt</button>
-      <p class="muted small" style="text-align:center;margin:10px 0 0">You'll get a prompt on your phone. Enter your M-Pesa PIN to finish.
-        ${state.data.mockPayments ? "<br><strong>Demo mode:</strong> no real money moves." : ""}</p>`);
-    sh.querySelectorAll("[data-mode]").forEach((x) => (x.onclick = () => { p.mode = x.dataset.mode; draw(); }));
-    sh.querySelectorAll("[data-tip]").forEach((x) => (x.onclick = () => { p.tipPct = Number(x.dataset.tip); draw(); }));
-    sh.querySelector("#pDec")?.addEventListener("click", () => { p.people = Math.max(2, p.people - 1); draw(); });
-    sh.querySelector("#pInc")?.addEventListener("click", () => { p.people = Math.min(20, p.people + 1); draw(); });
-    const live = (sel, key) => sh.querySelector(sel)?.addEventListener("input", (e) => {
-      p[key] = e.target.value.replace(/\D/g, "");
-      // update totals without losing focus
-      const box = sh.querySelector(".paybox");
-      box.innerHTML = `<div class="bill-line"><span>Towards bill</span><span class="num">${kes(amount())}</span></div>
-        ${tip() ? `<div class="bill-line"><span>Tip</span><span class="num">${kes(tip())}</span></div>` : ""}
-        <div class="total-row" style="border-top:1px solid var(--line)"><span>You pay</span><span class="num">${kes(amount() + tip())}</span></div>`;
-      sh.querySelector("#go").disabled = amount() < 1;
-    });
-    live("#custom", "custom");
-    live("#tipc", "tipCustom");
-    sh.querySelector("#go").onclick = () => submit(sh);
-  };
-
-  const submit = async (sh) => {
-    const phone = sh.querySelector("#phone").value.trim();
-    const btn = sh.querySelector("#go");
-    btn.disabled = true; btn.textContent = "Sending prompt…";
-    try {
-      const r = await api(`/api/t/${code}/pay`, { method: "POST", body: {
-        phone, amount: amount(), tip: tip(), payerLabel: localStorage.getItem(LS.name) || "",
-      }});
-      localStorage.setItem(LS.phone, phone);
-      waiting(r.paymentId, amount() + tip());
-    } catch (e) {
-      btn.disabled = false; btn.textContent = "Send M-Pesa prompt";
-      toast(e.message, 4000);
-    }
-  };
-  draw();
-}
-
-function waiting(paymentId, total) {
-  sheet(`<div style="text-align:center;padding:16px 0 8px">
-    <div class="spinner"></div>
-    <h2 style="margin-top:18px">Check your phone</h2>
-    <p class="muted">Enter your M-Pesa PIN to pay <strong class="num">${kes(total)}</strong>.<br>This screen updates on its own.</p>
-  </div>`);
-  let done = false;
-  const finish = (p) => {
-    if (done) return; done = true;
-    clearInterval(poll);
-    window.removeEventListener("tp-bill", onBill);
-    if (p.status === "paid") {
-      sheet(`<div style="text-align:center;padding:10px 0">
-        <div class="bigtick">✓</div><h2>Payment received</h2>
-        <p class="muted">${kes(p.amount + p.tip)} · M-Pesa ref <strong>${esc(p.provider_ref || "")}</strong></p>
-        <p>${state.bill.balance > 0 ? `Remaining on the bill: <strong class="num">${kes(state.bill.balance)}</strong>` : "The bill is fully paid. Thank you!"}</p>
-        <a class="btn primary lg block" href="/r/${state.receiptToken}">View receipt</a>
-        <button class="btn ghost block" style="margin-top:8px" onclick="TP.closeSheet()">Back to menu</button></div>`);
-    } else {
-      sheet(`<div style="text-align:center;padding:10px 0"><h2>Payment not completed</h2>
-        <p class="muted">${esc(p.failure_reason || "The request was cancelled or timed out.")}</p>
-        <button class="btn primary lg block" id="retry">Try again</button></div>`).querySelector("#retry").onclick = openPay;
-    }
-  };
-  const check = async () => {
-    try { const p = await api(`/api/t/${code}/payments/${paymentId}`); if (p.status !== "pending") finish(p); } catch {}
-  };
-  const onBill = (e) => { if (e.detail.reason.startsWith("payment_")) check(); };
-  window.addEventListener("tp-bill", onBill);
-  const poll = setInterval(check, 3000);
 }
 
 load();

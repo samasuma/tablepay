@@ -35,11 +35,11 @@ export function seedDemo() {
       Grill: [
         ["Nyama Choma (500g)", "Charcoal-grilled goat, served with kachumbari", 1400, "chef"],
         ["Half Chicken", "Herb marinated, flame grilled", 1100],
-        ["Beef Short Ribs", "Slow cooked, smoky BBQ glaze", 1800],
+        ["Beef Short Ribs", "Slow cooked, smoky BBQ glaze", 1800, "chef"],
         ["Tilapia (whole)", "Fried or grilled, with ugali or chips", 1300],
       ],
       Mains: [
-        ["Mtaa Burger", "Beef patty, cheddar, caramelised onion, fries", 1050],
+        ["Mtaa Burger", "Beef patty, cheddar, caramelised onion, fries", 1050, "chef"],
         ["Chicken Curry", "Coastal coconut curry with pilau or chapati", 1150, "spicy"],
         ["Veggie Wrap", "Grilled vegetables, avocado, halloumi", 900, "veg"],
         ["Beef Pilau", "Spiced rice with tender beef and kachumbari", 950],

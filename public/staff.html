@@ -26,8 +26,12 @@
   .tile .tl { font-size: 20px; font-weight: 800; }
   .tile.flash { animation: flash 1.2s ease 2; }
   @keyframes flash { 50% { background: var(--accent-soft); } }
-  .req-waiter { border-left: 5px solid var(--accent); }
-  .req-bill { border-left: 5px solid var(--ok); }
+  .rq { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; font-weight: 700; }
+  .rq-ic { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; color: #fff; background: var(--accent); }
+  .rq-ic.bill { background: var(--ok); }
+  .rq-ic.water { background: #0e7490; }
+  .rq-ic.other { background: #6d28d9; }
+  .rq-note { background: var(--field); border-radius: 10px; padding: 8px 10px; font-size: 14px; margin: -2px 0 10px; }
   .req.acknowledged { opacity: .65; }
   .tab-tile { cursor: pointer; }
   .tab-tile:hover { border-color: var(--accent); }
@@ -99,12 +103,14 @@ function start() {
     const a = JSON.parse(ev.data);
     beep();
     flashKey = a.table;
-    toast({ waiter: `🔔 ${a.table} is calling a waiter`, bill: `🧾 ${a.table} wants the bill`, order: `🍽 New order from ${a.table}` }[a.kind], 5000);
+    const AL = { waiter: ["bell", `${a.table} is calling a waiter`], bill: ["receipt", `${a.table} wants the bill`], water: ["water", `${a.table} would like water`],
+      other: ["message", `${a.table}: ${a.note || "sent a message"}`], order: ["dish", `New order from ${a.table}`] }[a.kind] || ["bell", a.table];
+    toast(AL[1], 5000, TP.icon(AL[0], 18));
     if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
   });
   es.addEventListener("change", (ev) => {
     const c = JSON.parse(ev.data);
-    if (c.reason === "payment_paid") toast(`💸 Payment received on ${c.table}`);
+    if (c.reason === "payment_paid") toast(`Payment received on ${c.table}`, 3500, TP.icon("check", 18, 2.6));
     refresh();
   });
   es.onerror = () => setLive(false);
@@ -134,8 +140,10 @@ function render() {
       ${b.requests.length ? b.requests.map((r) => `
         <div class="card tile req req-${r.kind} ${r.status} ${flashKey === r.table_label ? "flash" : ""}">
           <div class="row between"><span class="tl">${esc(r.table_label)}</span><span class="muted small">${ago(r.created_at)}</span></div>
-          <div style="margin:2px 0 10px;font-weight:600">${r.kind === "waiter" ? "🔔 Calling a waiter" : "🧾 Wants the bill"}
+          <div class="rq"><span class="rq-ic ${r.kind}">${TP.icon({ waiter: "bell", bill: "receipt", water: "water", other: "message" }[r.kind] || "bell", 18)}</span>
+            ${{ waiter: "Calling a waiter", bill: "Wants the bill", water: "Would like water", other: "Message" }[r.kind] || r.kind}
             ${r.status === "acknowledged" ? '<span class="pill preparing">On the way</span>' : ""}</div>
+          ${r.note ? `<div class="rq-note">“${esc(r.note)}”</div>` : ""}
           <div class="row">
             ${r.status === "open" ? `<button class="btn sm primary" data-ack="${r.id}">I'm going</button>` : ""}
             <button class="btn sm" data-done="${r.id}">Done</button>

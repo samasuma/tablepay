@@ -117,7 +117,11 @@ function menuView(admin) {
   ${menu.map((c) => `<div class="cat"><h3>${esc(c.name)}</h3><div class="card">
     ${c.items.length ? c.items.map((i) => `<div class="irow">
       <div>${admin ? `<input class="field" data-f="name" data-id="${i.id}" value="${esc(i.name)}" />` : `<strong>${esc(i.name)}</strong>`}
-        ${i.description ? `<div class="desc">${esc(i.description)}</div>` : ""}</div>
+        ${i.description ? `<div class="desc">${esc(i.description)}</div>` : ""}
+        ${admin ? `<div class="row" style="margin-top:6px;gap:8px">
+          <input class="field small" data-f="image_url" data-id="${i.id}" placeholder="Photo link (https://…)" value="${esc(i.image_url || "")}" style="min-height:34px;padding:6px 10px;flex:1" />
+          <label class="toggle small"><input type="checkbox" data-chef="${i.id}" data-tags="${esc(i.tags || "")}" ${(i.tags || "").includes("chef") ? "checked" : ""}/> Chef's pick</label>
+        </div>` : ""}</div>
       ${admin ? `<input class="field num" data-f="price" data-id="${i.id}" inputmode="numeric" value="${i.price}" />` : `<span class="num">${kes(i.price)}</span>`}
       <label class="toggle"><input type="checkbox" data-avail="${i.id}" ${i.available ? "checked" : ""}/> ${i.available ? "Available" : "Sold out"}</label>
       <div class="acts">${admin ? `<button class="btn sm ghost danger" data-del="${i.id}">Remove</button>` : ""}</div>
@@ -157,6 +161,12 @@ function bind(app) {
   }));
   app.querySelectorAll("[data-avail]").forEach((cb) => (cb.onchange = async () => {
     try { await api(`/api/admin/items/${cb.dataset.avail}`, { method: "PATCH", body: { available: cb.checked } }); load(); }
+    catch (e) { toast(e.message); load(); }
+  }));
+  app.querySelectorAll("[data-chef]").forEach((cb) => (cb.onchange = async () => {
+    const tags = cb.dataset.tags.split(",").filter((t) => t && t !== "chef");
+    if (cb.checked) tags.push("chef");
+    try { await api(`/api/admin/items/${cb.dataset.chef}`, { method: "PATCH", body: { tags: tags.join(",") } }); toast("Saved"); load(); }
     catch (e) { toast(e.message); load(); }
   }));
   app.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {

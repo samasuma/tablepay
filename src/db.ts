@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 CREATE TABLE IF NOT EXISTS service_requests (
   id INTEGER PRIMARY KEY,
   session_id INTEGER NOT NULL REFERENCES table_sessions(id),
-  kind TEXT NOT NULL,                  -- waiter | bill
+  kind TEXT NOT NULL,                  -- waiter | bill | water | other
   status TEXT NOT NULL DEFAULT 'open', -- open | acknowledged | done
   created_at TEXT DEFAULT (datetime('now')),
   acknowledged_at TEXT,
@@ -108,6 +108,14 @@ CREATE INDEX IF NOT EXISTS idx_sessions_table ON table_sessions(table_id, status
 CREATE INDEX IF NOT EXISTS idx_orders_session ON orders(session_id);
 CREATE INDEX IF NOT EXISTS idx_payments_checkout ON payments(checkout_request_id);
 `);
+
+// Lightweight migrations for databases created by earlier versions
+function addColumn(table: string, column: string, definition: string) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (!cols.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+addColumn("menu_items", "image_url", "TEXT");
+addColumn("service_requests", "note", "TEXT");
 
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {
