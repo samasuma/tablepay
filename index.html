@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TablePay</title>
+<meta name="description" content="TablePay modernizes the restaurant experience: guests browse the menu, call a waiter and pay by M-Pesa from their phone, your team works from a live board, and you get data on how your restaurant runs. Built in Nairobi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: full-width bands; a navy hero, three pillar bands (guests, team, owners), a navy growth band, FAQ */
+:root {
+  --navy: #1B2E4B;
+  --navy-2: #24395A;
+  --blue: #1E5EB8;
+  --blue-soft: #E3EDFB;
+  --green: #12805C;
+  --ground: #F3F5F9;
+  --surface: #FFFFFF;
+  --ink: #17233A;
+  --muted: #4F5B6E;
+  --line: #D8DEE8;
+  --bar: #C9D9F2;
+  --on-navy: #FFFFFF;
+  --on-navy-muted: #C7D3E6;
+  --sky: #9CC2F5;
+  --display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+  --body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
+    --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; --bar: #2C4569;
+    --on-navy: #FFFFFF; --on-navy-muted: #B9C7DC; --sky: #9CC2F5; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
+  --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; --bar: #2C4569;
+  --on-navy: #FFFFFF; --on-navy-muted: #B9C7DC; --sky: #9CC2F5; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; } body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--blue); }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; text-wrap: balance; margin: 0; letter-spacing: -0.015em; }
+h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 800; }
+h3 { font-size: 20px; font-weight: 600; }
+p { margin: 0; text-wrap: pretty; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.lead { font-size: 18px; color: var(--muted); max-width: 660px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; }
+.btn-primary { background: #FFFFFF; color: #1B2E4B; }
+.btn-ghost { color: var(--on-navy); border: 1.5px solid rgba(255,255,255,0.45); }
+
+/* hero */
+.hero { background: var(--navy); color: var(--on-navy); }
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 20px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 24px; color: var(--on-navy); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.nav-links a { color: var(--on-navy-muted); text-decoration: none; font-weight: 600; font-size: 15px; }
+.nav-links a:hover { color: var(--on-navy); }
+.nav-links .btn { min-height: 40px; padding: 0 18px; font-size: 15px; color: #1B2E4B; }
+.hero-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: center; padding-block: 40px 64px; }
+.hero h1 { font-size: clamp(40px, 6vw, 66px); font-weight: 800; }
+.hero h1 em { font-style: normal; color: var(--sky); }
+.hero .lead { color: var(--on-navy-muted); margin-top: 20px; }
+.hero .eyebrow { color: var(--sky); margin-bottom: 16px; display: block; }
+.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.hero-photo { border-radius: 20px; overflow: hidden; aspect-ratio: 16 / 10; box-shadow: 0 24px 60px rgba(0,0,0,0.35); }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 60%; }
+.proof { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+.proof span { font-size: 14px; font-weight: 600; color: var(--on-navy); border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 14px; }
+
+/* pillars overview */
+section.band { padding-block: 72px; }
+.section-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px; }
+.pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pillar { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: var(--ink); }
+.pillar:hover { border-color: var(--blue); }
+.pillar .who { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.pillar p { color: var(--muted); font-size: 15px; }
+.pillar svg { color: var(--blue); }
+
+/* feature rows */
+.feature { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.feature.flip .feature-media { order: -1; }
+.feature-alt { background: var(--surface); border-block: 1px solid var(--line); }
+.checks { list-style: none; padding: 0; margin: 22px 0 0; display: flex; flex-direction: column; gap: 14px; }
+.checks li { display: flex; gap: 12px; align-items: flex-start; }
+.checks svg { flex: none; color: var(--blue); margin-top: 3px; }
+.checks b { display: block; }
+.checks span span { color: var(--muted); font-size: 15px; }
+.phones { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+.phone { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-frame { width: 210px; max-width: 100%; background: #10141B; padding: 7px; border-radius: 30px; }
+.phone-frame img { width: 100%; aspect-ratio: 390 / 844; object-fit: cover; object-position: top; border-radius: 24px; }
+.phone figcaption { font-size: 14px; font-weight: 600; color: var(--muted); }
+.tablet { margin: 0; background: #10141B; padding: 10px; border-radius: 22px; }
+.tablet img { border-radius: 13px; width: 100%; aspect-ratio: 1180 / 820; object-fit: cover; }
+
+/* example report */
+.report { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.report-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.report-head b { font-family: var(--display); font-size: 20px; }
+.tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+.report h4 { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.hbars { display: flex; flex-direction: column; gap: 8px; }
+.hbar { display: grid; grid-template-columns: 76px minmax(0, 1fr) 36px; align-items: center; gap: 10px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.hbar .track { height: 12px; border-radius: 6px; background: var(--ground); overflow: hidden; }
+.hbar .fill { height: 100%; background: var(--blue); border-radius: 6px; }
+.hbar .v { text-align: right; color: var(--muted); }
+.vbars { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 6px; align-items: end; height: 120px; }
+.vbars i { display: block; background: var(--bar); border-radius: 5px 5px 0 0; }
+.vbars i.peak { background: var(--blue); }
+.vlabels { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 6px; font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin-top: 26px; }
+.insights div { border-top: 1px solid var(--line); padding-top: 12px; }
+.insights b { display: block; font-size: 15px; }
+.insights span { font-size: 14px; color: var(--muted); }
+
+/* brand */
+.compare { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.compare figure { margin: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; font-size: 14px; font-weight: 600; color: var(--muted); }
+.compare img { width: 190px; aspect-ratio: 105 / 148; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+.styles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.styles div { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--ground); }
+.styles b { display: block; font-size: 15px; }
+.styles span { font-size: 13px; color: var(--muted); }
+
+/* growth path */
+.grow { background: var(--navy); color: var(--on-navy); }
+.grow .eyebrow { color: var(--sky); }
+.grow .lead { color: var(--on-navy-muted); }
+.path { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; list-style: none; padding: 0; margin: 0; }
+.path li { background: var(--navy-2); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.path .stage { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky); }
+.path p { color: var(--on-navy-muted); font-size: 15px; }
+.cta-box { margin-top: 28px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--blue-soft); color: var(--ink); border-radius: 18px; padding: 22px 26px; }
+.cta-box b { font-family: var(--display); font-size: 22px; }
+.cta-box p { color: var(--muted); margin-top: 4px; }
+.cta-box .btn { background: #1E5EB8; color: #FFFFFF; }
+
+.faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; }
+.faq details { border-bottom: 1px solid var(--line); padding-block: 16px; }
+.faq summary { cursor: pointer; font-weight: 700; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--blue); font-size: 22px; line-height: 1; }
+.faq details[open] summary::after { content: "\2013"; }
+.faq details p { color: var(--muted); margin-top: 10px; }
+
+footer { background: var(--navy); color: var(--on-navy-muted); }
+.foot { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; padding-block: 40px; }
+.foot .brand { font-size: 22px; }
+.contact { display: flex; gap: 28px; flex-wrap: wrap; font-size: 15px; }
+.contact span b { color: var(--on-navy); display: block; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+@media (max-width: 900px) {
+  .hero-body, .feature { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .feature.flip .feature-media { order: 0; }
+  .pillars, .path { grid-template-columns: minmax(0, 1fr); }
+  .faq { grid-template-columns: minmax(0, 1fr); }
+  .hero-body { padding-block: 16px 48px; }
+}
+@media (max-width: 560px) {
+  .styles, .insights { grid-template-columns: minmax(0, 1fr); }
+  .nav-links a:not(.btn) { display: none; }
+  section.band { padding-block: 56px; }
+  .phone-frame { width: 160px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-photo { animation: rise 700ms ease-out both; }
+  @keyframes rise { from { transform: translateY(14px); } to { transform: none; } }
+}
+</style>
+</head>
+<body>
+
+
+<header class="hero">
+  <div class="wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="#top" id="top">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="9" height="16" rx="2"/><path d="M8.5 15.5h2"/><path d="M17 8.5a4 4 0 0 1 0 5"/><path d="M19.5 6.5a7 7 0 0 1 0 9"/></svg>
+        TablePay
+      </a>
+      <div class="nav-links">
+        <a href="#guests">For guests</a>
+        <a href="#team">For your team</a>
+        <a href="#owners">For owners</a>
+        <a class="btn btn-primary" href="https://wa.me/254700000000?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo" target="_blank" rel="noopener">Book a demo</a>
+      </div>
+    </nav>
+    <div class="hero-body">
+      <div>
+        <span class="eyebrow">Restaurant technology, built in Nairobi</span>
+        <h1>Modernize your restaurant, <em>one table at a time</em></h1>
+        <p class="lead">TablePay turns every table into a digital service point. Guests browse your menu, call a waiter and pay by M-Pesa from their own phone. Your team works from one live screen. And you finally see how your restaurant really runs.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="https://wa.me/254700000000?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo" target="_blank" rel="noopener">Book a free demo</a>
+          <a class="btn btn-ghost" href="#what">See what it does</a>
+        </div>
+        <div class="proof">
+          <span>No app for guests</span>
+          <span>Works with your POS</span>
+          <span>Live within 24 hours</span>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <img src="assets/mockup.jpg" alt="Three TablePay table talkers on a restaurant table: a tent, a tower and a panel on a wooden base" width="1233" height="765">
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="band" id="what">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">What TablePay does</span>
+        <h2>One tap connects your guests, your team and your numbers</h2>
+        <p class="lead">A small talker on each table, with a QR code and a hidden tap chip, links every guest's phone to your restaurant.</p>
+      </div>
+      <div class="pillars">
+        <a class="pillar" href="#guests">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>
+          <span class="who">For guests</span>
+          <h3>Convenience at the table</h3>
+          <p>Menu, waiter, bill and payment, all from their own phone, without waiting to catch someone's eye.</p>
+        </a>
+        <a class="pillar" href="#team">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          <span class="who">For your team</span>
+          <h3>A digital floor</h3>
+          <p>Calls, bill requests and payments arrive on one live board, and the menu updates itself everywhere.</p>
+        </a>
+        <a class="pillar" href="#owners">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6"/></svg>
+          <span class="who">For owners</span>
+          <h3>Data you never had</h3>
+          <p>Busiest tables, peak hours, popular dishes and how fast your team responds, in a report you can act on.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band feature-alt" id="guests">
+    <div class="wrap feature">
+      <div>
+        <span class="eyebrow">For guests</span>
+        <h2 style="margin-top: 12px;">Everything they need, from their own phone</h2>
+        <ul class="checks">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Tap or scan to open the menu</b><span>Photos, prices and labels like vegetarian or spicy. No app to download.</span></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Call a waiter or ask for the bill</b><span>One tap alerts your team, and the guest sees when someone is on the way.</span></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Pay by M-Pesa at the table</b><span>Straight to your own till, with the option to add a tip.</span></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Split the bill without the maths</b><span>Each friend pays their share from their own phone.</span></span></li>
+        </ul>
+      </div>
+      <div class="feature-media phones">
+        <figure class="phone"><div class="phone-frame"><img src="assets/service.jpg" alt="Guest screen with options to call a waiter, bring the bill, ask for water or send a note" loading="lazy" width="585" height="1266"></div><figcaption>Call a waiter</figcaption></figure>
+        <figure class="phone"><div class="phone-frame"><img src="assets/pay.jpg" alt="Guest splitting the bill equally between two people and paying by M-Pesa" loading="lazy" width="585" height="1153"></div><figcaption>Split and pay by M-Pesa</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="team">
+    <div class="wrap feature flip">
+      <div>
+        <span class="eyebrow">For your team</span>
+        <h2 style="margin-top: 12px;">Run the floor from one live screen</h2>
+        <ul class="checks">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Every request in one place</b><span>Waiter calls, bill requests and open bills appear live, with a sound, on a tablet or phone.</span></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Update the menu in seconds</b><span>Change a price, add a dish or mark it sold out, and every table sees it straight away. No reprinting.</span></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><b>Works alongside your POS</b><span>Your waiters keep ringing up orders the way they do now. Nothing to replace.</span></span></li>
+        </ul>
+      </div>
+      <div class="feature-media">
+        <figure class="tablet"><img src="assets/staff.jpg" alt="Staff board showing a waiter call from Table 1, a bill request from Table 2, a kitchen order and an open bill" loading="lazy" width="1180" height="820"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band feature-alt" id="owners">
+    <div class="wrap feature">
+      <div>
+        <span class="eyebrow">For owners</span>
+        <h2 style="margin-top: 12px;">See how your restaurant really runs</h2>
+        <p class="lead" style="margin-top: 16px;">Every tap is tied to a table and a time, so you get a monthly report built from your own guests, not guesswork.</p>
+        <div class="insights">
+          <div><b>Busiest tables and areas</b><span>Where guests sit, and which tables sit empty</span></div>
+          <div><b>Peak hours and days</b><span>When to add staff, when to run an offer</span></div>
+          <div><b>What guests look at</b><span>The dishes and searches that draw attention</span></div>
+          <div><b>Missed demand</b><span>How often guests wanted a dish that was sold out</span></div>
+          <div><b>Team response time</b><span>How long calls and bill requests wait</span></div>
+          <div><b>Payments and tips</b><span>M-Pesa payments and tips, by day and by table</span></div>
+        </div>
+      </div>
+      <div class="feature-media">
+        <div class="report" role="img" aria-label="Example monthly report: Table 4 is the busiest table and 8 pm is the peak hour">
+          <div class="report-head"><b>Monthly report</b><span class="tag">Example</span></div>
+          <div>
+            <h4>Busiest tables (visits this month)</h4>
+            <div class="hbars">
+              <div class="hbar"><span>Table 4</span><span class="track"><span class="fill" style="width: 100%; display: block;"></span></span><span class="v">86</span></div>
+              <div class="hbar"><span>Table 1</span><span class="track"><span class="fill" style="width: 86%; display: block;"></span></span><span class="v">74</span></div>
+              <div class="hbar"><span>Terrace 2</span><span class="track"><span class="fill" style="width: 71%; display: block;"></span></span><span class="v">61</span></div>
+              <div class="hbar"><span>Table 6</span><span class="track"><span class="fill" style="width: 56%; display: block;"></span></span><span class="v">48</span></div>
+              <div class="hbar"><span>Bar 1</span><span class="track"><span class="fill" style="width: 38%; display: block;"></span></span><span class="v">33</span></div>
+            </div>
+          </div>
+          <div>
+            <h4>Peak hours (share of visits)</h4>
+            <div class="vbars" aria-hidden="true">
+              <i style="height: 20%"></i><i style="height: 55%"></i><i style="height: 40%"></i><i style="height: 18%"></i><i style="height: 15%"></i><i style="height: 25%"></i><i style="height: 48%"></i><i style="height: 82%"></i><i class="peak" style="height: 100%"></i><i style="height: 71%"></i><i style="height: 30%"></i>
+            </div>
+            <div class="vlabels" aria-hidden="true"><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="brand">
+    <div class="wrap feature flip">
+      <div>
+        <span class="eyebrow">Your brand</span>
+        <h2 style="margin-top: 12px;">It looks like your restaurant, not ours</h2>
+        <p class="lead" style="margin-top: 16px;">Your name, logo and colours on every talker and on every screen your guests see. We type up your menu from a photo, so you don't have to.</p>
+        <div class="styles">
+          <div><b>Tent</b><span>Folded A6 stand with a closed base</span></div>
+          <div><b>Tower</b><span>Three sides, readable from anywhere</span></div>
+          <div><b>Wooden base</b><span>A6 panel in a round wood base</span></div>
+        </div>
+      </div>
+      <div class="feature-media compare">
+        <figure><img src="assets/talker-default.jpg" alt="A TablePay talker in standard navy" loading="lazy" width="827" height="1165"><figcaption>Standard</figcaption></figure>
+        <figure><img src="assets/talker-brand.jpg" alt="The same talker in an example restaurant's colours" loading="lazy" width="827" height="1165"><figcaption>In your colours</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band grow">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Start small, grow with us</span>
+        <h2>Go digital at your own pace</h2>
+        <p class="lead">Every restaurant is different, so we shape the package and pricing around your tables and the features you use.</p>
+      </div>
+      <ol class="path">
+        <li><span class="stage">Start</span><h3>Digital menu</h3><p>Tap-and-scan menus on every table, updated from your phone, with your first table report.</p></li>
+        <li><span class="stage">Add</span><h3>Table service</h3><p>Waiter calls, bill requests, and M-Pesa payment and bill splitting at the table.</p></li>
+        <li><span class="stage">Grow</span><h3>Full restaurant system</h3><p>Ordering from the table, sales and stock reports, and a POS built around how you serve.</p></li>
+      </ol>
+      <div class="cta-box">
+        <div>
+          <b>Try it free on 5 tables for 14 days</b>
+          <p>We set it up at no cost. Send us a photo of your menu and you can be live tomorrow.</p>
+        </div>
+        <a class="btn" href="https://wa.me/254700000000?text=Hi%20Samuel%2C%20I%27d%20like%20a%20free%20TablePay%20trial" target="_blank" rel="noopener">Book a free trial</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Questions</span>
+        <h2>What owners ask us</h2>
+      </div>
+      <div class="faq">
+        <details><summary>Do guests need to download an app?</summary><p>No. Everything opens in the phone's normal browser from the tap chip or the QR code.</p></details>
+        <details><summary>Does it replace our POS?</summary><p>No. TablePay works alongside your POS. Your team keeps ringing up orders as they do now.</p></details>
+        <details><summary>Who receives the payments?</summary><p>You do. M-Pesa payments go straight to your own till or paybill. We never hold your money.</p></details>
+        <details><summary>What if a guest's phone has no NFC?</summary><p>Every talker also has a QR code, which any smartphone camera can scan.</p></details>
+        <details><summary>How much does it cost?</summary><p>It depends on your number of tables and the features you choose. Every restaurant starts with a free 14-day trial, and we'll give you a clear quote before you commit.</p></details>
+        <details><summary>How fast can we start?</summary><p>Send a photo of your menu and your tables can be live within 24 hours.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="9" height="16" rx="2"/><path d="M8.5 15.5h2"/><path d="M17 8.5a4 4 0 0 1 0 5"/><path d="M19.5 6.5a7 7 0 0 1 0 9"/></svg>
+      TablePay
+    </span>
+    <div class="contact">
+      <span><b>Samuel</b>Nairobi, Kenya</span>
+      <span><b>Phone and WhatsApp</b>+254 700 000 000</span>
+      <span><b>Email</b>hello@yourdomain.co.ke</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
