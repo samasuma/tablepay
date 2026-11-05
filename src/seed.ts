@@ -19,6 +19,11 @@ export function seedDemo() {
       "0700 000 000", "hello@example.co.ke", "1234", "9999"
     );
     const rid = Number(r.lastInsertRowid);
+    // The demo shows the full flow: guest ordering, POS hand-off, bill confirmation and every way to pay.
+    run("UPDATE restaurants SET settings=? WHERE id=?", JSON.stringify({
+      ordering: "guest", waiterCalls: true, payAtTable: true, posHandoff: true, posReminderMin: 3, confirmBill: true,
+      payMethods: { mpesa: true, pesapal: true, card: true, cash: true },
+    }), rid);
 
     const tables = ["T1", "T2", "T3", "T4", "T5", "T6", "Bar 1", "Bar 2", "Terrace 1", "Terrace 2"];
     for (const label of tables) {

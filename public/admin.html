@@ -44,8 +44,8 @@
 <script src="/common.js"></script>
 <script>
 const { kes, esc, api, toast } = TP;
-let view = location.hash === "#tables" ? "tables" : "menu";
-let menu = [], tables = null;
+let view = ["#tables", "#settings"].includes(location.hash) ? location.hash.slice(1) : "menu";
+let menu = [], tables = null, cfg = null;
 const isAdmin = () => localStorage.getItem("tp_role") === "admin";
 const restaurant = () => JSON.parse(localStorage.getItem("tp_restaurant") || "{}");
 
@@ -72,6 +72,7 @@ async function load() {
   try {
     menu = await api("/api/admin/menu");
     tables = await api("/api/admin/tables");
+    cfg = await api("/api/admin/settings");
     render();
   } catch (e) {
     if (e.status === 401) return loginView();
@@ -88,12 +89,13 @@ function render() {
       <div class="seg" style="flex:1">
         <button data-v="menu" class="${view === "menu" ? "on" : ""}">Menu</button>
         <button data-v="tables" class="${view === "tables" ? "on" : ""}">Tables & QR codes</button>
+        <button data-v="settings" class="${view === "settings" ? "on" : ""}">Settings</button>
       </div>
       <a class="btn sm" href="/staff">← Live board</a>
     </div>
     ${!admin ? `<div class="banner warn no-print" style="background:var(--warn-soft);color:var(--warn);padding:10px 14px;border-radius:12px">
       Signed in as staff: you can mark items sold out. Sign in with the manager PIN to edit prices or tables.</div>` : ""}
-    ${view === "menu" ? menuView(admin) : tablesView(admin)}
+    ${view === "menu" ? menuView(admin) : view === "tables" ? tablesView(admin) : settingsView(admin)}
   </div>`;
   app.querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => { view = b.dataset.v; location.hash = view; render(); }));
   bind(app);
@@ -153,7 +155,73 @@ function tablesView(admin) {
     </div></div>`).join("")}</div>`;
 }
 
+function settingsView(admin) {
+  const s = cfg.settings, pp = cfg.pesapal;
+  const dis = admin ? "" : "disabled";
+  const sw = (key, title, sub) => `<label class="toggle" style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);white-space:normal">
+      <input type="checkbox" data-set="${key}" ${s[key] ? "checked" : ""} ${dis} style="margin-top:2px"/>
+      <span><strong>${title}</strong><br><span class="muted small" style="font-weight:500">${sub}</span></span></label>`;
+  const pm = (m, title, sub) => `<label class="toggle" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;white-space:normal">
+      <input type="checkbox" data-pm="${m}" ${s.payMethods[m] ? "checked" : ""} ${dis} style="margin-top:2px"/>
+      <span><strong>${title}</strong><br><span class="muted small" style="font-weight:500">${sub}</span></span></label>`;
+  return `
+  ${!admin ? "" : `<p class="muted small" style="margin-top:14px">Changes save straight away and apply to every table.</p>`}
+  <div class="card" style="padding:16px;margin-top:14px">
+    <strong>Ordering</strong>
+    <div class="seg" style="margin-top:10px;max-width:520px">
+      ${[["guest", "Guests order from their phone"], ["staff", "Waiters only"], ["off", "Off (menu or pay only)"]].map(([v, t]) =>
+        `<button data-ordering="${v}" class="${s.ordering === v ? "on" : ""}" ${dis}>${t}</button>`).join("")}
+    </div>
+    ${sw("posHandoff", "Waiters enter orders in our POS", "Each order waits on the board until a waiter taps “Entered in POS”. Guests see “Accepted”.")}
+    <label class="toggle" style="display:flex;align-items:center;gap:10px;padding:10px 0;white-space:normal">
+      <span class="muted small" style="font-weight:600">Flag orders not entered after</span>
+      <input class="field num" data-remind type="number" min="1" max="30" value="${s.posReminderMin}" ${dis} style="width:80px;min-height:38px"/>
+      <span class="muted small" style="font-weight:600">minutes</span></label>
+    ${sw("waiterCalls", "Call a waiter", "Guests can call a waiter, ask for the bill or water, or send a short note.")}
+  </div>
+  <div class="card" style="padding:16px;margin-top:14px">
+    <strong>Paying at the table</strong>
+    ${sw("payAtTable", "Guests can split and pay from their phone", "Turn off to use TablePay for the menu and orders only.")}
+    ${sw("confirmBill", "Confirm the bill before guests pay", "When a table taps “Ready to pay”, a waiter checks the total against the POS (adding service charge or discounts) and confirms it.")}
+    <div style="margin-top:10px"><strong class="small">Ways to pay</strong>
+      ${pm("mpesa", "M-Pesa prompt", "An STK push to the guest's phone, paid to your till or paybill.")}
+      ${pm("pesapal", "Pesapal: card, M-Pesa or Airtel", "Guests pay on Pesapal's secure page. Money settles to your Pesapal account.")}
+      ${pm("card", "Card machine at the table", "The guest picks their share and a waiter brings your card machine (any bank, Pesapal included), then taps “Paid” on the board.")}
+      ${pm("cash", "Cash", "The guest picks their share and hands cash to the waiter, who taps “Paid”.")}
+    </div>
+  </div>
+  <div class="card" style="padding:16px;margin-top:14px">
+    <strong>Pesapal account</strong>
+    <p class="muted small">${pp.ownKeys ? `Connected with key ${esc(pp.keyHint)} (${pp.environment}).` : pp.live ? `Using the shared ${pp.environment} keys.` : "Not connected: Pesapal payments run in demo mode."}
+      Get your consumer key and secret from your Pesapal merchant dashboard.</p>
+    ${admin ? `<div class="row" style="gap:8px;flex-wrap:wrap">
+      <input class="field" id="ppKey" placeholder="Consumer key" style="flex:1;min-width:180px;min-height:40px" autocomplete="off"/>
+      <input class="field" id="ppSecret" placeholder="Consumer secret" type="password" style="flex:1;min-width:180px;min-height:40px" autocomplete="off"/>
+      <button class="btn sm" id="ppSave">Save keys</button>
+      ${pp.ownKeys ? `<button class="btn sm ghost danger" id="ppClear">Disconnect</button>` : ""}</div>` : ""}
+  </div>`;
+}
+
+async function saveSettings(patch, extra = {}) {
+  try {
+    const r = await api("/api/admin/settings", { method: "PATCH", body: { settings: patch, ...extra } });
+    cfg = await api("/api/admin/settings");
+    toast("Saved"); render();
+    return r;
+  } catch (e) { toast(e.message); cfg = await api("/api/admin/settings"); render(); }
+}
+
 function bind(app) {
+  app.querySelectorAll("[data-set]").forEach((cb) => (cb.onchange = () => saveSettings({ [cb.dataset.set]: cb.checked })));
+  app.querySelectorAll("[data-pm]").forEach((cb) => (cb.onchange = () => saveSettings({ payMethods: { [cb.dataset.pm]: cb.checked } })));
+  app.querySelectorAll("[data-ordering]").forEach((b) => (b.onclick = () => saveSettings({ ordering: b.dataset.ordering })));
+  app.querySelector("[data-remind]")?.addEventListener("change", (e) => saveSettings({ posReminderMin: Number(e.target.value) }));
+  app.querySelector("#ppSave")?.addEventListener("click", () => {
+    const key = app.querySelector("#ppKey").value.trim(), secret = app.querySelector("#ppSecret").value.trim();
+    if (!key || !secret) return toast("Enter both the consumer key and secret");
+    saveSettings({}, { pesapal: { key, secret } });
+  });
+  app.querySelector("#ppClear")?.addEventListener("click", () => saveSettings({}, { pesapal: { clear: true } }));
   // inline edits save on change
   app.querySelectorAll("[data-f]").forEach((inp) => (inp.onchange = async () => {
     try { await api(`/api/admin/items/${inp.dataset.id}`, { method: "PATCH", body: { [inp.dataset.f]: inp.value } }); toast("Saved"); }

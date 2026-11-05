@@ -46,6 +46,23 @@ To try it on a real phone, expose your laptop with a tunnel (e.g. `cloudflared t
 - Add/remove tables, print QR table cards (2 per page), regenerate a table's code if one is misused
 - The same table link can be written to an NFC sticker (e.g. NTAG213 with the "NFC Tools" app → Write → URL)
 
+## Works alongside the venue's POS
+
+Each venue chooses how TablePay fits its service in **Admin → Settings**:
+
+| Setting | What it does |
+|---|---|
+| Ordering: guests / waiters only / off | Who can add orders in TablePay. "Off" gives a menu-only or pay-only venue. |
+| Waiters enter orders in our POS | Orders wait on the board until a waiter taps **Entered in POS**; guests see "Accepted". Orders not entered after N minutes turn red. |
+| Call a waiter | Waiter, bill, water and note buttons for guests. |
+| Guests can split and pay | Shared bill, split equally, by item or any amount, with tips. |
+| Confirm the bill before guests pay | Guests tap **Ready to pay**; a waiter checks the total against the POS, can add lines (service charge, discount, an item rung up at the bar) and taps **Matches the POS · confirm**. Any later order re-opens the check. |
+| Ways to pay | M-Pesa prompt, Pesapal (card, M-Pesa, Airtel), card machine at the table, cash. |
+
+**Card machines:** a guest picks their share and "Card machine"; the board shows "Bring the card machine · KES 825". The waiter runs it on any bank's machine (Pesapal's Sabi POS included) and taps **Paid**, optionally with the slip reference. The split stays exact. A direct link to the terminal needs the terminal provider's developer access and can replace that tap later.
+
+**Pesapal:** each guest's share is one Pesapal order (`SubmitOrderRequest`). Pesapal notifies `/api/pesapal/ipn` and sends the guest back to `/t/<code>?pesapal=<payment id>`; the app always confirms with `GetTransactionStatus`. Save each venue's consumer key and secret in Admin → Settings so money settles to the venue's own Pesapal account. Set `PESAPAL_ENV=live` for production.
+
 ## Going live with M-Pesa (Daraja)
 
 1. Create an app on developer.safaricom.co.ke, enable **M-Pesa Express (STK Push)**.
@@ -73,7 +90,7 @@ public/         table.html, staff.html, admin.html, receipt.html, PWA manifest +
 - **KRA eTIMS invoices** — needed before you can replace a restaurant's POS. Until then, position this as working *alongside* their POS.
 - **Multi-restaurant onboarding / billing** — the schema is multi-tenant already; add a signup flow and per-restaurant PINs.
 - **Kitchen printer / KDS routing** (food vs bar tickets), modifiers (e.g. "well done"), item photos
-- **Card payments** (Paystack/Pesapal) alongside M-Pesa
+- **Direct card-terminal link** (amount pushed to the machine, result sent back) once the terminal provider gives developer access
 - **Per-waiter sections and accounts** instead of a shared PIN; tip split per waiter
 - **Postgres** when you have several busy venues (SQLite is fine for pilots)
 - **Abuse guard:** someone ordering from home with a photographed QR. Today: staff cancel the order and press "New code". Later: require the first order on a table to be confirmed by staff.

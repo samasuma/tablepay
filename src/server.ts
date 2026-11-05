@@ -5,6 +5,8 @@ import QRCode from "qrcode";
 import { all, get, run, tx } from "./db.js";
 import { publish, subscribe } from "./events.js";
 import { MOCK, normalisePhone, parseCallback, stkPush, stkQuery, type StkCallbackOutcome } from "./mpesa.js";
+import { credsFor, submitOrder, transactionStatus, type PesapalOutcome } from "./pesapal.js";
+import { mergeSettings, readSettings, type PayMethod, type VenueSettings } from "./settings.js";
 import { seedDemo, token } from "./seed.js";
 
 const PORT = Number(process.env.PORT || 3000);
@@ -19,9 +21,15 @@ app.use(express.json({ limit: "100kb" }));
 app.use(express.static(join(process.cwd(), "public"), { extensions: ["html"] }));
 
 // ---------- helpers ----------
-type Restaurant = { id: number; slug: string; name: string; branch: string; tagline: string; phone: string; email: string; staff_pin: string; admin_pin: string };
+type Restaurant = {
+  id: number; slug: string; name: string; branch: string; tagline: string; phone: string; email: string;
+  staff_pin: string; admin_pin: string; settings: string | null; pesapal_key: string | null; pesapal_secret: string | null;
+};
 type Table = { id: number; restaurant_id: number; label: string; code: string; active: number };
-type Session = { id: number; table_id: number; status: string; receipt_token: string; opened_at: string; closed_at: string | null };
+type Session = {
+  id: number; table_id: number; status: string; receipt_token: string; opened_at: string; closed_at: string | null;
+  pay_requested_at: string | null; bill_confirmed_at: string | null; confirmed_total: number | null;
+};
 
 class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -34,8 +42,12 @@ const wrap = (fn: (req: Request, res: Response) => any) => (req: Request, res: R
 };
 
 function publicRestaurant(r: Restaurant) {
-  const { staff_pin, admin_pin, ...rest } = r;
-  return rest;
+  const { staff_pin, admin_pin, pesapal_key, pesapal_secret, settings, ...rest } = r;
+  return { ...rest, settings: readSettings(settings) };
+}
+
+function settingsOf(rid: number): VenueSettings {
+  return readSettings(get<{ settings: string | null }>("SELECT settings FROM restaurants WHERE id = ?", rid)?.settings);
 }
 
 function tableByCode(codeParam: string | string[]): { table: Table; restaurant: Restaurant } {
@@ -74,7 +86,16 @@ function billFor(sessionId: number) {
      GROUP BY oi.name, oi.unit_price ORDER BY MIN(oi.id)`,
     sessionId
   ).map((l) => ({ ...l, total: l.unit_price * l.qty }));
-  const subtotal = lines.reduce((s, l) => s + l.total, 0);
+  // Lines staff add when checking against the POS: service charge, discounts, items rung up only in the POS
+  const adjustments = all<{ id: number; label: string; amount: number }>(
+    "SELECT id, label, amount FROM bill_adjustments WHERE session_id = ? ORDER BY id",
+    sessionId
+  );
+  const itemsTotal = lines.reduce((s, l) => s + l.total, 0);
+  const subtotal = Math.max(0, itemsTotal + adjustments.reduce((s, a) => s + a.amount, 0));
+  const ses = get<Session>("SELECT * FROM table_sessions WHERE id = ?", sessionId);
+  // A confirmation only holds while the total is unchanged: a new order or adjustment re-opens it.
+  const confirmed = !!ses?.bill_confirmed_at && ses.confirmed_total === subtotal && subtotal > 0;
   const payments = all(
     `SELECT id, method, amount, tip, payer_label, status, provider_ref, failure_reason, created_at, paid_at,
             CASE WHEN phone IS NULL THEN NULL ELSE substr(phone,1,6) || '***' || substr(phone,-3) END AS phone_masked
@@ -85,13 +106,16 @@ function billFor(sessionId: number) {
   const tips = payments.filter((p: any) => p.status === "paid").reduce((s: number, p: any) => s + p.tip, 0);
   const pending = payments.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + p.amount, 0);
   const orders = all(
-    `SELECT o.id, o.guest_name, o.note, o.status, o.created_at, o.placed_by,
+    `SELECT o.id, o.guest_name, o.note, o.status, o.created_at, o.placed_by, o.pos_entered_at,
             json_group_array(json_object('name', oi.name, 'qty', oi.qty, 'unit_price', oi.unit_price)) AS items
      FROM orders o JOIN order_items oi ON oi.order_id = o.id
      WHERE o.session_id = ? GROUP BY o.id ORDER BY o.id`,
     sessionId
   ).map((o: any) => ({ ...o, items: JSON.parse(o.items) }));
-  return { lines, subtotal, paid, tips, pending, balance: Math.max(0, subtotal - paid), payments, orders };
+  return {
+    lines, adjustments, itemsTotal, subtotal, paid, tips, pending, balance: Math.max(0, subtotal - paid), payments, orders,
+    confirmed, confirmedAt: confirmed ? ses!.bill_confirmed_at : null, payRequestedAt: ses?.pay_requested_at ?? null,
+  };
 }
 
 function sessionSummary(sessionId: number) {
@@ -161,6 +185,38 @@ function applyOutcome(o: StkCallbackOutcome) {
   notifySession(p.session_id, o.success ? "payment_paid" : "payment_failed");
 }
 
+function applyPesapal(o: PesapalOutcome) {
+  const p = get<{ id: number; session_id: number; status: string }>(
+    "SELECT id, session_id, status FROM payments WHERE provider_tracking_id = ? AND method = 'pesapal'",
+    o.trackingId
+  );
+  if (!p || p.status !== "pending") return;
+  if (o.success) {
+    run("UPDATE payments SET status='paid', provider_ref=?, paid_at=datetime('now') WHERE id=?",
+      [o.reference, o.method].filter(Boolean).join(" · ") || null, p.id);
+  } else {
+    run("UPDATE payments SET status='failed', failure_reason=? WHERE id=?", o.reason ?? "Failed", p.id);
+  }
+  notifySession(p.session_id, o.success ? "payment_paid" : "payment_failed");
+}
+
+/** Pesapal keys for the venue a payment belongs to. */
+function pesapalCredsForPayment(paymentId: number) {
+  const r = get<Restaurant>(
+    `SELECT r.* FROM payments p JOIN table_sessions ts ON ts.id = p.session_id
+     JOIN dining_tables dt ON dt.id = ts.table_id JOIN restaurants r ON r.id = dt.restaurant_id WHERE p.id = ?`,
+    paymentId
+  );
+  return r ? credsFor(r) : null;
+}
+
+async function checkPesapal(paymentId: number, trackingId: string) {
+  const creds = pesapalCredsForPayment(paymentId);
+  if (!creds) return; // mock payments finish by themselves
+  const o = await transactionStatus(creds, trackingId);
+  if (o) applyPesapal(o);
+}
+
 // Privacy safety net: a fully paid tab that has gone quiet closes itself, so the next party at that
 // table starts a fresh bill even if staff forget to press "Close table". Empty tabs (someone only
 // looked at the menu) are tidied up after a few hours.
@@ -198,6 +254,19 @@ setInterval(async () => {
       if (s.age > 180) applyOutcome({ checkoutRequestId: s.checkout_request_id, success: false, reason: "Timed out" });
     }
   }
+  // Pesapal: guests can take a while on the card page, so check for longer before timing out.
+  const pp = all<{ id: number; provider_tracking_id: string | null; age: number }>(
+    `SELECT id, provider_tracking_id, (julianday('now') - julianday(created_at)) * 86400 AS age
+     FROM payments WHERE status='pending' AND method='pesapal' AND created_at < datetime('now','-60 seconds')`
+  );
+  for (const p of pp) {
+    if (!p.provider_tracking_id) {
+      if (p.age > 120) run("UPDATE payments SET status='failed', failure_reason='Not started' WHERE id=?", p.id);
+      continue;
+    }
+    try { await checkPesapal(p.id, p.provider_tracking_id); } catch {}
+    if (p.age > 1800) applyPesapal({ trackingId: p.provider_tracking_id, success: false, reason: "Timed out" });
+  }
 }, 20000);
 
 // ================= GUEST API =================
@@ -223,6 +292,7 @@ app.get("/api/t/:code", wrap((req, res) => {
     menu: menuFor(restaurant.id),
     bill: billFor(session.id),
     mockPayments: MOCK,
+    pesapalMock: !credsFor(restaurant),
   });
 }));
 
@@ -239,6 +309,9 @@ app.get("/api/t/:code/events", wrap((req, res) => {
 }));
 
 function placeOrder(table: Table, restaurant: Restaurant, body: any, placedBy: "guest" | "staff") {
+  const settings = readSettings(restaurant.settings);
+  if (settings.ordering === "off") throw new HttpError(403, "Ordering is switched off for this venue");
+  if (placedBy === "guest" && settings.ordering !== "guest") throw new HttpError(403, "Please order with your waiter");
   const items: { id: number; qty: number }[] = Array.isArray(body?.items) ? body.items : [];
   if (!items.length) throw new HttpError(400, "The order is empty");
   const guestName = String(body?.guestName || "").trim().slice(0, 40) || null;
@@ -272,6 +345,7 @@ app.post("/api/t/:code/orders", wrap((req, res) => {
 
 app.post("/api/t/:code/requests", wrap((req, res) => {
   const { table, restaurant } = tableByCode(req.params.code);
+  if (!readSettings(restaurant.settings).waiterCalls) throw new HttpError(403, "Please ask a member of staff");
   const KINDS = ["waiter", "bill", "water", "other"];
   const kind = KINDS.includes(req.body?.kind) ? req.body.kind : "waiter";
   const note = String(req.body?.note || "").trim().slice(0, 140) || null;
@@ -310,15 +384,39 @@ app.post("/api/t/:code/requests/:id/cancel", wrap((req, res) => {
   res.json({ ok: true });
 }));
 
-app.post("/api/t/:code/pay", wrap(async (req, res) => {
+// Guests tell staff they are ready to pay. With "confirm bill" on, staff check the total against
+// their POS (adding service charge, discounts or items rung up only in the POS) before anyone can pay.
+app.post("/api/t/:code/ready", wrap((req, res) => {
   const { table, restaurant } = tableByCode(req.params.code);
+  const settings = readSettings(restaurant.settings);
+  if (!settings.payAtTable) throw new HttpError(403, "Please pay with your waiter");
   const session = openSession(table.id, false);
   if (!session) throw new HttpError(409, "This tab is already closed");
-  const phone = normalisePhone(req.body?.phone);
-  if (!phone) throw new HttpError(400, "Enter a valid Safaricom number, e.g. 0712 345 678");
+  const bill = billFor(session.id);
+  if (bill.confirmed || !settings.confirmBill) return res.json({ ok: true, confirmed: true });
+  if (bill.subtotal <= 0) throw new HttpError(400, "There is nothing on the bill yet");
+  run("UPDATE table_sessions SET pay_requested_at = datetime('now') WHERE id = ?", session.id);
+  const open = get("SELECT id FROM service_requests WHERE session_id=? AND kind='pay' AND status != 'done'", session.id);
+  if (!open) run("INSERT INTO service_requests (session_id, kind) VALUES (?, 'pay')", session.id);
+  publish(`staff:${restaurant.id}`, "alert", { kind: "pay", table: table.label, total: bill.subtotal });
+  notifySession(session.id, "pay_requested");
+  res.json({ ok: true, confirmed: false, alreadyRequested: !!open });
+}));
+
+app.post("/api/t/:code/pay", wrap(async (req, res) => {
+  const { table, restaurant } = tableByCode(req.params.code);
+  const settings = readSettings(restaurant.settings);
+  if (!settings.payAtTable) throw new HttpError(403, "Please pay with your waiter");
+  const method = (["mpesa", "pesapal", "card", "cash"].includes(req.body?.method) ? req.body.method : "mpesa") as PayMethod;
+  if (!settings.payMethods[method]) throw new HttpError(400, "That way of paying isn't available here");
+  const session = openSession(table.id, false);
+  if (!session) throw new HttpError(409, "This tab is already closed");
   const amount = Math.floor(Number(req.body?.amount) || 0);
   const tip = Math.max(0, Math.floor(Number(req.body?.tip) || 0));
   const bill = billFor(session.id);
+  if (settings.confirmBill && !bill.confirmed) {
+    throw new HttpError(409, "Your waiter is checking the bill. You can pay as soon as they confirm it.");
+  }
   const available = bill.balance - bill.pending;
   if (amount < 1) throw new HttpError(400, "Enter an amount to pay");
   if (amount > available) {
@@ -327,7 +425,49 @@ app.post("/api/t/:code/pay", wrap(async (req, res) => {
       : `The balance is KES ${bill.balance.toLocaleString()}`);
   }
   const payerLabel = String(req.body?.payerLabel || "").trim().slice(0, 40) || null;
+  const phone = req.body?.phone ? normalisePhone(req.body.phone) : null;
 
+  // Card machine or cash: the guest picks their share here, a waiter brings the machine (or takes the cash)
+  // and marks it paid on the board. Works with any bank's card machine, Pesapal's included.
+  if (method === "card" || method === "cash") {
+    const r = run(
+      "INSERT INTO payments (session_id, method, amount, tip, payer_label, requested_by_guest) VALUES (?, ?, ?, ?, ?, 1)",
+      session.id, method, amount, tip, payerLabel
+    );
+    const paymentId = Number(r.lastInsertRowid);
+    publish(`staff:${restaurant.id}`, "alert", { kind: method, table: table.label, amount: amount + tip, payer: payerLabel });
+    notifySession(session.id, "payment_started");
+    return res.json({ ok: true, paymentId, staffAssisted: true });
+  }
+
+  if (method === "pesapal") {
+    const r = run(
+      "INSERT INTO payments (session_id, method, amount, tip, phone, payer_label) VALUES (?, 'pesapal', ?, ?, ?, ?)",
+      session.id, amount, tip, phone, payerLabel
+    );
+    const paymentId = Number(r.lastInsertRowid);
+    const out = await submitOrder({
+      creds: credsFor(restaurant),
+      merchantRef: `TP${paymentId}-${token(6)}`,
+      amount: amount + tip,
+      description: `${restaurant.name} · ${table.label}`,
+      callbackUrl: `${PUBLIC_URL}/t/${table.code}?pesapal=${paymentId}`,
+      ipnUrl: `${PUBLIC_URL}/api/pesapal/ipn`,
+      phone,
+      payerName: payerLabel,
+      onMockComplete: applyPesapal,
+    });
+    if (!out.ok) {
+      run("UPDATE payments SET status='failed', failure_reason=? WHERE id=?", out.error, paymentId);
+      notifySession(session.id, "payment_failed");
+      throw new HttpError(502, out.error);
+    }
+    run("UPDATE payments SET provider_tracking_id=? WHERE id=?", out.trackingId, paymentId);
+    notifySession(session.id, "payment_started");
+    return res.json({ ok: true, paymentId, redirectUrl: out.redirectUrl, mock: out.mock });
+  }
+
+  if (!phone) throw new HttpError(400, "Enter a valid Safaricom number, e.g. 0712 345 678");
   const r = run(
     "INSERT INTO payments (session_id, method, amount, tip, phone, payer_label) VALUES (?, 'mpesa', ?, ?, ?, ?)",
     session.id, amount, tip, phone, payerLabel
@@ -350,16 +490,52 @@ app.post("/api/t/:code/pay", wrap(async (req, res) => {
   res.json({ ok: true, paymentId, mock: push.mock });
 }));
 
-app.get("/api/t/:code/payments/:pid", wrap((req, res) => {
+app.get("/api/t/:code/payments/:pid", wrap(async (req, res) => {
   const { table } = tableByCode(req.params.code);
-  const p = get(
-    `SELECT p.id, p.status, p.amount, p.tip, p.provider_ref, p.failure_reason FROM payments p
+  const q = () => get<any>(
+    `SELECT p.id, p.method, p.status, p.amount, p.tip, p.provider_ref, p.failure_reason, p.provider_tracking_id FROM payments p
      JOIN table_sessions ts ON ts.id = p.session_id WHERE p.id = ? AND ts.table_id = ?`,
     Number(req.params.pid), table.id
   );
+  let p = q();
   if (!p) throw new HttpError(404, "Payment not found");
-  res.json(p);
+  // Guest just came back from Pesapal's page: ask Pesapal straight away instead of waiting for the IPN.
+  if (p.method === "pesapal" && p.status === "pending" && p.provider_tracking_id) {
+    try { await checkPesapal(p.id, p.provider_tracking_id); p = q(); } catch {}
+  }
+  const { provider_tracking_id, ...out } = p;
+  res.json(out);
 }));
+
+// Guest changed their mind about paying by card machine or cash
+app.post("/api/t/:code/payments/:pid/cancel", wrap((req, res) => {
+  const { table } = tableByCode(req.params.code);
+  const p = get<{ id: number; session_id: number }>(
+    `SELECT p.id, p.session_id FROM payments p JOIN table_sessions ts ON ts.id = p.session_id
+     WHERE p.id = ? AND ts.table_id = ? AND p.status = 'pending' AND p.requested_by_guest = 1`,
+    Number(req.params.pid), table.id
+  );
+  if (!p) throw new HttpError(404, "Nothing to cancel");
+  run("UPDATE payments SET status='failed', failure_reason='Cancelled by guest' WHERE id=?", p.id);
+  notifySession(p.session_id, "payment_failed");
+  res.json({ ok: true });
+}));
+
+// Pesapal instant payment notification (registered as GET). Always confirm with GetTransactionStatus.
+async function pesapalIpn(req: Request, res: Response) {
+  const q: any = req.method === "GET" ? req.query : req.body || {};
+  const trackingId = String(q.OrderTrackingId || q.orderTrackingId || "");
+  const merchantRef = String(q.OrderMerchantReference || q.orderMerchantReference || "");
+  const type = String(q.OrderNotificationType || q.orderNotificationType || "IPNCHANGE");
+  let status = 500;
+  const p = trackingId ? get<{ id: number }>("SELECT id FROM payments WHERE provider_tracking_id = ? AND method='pesapal'", trackingId) : undefined;
+  if (p) {
+    try { await checkPesapal(p.id, trackingId); status = 200; } catch { status = 500; }
+  }
+  res.json({ orderNotificationType: type, orderTrackingId: trackingId, orderMerchantReference: merchantRef, status });
+}
+app.get("/api/pesapal/ipn", wrap(pesapalIpn));
+app.post("/api/pesapal/ipn", wrap(pesapalIpn));
 
 // M-Pesa callback (Safaricom POSTs here). Secret path segment keeps randoms out.
 app.post("/api/mpesa/callback/:secret", (req, res) => {
@@ -386,7 +562,7 @@ app.get("/api/receipt/:token", wrap((req, res) => {
     opened_at: s.opened_at,
     closed_at: s.closed_at,
     status: s.status,
-    lines: bill.lines,
+    lines: [...bill.lines, ...bill.adjustments.map((a) => ({ name: a.label, qty: 1, unit_price: a.amount, total: a.amount }))],
     subtotal: bill.subtotal,
     paid: bill.paid,
     tips: bill.tips,
@@ -421,7 +597,9 @@ app.get("/api/staff/board", requireStaff(), wrap((req, res) => {
     rid
   );
   const orders = all(
-    `SELECT o.id, o.status, o.guest_name, o.note, o.created_at, dt.label AS table_label, ts.id AS session_id,
+    `SELECT o.id, o.status, o.guest_name, o.note, o.created_at, o.placed_by, o.pos_entered_at,
+            dt.label AS table_label, ts.id AS session_id,
+            (julianday('now') - julianday(o.created_at)) * 1440 AS age_min,
             json_group_array(json_object('name', oi.name, 'qty', oi.qty)) AS items
      FROM orders o JOIN order_items oi ON oi.order_id = o.id
      JOIN table_sessions ts ON ts.id = o.session_id JOIN dining_tables dt ON dt.id = ts.table_id
@@ -434,18 +612,32 @@ app.get("/api/staff/board", requireStaff(), wrap((req, res) => {
     rid
   ).map((t) => {
     const b = billFor(t.id);
-    return { ...t, subtotal: b.subtotal, paid: b.paid, balance: b.balance, pending: b.pending, orders: b.orders.length };
-  }).filter((t) => t.orders > 0 || t.paid > 0); // hide tabs where someone only scanned
+    return {
+      ...t, subtotal: b.subtotal, paid: b.paid, balance: b.balance, pending: b.pending, orders: b.orders.length,
+      confirmed: b.confirmed, payRequested: !!b.payRequestedAt && !b.confirmed,
+    };
+  }).filter((t) => t.orders > 0 || t.paid > 0 || t.subtotal > 0); // hide tabs where someone only scanned
+  // Guests who chose to pay their share by card machine or cash: a waiter needs to go to the table
+  const assists = all(
+    `SELECT p.id, p.method, p.amount, p.tip, p.payer_label, p.created_at, dt.label AS table_label, ts.id AS session_id
+     FROM payments p JOIN table_sessions ts ON ts.id = p.session_id JOIN dining_tables dt ON dt.id = ts.table_id
+     WHERE dt.restaurant_id = ? AND p.status = 'pending' AND p.requested_by_guest = 1 ORDER BY p.id`,
+    rid
+  );
   const today = get(
     `SELECT COALESCE(SUM(p.amount),0) AS sales, COALESCE(SUM(p.tip),0) AS tips,
             COALESCE(SUM(CASE WHEN p.method='mpesa' THEN p.amount END),0) AS mpesa,
+            COALESCE(SUM(CASE WHEN p.method='pesapal' THEN p.amount END),0) AS pesapal,
+            COALESCE(SUM(CASE WHEN p.method='card' THEN p.amount END),0) AS card,
             COALESCE(SUM(CASE WHEN p.method='cash' THEN p.amount END),0) AS cash,
             COUNT(*) AS count
      FROM payments p JOIN table_sessions ts ON ts.id = p.session_id JOIN dining_tables dt ON dt.id = ts.table_id
      WHERE dt.restaurant_id = ? AND p.status='paid' AND date(p.paid_at) = date('now')`,
     rid
   );
-  res.json({ requests, orders, tabs, today });
+  // Attach the bill total to "ready to pay" requests so the board can show it
+  for (const r of requests as any[]) if (r.kind === "pay") r.total = billFor(r.session_id).subtotal;
+  res.json({ requests, orders, tabs, assists, today, settings: settingsOf(rid) });
 }));
 
 app.post("/api/staff/requests/:id", requireStaff(), wrap((req, res) => {
@@ -479,6 +671,82 @@ app.post("/api/staff/orders/:id", requireStaff(), wrap((req, res) => {
   res.json({ ok: true });
 }));
 
+// Staff have keyed this order into the venue's own POS. The guest sees "Accepted".
+app.post("/api/staff/orders/:id/entered", requireStaff(), wrap((req, res) => {
+  const o = get<{ session_id: number; restaurant_id: number; status: string }>(
+    `SELECT o.session_id, o.status, dt.restaurant_id FROM orders o JOIN table_sessions ts ON ts.id = o.session_id
+     JOIN dining_tables dt ON dt.id = ts.table_id WHERE o.id = ?`,
+    Number(req.params.id)
+  );
+  if (!o || o.restaurant_id !== ridOf(req)) throw new HttpError(404, "Order not found");
+  run(
+    `UPDATE orders SET pos_entered_at = COALESCE(pos_entered_at, datetime('now')),
+       status = CASE WHEN status = 'new' THEN 'preparing' ELSE status END WHERE id = ?`,
+    Number(req.params.id)
+  );
+  notifySession(o.session_id, "order_accepted");
+  res.json({ ok: true });
+}));
+
+// Bill check against the POS: add a line (service charge, discount, item rung up only in the POS)
+app.post("/api/staff/sessions/:id/adjustments", requireStaff(), wrap((req, res) => {
+  const s = sessionForStaff(req);
+  if (s.status !== "open") throw new HttpError(409, "This bill is closed");
+  const label = String(req.body?.label || "").trim().slice(0, 60);
+  const amount = Math.trunc(Number(req.body?.amount) || 0);
+  if (!label) throw new HttpError(400, "Say what the line is for, e.g. Service charge");
+  if (!amount) throw new HttpError(400, "Enter an amount (use a minus sign for a discount)");
+  const bill = billFor(s.id);
+  if (bill.subtotal + amount < bill.paid) throw new HttpError(400, "That would make the bill less than what's already paid");
+  run("INSERT INTO bill_adjustments (session_id, label, amount) VALUES (?,?,?)", s.id, label, amount);
+  notifySession(s.id, "bill_adjusted");
+  res.json({ ok: true });
+}));
+
+app.delete("/api/staff/sessions/:id/adjustments/:aid", requireStaff(), wrap((req, res) => {
+  const s = sessionForStaff(req);
+  const a = get<{ amount: number }>("SELECT amount FROM bill_adjustments WHERE id=? AND session_id=?", Number(req.params.aid), s.id);
+  if (!a) throw new HttpError(404, "Line not found");
+  const bill = billFor(s.id);
+  if (bill.subtotal - a.amount < bill.paid) throw new HttpError(400, "That would make the bill less than what's already paid");
+  run("DELETE FROM bill_adjustments WHERE id=?", Number(req.params.aid));
+  notifySession(s.id, "bill_adjusted");
+  res.json({ ok: true });
+}));
+
+// Waiter has checked the total against the POS. Guests can now split and pay this exact amount.
+app.post("/api/staff/sessions/:id/confirm", requireStaff(), wrap((req, res) => {
+  const s = sessionForStaff(req);
+  if (s.status !== "open") throw new HttpError(409, "This bill is closed");
+  const bill = billFor(s.id);
+  if (bill.subtotal <= 0) throw new HttpError(400, "There is nothing on the bill to confirm");
+  const expected = req.body?.total !== undefined ? Math.floor(Number(req.body.total)) : bill.subtotal;
+  if (expected !== bill.subtotal) throw new HttpError(409, "The bill changed while you were checking it. Please look again.");
+  run("UPDATE table_sessions SET bill_confirmed_at = datetime('now'), confirmed_total = ? WHERE id = ?", bill.subtotal, s.id);
+  run("UPDATE service_requests SET status='done', done_at=datetime('now') WHERE session_id=? AND kind='pay' AND status!='done'", s.id);
+  notifySession(s.id, "bill_confirmed");
+  res.json({ ok: true, total: bill.subtotal });
+}));
+
+// A guest asked to pay their share by card machine or cash: the waiter marks how it went.
+app.post("/api/staff/payments/:pid", requireStaff(), wrap((req, res) => {
+  const p = get<{ id: number; session_id: number; restaurant_id: number }>(
+    `SELECT p.id, p.session_id, dt.restaurant_id FROM payments p JOIN table_sessions ts ON ts.id = p.session_id
+     JOIN dining_tables dt ON dt.id = ts.table_id WHERE p.id = ? AND p.status = 'pending' AND p.requested_by_guest = 1`,
+    Number(req.params.pid)
+  );
+  if (!p || p.restaurant_id !== ridOf(req)) throw new HttpError(404, "Payment not found");
+  if (req.body?.result === "paid") {
+    const ref = String(req.body?.reference || "").trim().slice(0, 40) || null;
+    run("UPDATE payments SET status='paid', provider_ref=?, paid_at=datetime('now') WHERE id=?", ref, p.id);
+    notifySession(p.session_id, "payment_paid");
+  } else {
+    run("UPDATE payments SET status='failed', failure_reason='Not completed at the table' WHERE id=?", p.id);
+    notifySession(p.session_id, "payment_failed");
+  }
+  res.json({ ok: true });
+}));
+
 app.get("/api/staff/sessions/:id", requireStaff(), wrap((req, res) => {
   const s = sessionForStaff(req);
   res.json(sessionSummary(s.id));
@@ -501,6 +769,7 @@ app.post("/api/staff/sessions/:id/cash", requireStaff(), wrap((req, res) => {
 function closeSession(id: number, reason = "closed") {
   run("UPDATE table_sessions SET status='closed', closed_at=datetime('now') WHERE id=? AND status='open'", id);
   run("UPDATE service_requests SET status='done', done_at=datetime('now') WHERE session_id=? AND status!='done'", id);
+  run("UPDATE payments SET status='failed', failure_reason='Table closed' WHERE session_id=? AND status='pending' AND requested_by_guest=1", id);
   notifySession(id, reason);
 }
 
@@ -533,6 +802,35 @@ app.post("/api/staff/tables/:id/orders", requireStaff(), wrap((req, res) => {
 // ================= ADMIN API =================
 app.get("/api/admin/menu", requireStaff(), wrap((req, res) => {
   res.json(menuFor(ridOf(req)));
+}));
+
+app.get("/api/admin/settings", requireStaff(), wrap((req, res) => {
+  const r = get<Restaurant>("SELECT * FROM restaurants WHERE id=?", ridOf(req))!;
+  res.json({
+    settings: readSettings(r.settings),
+    pesapal: {
+      ownKeys: !!(r.pesapal_key && r.pesapal_secret),
+      keyHint: r.pesapal_key ? r.pesapal_key.slice(0, 4) + "…" + r.pesapal_key.slice(-3) : null,
+      live: !!credsFor(r),
+      environment: process.env.PESAPAL_ENV === "live" ? "live" : "sandbox",
+    },
+  });
+}));
+
+app.patch("/api/admin/settings", requireStaff("admin"), wrap((req, res) => {
+  const rid = ridOf(req);
+  const r = get<Restaurant>("SELECT * FROM restaurants WHERE id=?", rid)!;
+  let next: VenueSettings;
+  try { next = mergeSettings(readSettings(r.settings), req.body?.settings || {}); }
+  catch (e: any) { throw new HttpError(400, e.message); }
+  run("UPDATE restaurants SET settings=? WHERE id=?", JSON.stringify(next), rid);
+  const pk = req.body?.pesapal;
+  if (pk && pk.clear) run("UPDATE restaurants SET pesapal_key=NULL, pesapal_secret=NULL WHERE id=?", rid);
+  else if (pk && pk.key && pk.secret) {
+    run("UPDATE restaurants SET pesapal_key=?, pesapal_secret=? WHERE id=?", String(pk.key).trim(), String(pk.secret).trim(), rid);
+  }
+  publish(`staff:${rid}`, "menu", {});
+  res.json({ ok: true, settings: next });
 }));
 
 app.patch("/api/admin/items/:id", requireStaff(), wrap((req, res) => {

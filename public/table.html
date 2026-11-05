@@ -232,7 +232,7 @@ const state = {
   cart: new Map(),
   view: "menu",          // menu | bill | pay | wait | result | closed
   searching: false, q: "",
-  pay: { mode: "all", people: 2, tip: 0, tipCustom: "", custom: "" },
+  pay: { mode: "all", people: 2, tip: 0, tipCustom: "", custom: "", method: null },
   payment: null,         // { id, total, phone, started }
   result: null,
   receiptToken: null,
@@ -256,6 +256,24 @@ const myTotal = () => {
     .reduce((s, o) => s + o.items.reduce((a, i) => a + i.qty * i.unit_price, 0), 0);
 };
 const available = () => Math.max(0, state.bill.balance - state.bill.pending);
+// Venue settings decide which parts of the app guests see
+const S = () => state.data.restaurant.settings;
+const canOrder = () => S().ordering === "guest";
+const canPay = () => S().payAtTable;
+const needsConfirm = () => S().confirmBill && !state.bill.confirmed;
+const METHODS = {
+  mpesa: { title: "M‑Pesa", sub: "A prompt on your phone", cta: "Send M‑Pesa prompt", ic: "phone" },
+  pesapal: { title: "Card, M‑Pesa or Airtel", sub: "Secure checkout by Pesapal", cta: "Continue to Pesapal", ic: "card" },
+  card: { title: "Card machine", sub: "Your waiter brings it to the table", cta: "Ask for the card machine", ic: "card" },
+  cash: { title: "Cash", sub: "Hand it to your waiter", cta: "Pay cash to the waiter", ic: "cash" },
+};
+const methodsOn = () => Object.keys(METHODS).filter((m) => S().payMethods[m]);
+const orderPill = (o) => {
+  if (o.status === "cancelled") return ["cancelled", "Cancelled"];
+  if (o.status === "served") return ["served", "Served"];
+  if (S().posHandoff) return o.pos_entered_at ? ["preparing", "Accepted"] : ["new", "Sent"];
+  return o.status === "preparing" ? ["preparing", "Preparing"] : ["new", "Sent"];
+};
 const okIcon = icon("check", 18, 2.6);
 const errIcon = icon("alert", 18, 2.2);
 
@@ -273,6 +291,7 @@ async function load() {
     render();
     listen();
     window.addEventListener("scroll", spy, { passive: true });
+    resumePesapal();
     setInterval(() => { if (state.view === "menu" && state.requests.length) renderStatusOnly(); }, 30000);
   } catch {
     document.getElementById("app").innerHTML = `<div class="closed"><div class="big-alert">${icon("alert", 34)}</div>
@@ -297,7 +316,9 @@ function listen() {
     }
     if (d.reason === "request_acknowledged") toast("The team has seen your request", 3500, icon("bell", 18));
     if (d.reason === "order_preparing") toast("Your order is being prepared", 3000, okIcon);
+    if (d.reason === "order_accepted") toast("Your order has been accepted", 3000, okIcon);
     if (d.reason === "order_served") toast("Order served. Enjoy!", 3000, okIcon);
+    if (d.reason === "bill_confirmed") toast("Your bill is confirmed. You can pay now.", 3500, okIcon);
     if (d.reason.startsWith("request")) return refreshRequests();
     window.dispatchEvent(new CustomEvent("tp-bill", { detail: d }));
     if (["menu", "bill"].includes(state.view)) render();
@@ -372,7 +393,7 @@ function photo(i, extra = "") {
   return `<div class="photo ${extra}"><img src="${esc(src)}" alt="" loading="lazy">${ctrl(i)}</div>`;
 }
 function ctrl(i) {
-  if (!i.available) return "";
+  if (!i.available || !canOrder()) return "";
   const q = state.cart.get(i.id) || 0;
   return `<div class="ctrl">${q
     ? `<div class="stepper-d"><button data-dec="${i.id}" aria-label="Remove one ${esc(i.name)}">${icon("minus", 16, 2.4)}</button><span>${q}</span><button data-inc="${i.id}" aria-label="Add one ${esc(i.name)}">${icon("plus", 16, 2.4)}</button></div>`
@@ -410,8 +431,8 @@ function menuView() {
       <label class="searchbox">${icon("search", 18)}<input id="q" type="search" placeholder="Search dishes and drinks" aria-label="Search dishes and drinks" value="${esc(state.q)}" autocomplete="off"></label>
       <button class="linkbtn" data-act="search-close">Cancel</button></div>`
     : `<div class="acts">
-      ${servicePill()}
-      <button class="hp" data-go="bill">${icon("receipt", 18)}Bill${b.subtotal ? `<span class="sub">${kes(b.balance)}</span>` : ""}</button>
+      ${S().waiterCalls ? servicePill() : ""}
+      ${canPay() || S().ordering !== "off" || b.subtotal ? `<button class="hp" data-go="bill">${icon("receipt", 18)}Bill${b.subtotal ? `<span class="sub">${kes(b.balance)}</span>` : ""}</button>` : ""}
       <button class="iconbtn" data-act="search" aria-label="Search the menu">${icon("search", 18)}</button>
     </div>`}
   </header>
@@ -435,8 +456,8 @@ function menuView() {
 function dock() {
   if (cartCount()) return `<div class="dock"><div class="dock-in"><button class="bar dark" data-act="cart">
     <span class="badge">${cartCount()}</span><span>View order</span><span class="amt">${kes(cartTotal())}</span></button></div></div>`;
-  if (state.bill.balance > 0) return `<div class="dock"><div class="dock-in"><button class="bar blue" data-go="bill">
-    ${icon("phone", 22)}<span>Pay the bill</span><span class="amt">${kes(state.bill.balance)}</span></button></div></div>`;
+  if (state.bill.balance > 0 && canPay()) return `<div class="dock"><div class="dock-in"><button class="bar blue" data-go="bill">
+    ${icon("phone", 22)}<span>${needsConfirm() ? "View bill" : "Pay the bill"}</span><span class="amt">${kes(state.bill.balance)}</span></button></div></div>`;
   return "";
 }
 
@@ -487,20 +508,44 @@ function billView() {
     <section class="card" style="padding:6px 18px">
       ${live.map((o, idx) => `${idx ? '<div class="sep"></div>' : ""}
         <div class="grp-h"><span>${o.guest_name ? esc(o.guest_name) + "'s order" : o.placed_by === "staff" ? "Added by staff" : "Order " + (idx + 1)}${o.placed_by === "staff" && o.guest_name ? ' <span class="rsub" style="font-weight:600">· by staff</span>' : ""}</span>
-          <span class="status-pill ${o.status}">${o.status === "new" ? "Sent" : o.status}</span></div>
+          <span class="status-pill ${orderPill(o)[0]}">${orderPill(o)[1]}</span></div>
         ${o.items.map((i) => `<div class="line" ${o.status === "cancelled" ? 'style="opacity:.5;text-decoration:line-through"' : ""}><span><span class="q">${i.qty}×</span> ${esc(i.name)}</span><span>${(i.qty * i.unit_price).toLocaleString("en-KE")}</span></div>`).join("")}
         ${o.note ? `<div class="rsub" style="padding:0 0 8px">Note: ${esc(o.note)}</div>` : ""}`).join("")}
+      ${(b.adjustments || []).length ? `<div class="sep"></div>${b.adjustments.map((a) => `<div class="line"><span>${esc(a.label)}</span><span>${a.amount < 0 ? "−" : ""}${Math.abs(a.amount).toLocaleString("en-KE")}</span></div>`).join("")}` : ""}
       <div class="sep"></div>
       <div class="line" style="font-size:15px;font-weight:800;padding:12px 0"><span>Total</span><span>${kes(b.subtotal)}</span></div>
+      ${S().confirmBill && b.confirmed ? `<div class="payrow" style="margin:0 0 12px"><span class="tick">${icon("check", 14, 3)}</span><span>Checked and confirmed by your waiter</span></div>` : ""}
     </section>
     <p class="fine">Prices include VAT. Your receipt updates as each person pays.</p>`}
   </main>
-  ${b.balance > 0 ? `<div class="dock"><div class="dock-in">
+  ${billDock(b)}
+  </div>`;
+}
+
+function billDock(b) {
+  if (b.balance <= 0) return b.subtotal ? `<div class="dock"><div class="dock-in"><a class="bar green" href="/r/${state.receiptToken}">${icon("check", 20, 2.6)}Paid in full · View receipt</a></div></div>` : "";
+  if (!canPay()) return `<div class="dock"><div class="dock-in"><div class="bar-2" style="flex:1;justify-content:center">Ask your waiter for the bill</div></div></div>`;
+  if (needsConfirm()) {
+    return b.payRequestedAt
+      ? `<div class="dock"><div class="dock-in"><button class="bar dark center" disabled style="opacity:1;flex-direction:column;gap:2px;justify-content:center">
+          <span style="display:flex;align-items:center;gap:8px"><span class="dot"></span>Your waiter is checking the bill</span>
+          <span style="font-size:12px;font-weight:600;opacity:.75">You can split and pay as soon as they confirm it</span></button></div></div>`
+      : `<div class="dock"><div class="dock-in"><button class="bar blue center" data-act="ready">${icon("receipt", 20)}Ready to pay · ${kes(b.subtotal)}</button></div></div>`;
+  }
+  return `<div class="dock"><div class="dock-in">
       <button class="bar-2" data-pay="split">${icon("users", 20)}Split</button>
       <button class="bar blue center" data-pay="all" ${available() < 1 ? "disabled" : ""}>Pay ${kes(available())}</button>
-    </div></div>`
-  : b.subtotal ? `<div class="dock"><div class="dock-in"><a class="bar green" href="/r/${state.receiptToken}">${icon("check", 20, 2.6)}Paid in full · View receipt</a></div></div>` : ""}
-  </div>`;
+    </div></div>`;
+}
+
+async function readyToPay(btn) {
+  btn.disabled = true;
+  try {
+    const r = await api(`/api/t/${code}/ready`, { method: "POST" });
+    if (!r.confirmed) toast(r.alreadyRequested ? "We've reminded your waiter" : "Your waiter has been asked to confirm the bill", 3500, okIcon);
+    try { state.bill = (await api(`/api/t/${code}/bill`)).bill; } catch {}
+    render();
+  } catch (e) { btn.disabled = false; toast(e.message, 4000, errIcon); }
 }
 
 // ----- pay -----
@@ -521,9 +566,23 @@ function summaryHtml() {
     ${t ? `<div class="sumline"><span>Tip${state.pay.tip > 0 ? ` (${state.pay.tip}%)` : ""}</span><span>${kes(t)}</span></div>` : ""}
     <div class="sumtotal"><span>You pay</span><span>${kes(a + t)}</span></div>`;
 }
+function methodPicker() {
+  const ms = methodsOn(), p = state.pay;
+  if (!ms.includes(p.method)) p.method = ms[0];
+  if (ms.length < 2) return "";
+  return `<fieldset>
+      <legend>How are you paying?</legend>
+      ${ms.map((m) => `<label class="opt ${p.method === m ? "on" : ""}">
+        <input type="radio" name="method" value="${m}" ${p.method === m ? "checked" : ""}>
+        <span class="ot">${METHODS[m].title}<span class="os">${METHODS[m].sub}</span></span>
+        <span style="color:var(--accent)">${icon(METHODS[m].ic, 22)}</span></label>`).join("")}
+    </fieldset>`;
+}
 function payView() {
   const b = state.bill, p = state.pay, mt = myTotal();
   if (p.mode === "mine" && !mt) p.mode = "all";
+  const picker = methodPicker();
+  const m = METHODS[p.method] || METHODS.mpesa;
   if (p.phone === undefined) p.phone = (localStorage.getItem(LS.phone) || "").replace(/^\+?254/, "").replace(/^0/, "");
   const savedPhone = p.phone;
   const opt = (mode, title, amount, sub = "") => `<label class="opt ${p.mode === mode ? "on" : ""}">
@@ -532,7 +591,7 @@ function payView() {
   return `<div class="shell" style="padding-bottom:230px">
   <header class="top">
     <button class="iconbtn plain" data-go="bill" aria-label="Back to bill">${icon("back", 22, 2.2)}</button>
-    <div class="tt"><h1>Pay with M‑Pesa</h1><div class="rsub">${esc(tableName())} · ${kes(b.balance)} left to pay</div></div>
+    <div class="tt"><h1>${picker ? "Pay your share" : "Pay with " + m.title}</h1><div class="rsub">${esc(tableName())} · ${kes(b.balance)} left to pay</div></div>
   </header>
   <main class="page" style="gap:18px;padding-top:16px">
     ${b.pending ? `<div class="warnbox">${kes(b.pending)} is being paid by someone at your table right now.</div>` : ""}
@@ -558,42 +617,92 @@ function payView() {
       ${p.tip === -1 ? `<div class="field-row" style="margin-top:4px"><span class="pre">KES</span><span class="vr"></span>
         <input id="tipc" inputmode="numeric" placeholder="Tip amount" aria-label="Tip amount" value="${esc(p.tipCustom)}"></div>` : ""}
     </fieldset>
-    <div style="display:flex;flex-direction:column;gap:8px">
+    ${picker}
+    ${p.method === "mpesa" ? `<div style="display:flex;flex-direction:column;gap:8px">
       <label for="phone" class="h3" style="margin:0">M‑Pesa number</label>
       <div class="field-row"><span class="pre">+254</span><span class="vr"></span>
         <input id="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="712 345 678" value="${esc(savedPhone)}"></div>
-    </div>
+    </div>` : ""}
   </main>
   <div class="summary"><div class="summary-in">
     <div id="sumbox" style="display:flex;flex-direction:column;gap:6px">${summaryHtml()}</div>
-    <button class="primary" id="go" ${payAmount() < 1 ? "disabled" : ""}>${icon("phone", 20)}Send M‑Pesa prompt</button>
-    ${state.data.mockPayments ? `<p class="fine" style="margin:0">Demo mode: no real money moves.</p>` : ""}
+    <button class="primary" id="go" ${payAmount() < 1 ? "disabled" : ""}>${icon(m.ic, 20)}${m.cta}</button>
+    ${(p.method === "mpesa" && state.data.mockPayments) || (p.method === "pesapal" && state.data.pesapalMock) ? `<p class="fine" style="margin:0">Demo mode: no real money moves.</p>` : ""}
   </div></div>
   </div>`;
 }
 
 async function submitPay() {
   const btn = document.getElementById("go");
-  const raw = document.getElementById("phone").value.replace(/\D/g, "");
-  const phone = raw.length === 9 ? "0" + raw : raw;
+  const method = state.pay.method || "mpesa";
+  const m = METHODS[method];
+  let phone = "";
+  if (method === "mpesa") {
+    const raw = document.getElementById("phone").value.replace(/\D/g, "");
+    phone = raw.length === 9 ? "0" + raw : raw;
+  } else {
+    phone = localStorage.getItem(LS.phone) || "";
+  }
   const amount = payAmount(), tip = payTip();
-  btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:22px;height:22px;border-width:3px;margin:0"></span>Sending prompt…`;
+  btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:22px;height:22px;border-width:3px;margin:0"></span>${method === "mpesa" ? "Sending prompt…" : "One moment…"}`;
   try {
-    const r = await api(`/api/t/${code}/pay`, { method: "POST", body: { phone, amount, tip, payerLabel: localStorage.getItem(LS.name) || "" } });
-    localStorage.setItem(LS.phone, phone);
-    state.payment = { id: r.paymentId, total: amount + tip, phone, started: Date.now() };
+    const r = await api(`/api/t/${code}/pay`, { method: "POST", body: { method, phone, amount, tip, payerLabel: localStorage.getItem(LS.name) || "" } });
+    if (method === "mpesa") localStorage.setItem(LS.phone, phone);
+    state.payment = { id: r.paymentId, total: amount + tip, phone, method, started: Date.now() };
+    if (r.redirectUrl) {
+      // Real Pesapal: continue on Pesapal's secure page; it sends the guest back to this table afterwards.
+      try { sessionStorage.setItem("tp_pp", JSON.stringify(state.payment)); } catch {}
+      location.href = r.redirectUrl;
+      return;
+    }
     setView("wait");
     watchPayment();
   } catch (e) {
-    btn.disabled = false; btn.innerHTML = `${icon("phone", 20)}Send M‑Pesa prompt`;
+    btn.disabled = false; btn.innerHTML = `${icon(m.ic, 20)}${m.cta}`;
     toast(e.message, 4500, errIcon);
   }
+}
+
+// Back from Pesapal's page (/t/<code>?pesapal=<payment id>): show progress until Pesapal confirms.
+async function resumePesapal() {
+  const pid = new URLSearchParams(location.search).get("pesapal");
+  if (!pid) return;
+  history.replaceState(null, "", location.pathname);
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem("tp_pp") || "null"); } catch {}
+  try {
+    const p = await api(`/api/t/${code}/payments/${pid}`);
+    state.payment = { id: Number(pid), total: p.amount + p.tip, phone: saved?.phone || "", method: "pesapal", started: saved?.started || Date.now() };
+    if (p.status === "pending") { setView("wait"); watchPayment(); }
+    else { state.result = p; setView("result"); }
+  } catch {}
 }
 
 // ----- waiting -----
 function prettyPhone(p) { return p.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3"); }
 function waitView() {
   const p = state.payment;
+  if (p.method && p.method !== "mpesa") {
+    const staff = p.method === "card" || p.method === "cash";
+    const title = p.method === "card" ? "The card machine is on its way" : p.method === "cash" ? "Your waiter is on the way" : "Finishing your payment";
+    const lead = p.method === "card" ? `A waiter is bringing the card machine for <strong>${kes(p.total)}</strong>.`
+      : p.method === "cash" ? `Hand <strong>${kes(p.total)}</strong> in cash to your waiter.`
+      : `Confirming <strong>${kes(p.total)}</strong> with Pesapal.`;
+    return `<div class="full">
+      <div class="full-top"><button class="iconbtn soft" data-act="wait-close" aria-label="Close">${icon("x", 18, 2.2)}</button></div>
+      <div class="full-mid" style="padding-top:40px">
+        <div class="big-tick" style="background:var(--accent)">${icon(p.method === "cash" ? "cash" : "card", 34, 2.2)}</div>
+        <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h-big">${title}</h1><p class="lead">${lead}</p></div>
+        <ol class="wsteps">
+          <li><span class="tick">${icon("check", 14, 3)}</span>${staff ? "The team has been told" : "Payment started"}</li>
+          <li style="font-weight:700"><span class="ring"></span>${staff ? "Waiting for your waiter" : "Waiting for confirmation"}<span id="wtimer" class="rsub" style="margin-left:auto">0:00</span></li>
+          <li class="todo"><span class="circle"></span>Your share is marked as paid on the bill</li>
+        </ol>
+        <p class="fine" style="margin:0">Keep this page open. It updates by itself.${p.method === "pesapal" && state.data.pesapalMock ? "<br>Demo mode: this completes in a few seconds." : ""}</p>
+      </div>
+      <div class="full-bot">${staff ? `<button class="ghost-danger" data-act="assist-cancel">Cancel and choose another way</button>` : `<button class="secondary" data-act="wait-close">Back to the bill</button>`}</div>
+    </div>`;
+  }
   return `<div class="full">
     <div class="full-top"><button class="iconbtn soft" data-act="wait-close" aria-label="Close">${icon("x", 18, 2.2)}</button></div>
     <div class="full-mid">
@@ -658,7 +767,8 @@ function resultView() {
         <div class="refbox">
           <div class="line"><span class="rsub">Amount</span><strong>${kes(r.amount + r.tip)}</strong></div>
           ${r.tip ? `<div class="line"><span class="rsub">Includes tip</span><span>${kes(r.tip)}</span></div>` : ""}
-          <div class="line"><span class="rsub">M‑Pesa reference</span><strong style="font-family:var(--mono)">${esc(r.provider_ref || "—")}</strong></div>
+          ${r.provider_ref ? `<div class="line"><span class="rsub">${r.method === "mpesa" || !r.method ? "M‑Pesa reference" : "Reference"}</span><strong style="font-family:var(--mono)">${esc(r.provider_ref)}</strong></div>` : ""}
+          <div class="line"><span class="rsub">Paid by</span><span>${esc((METHODS[r.method] || METHODS.mpesa).title)}</span></div>
         </div>
       </div>
       <div class="full-bot">
@@ -715,6 +825,14 @@ function bind(app) {
     toast("If you already entered your PIN, the payment will still show on the bill.", 4500);
   });
   act("no-prompt", () => openNoPrompt());
+  act("ready", (e) => readyToPay(e.currentTarget));
+  act("assist-cancel", async () => {
+    try { await api(`/api/t/${code}/payments/${state.payment.id}/cancel`, { method: "POST" }); } catch {}
+    stopWatching(); state.payment = null;
+    try { state.bill = (await api(`/api/t/${code}/bill`)).bill; } catch {}
+    setView("pay");
+  });
+  app.querySelectorAll('input[name="method"]').forEach((r) => (r.onchange = () => { state.pay.method = r.value; render(); }));
   const q = app.querySelector("#q");
   if (q) q.oninput = () => {
     state.q = q.value; const pos = q.selectionStart;
@@ -777,9 +895,9 @@ function openService() {
       ${tile("water", "water", "Water or ice", "Bottled, tap or a jug of ice")}
       ${tile("other", "message", "Something else", "Write a short note")}
     </div>
-    ${state.bill.balance > 0 ? `<div class="sep" style="margin:18px 0 14px"></div>
+    ${state.bill.balance > 0 && canPay() ? `<div class="sep" style="margin:18px 0 14px"></div>
     <button class="rowlink" data-paynow><span class="ri">${icon("phone", 20)}</span>
-      <span style="flex:1"><b>Skip the wait, pay on your phone</b><small>M‑Pesa · split with your table</small></span>${icon("chevron", 20)}</button>` : ""}`);
+      <span style="flex:1"><b>Skip the wait, pay on your phone</b><small>Split with your table · ${methodsOn().map((m) => METHODS[m].title.split(",")[0]).join(", ")}</small></span>${icon("chevron", 20)}</button>` : ""}`);
   sh.querySelector("[data-close]").onclick = closeSheet;
   sh.querySelector("[data-paynow]")?.addEventListener("click", () => { closeSheet(); setView("bill"); });
   sh.querySelectorAll("[data-kind]").forEach((b) => (b.onclick = () => b.dataset.kind === "other" ? openNote() : sendRequest(b.dataset.kind)));
@@ -825,7 +943,7 @@ function openNoPrompt() {
 function openCart() {
   const lines = [...state.cart].map(([id, q]) => ({ item: itemById(id), q })).filter((l) => l.item);
   const sh = sheet(`
-    <div class="sheet-h"><div><h2>Your order</h2><span class="rsub" style="font-size:14px">${esc(tableName())} · goes straight to the kitchen</span></div>
+    <div class="sheet-h"><div><h2>Your order</h2><span class="rsub" style="font-size:14px">${esc(tableName())} · ${S().posHandoff ? "sent to the team" : "goes straight to the kitchen"}</span></div>
       <button class="iconbtn soft" data-close aria-label="Close">${icon("x", 18, 2.2)}</button></div>
     <div>${lines.map(({ item, q }) => `<div class="cart-line">
         <div><div class="n">${esc(item.name)}</div><div class="rsub">${kes(item.price * q)}</div></div>

@@ -18,6 +18,12 @@ services:
         generateValue: true
       - key: PUBLIC_URL
         sync: false          # set to https://<your-service>.onrender.com or your domain
+      - key: PESAPAL_ENV
+        value: sandbox       # live in production
+      - key: PESAPAL_CONSUMER_KEY
+        sync: false          # optional fallback; venues can save their own keys in Admin > Settings
+      - key: PESAPAL_CONSUMER_SECRET
+        sync: false
     disk:
       name: data
       mountPath: /var/data

@@ -118,6 +118,32 @@ addColumn("menu_items", "image_url", "TEXT");
 addColumn("service_requests", "note", "TEXT");
 addColumn("orders", "placed_by", "TEXT NOT NULL DEFAULT 'guest'");
 
+// Venue settings (JSON, see settings.ts) and per-venue Pesapal keys
+addColumn("restaurants", "settings", "TEXT");
+addColumn("restaurants", "pesapal_key", "TEXT");
+addColumn("restaurants", "pesapal_secret", "TEXT");
+// POS hand-off: staff mark when an order has been keyed into the venue's own POS
+addColumn("orders", "pos_entered_at", "TEXT");
+// Bill confirmation: staff check the TablePay total against the POS before guests pay
+addColumn("table_sessions", "pay_requested_at", "TEXT");
+addColumn("table_sessions", "bill_confirmed_at", "TEXT");
+addColumn("table_sessions", "confirmed_total", "INTEGER");
+// Payments: Pesapal tracking id, and card-machine/cash requests handled by staff
+addColumn("payments", "provider_tracking_id", "TEXT");
+addColumn("payments", "requested_by_guest", "INTEGER NOT NULL DEFAULT 0");
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS bill_adjustments (
+  id INTEGER PRIMARY KEY,
+  session_id INTEGER NOT NULL REFERENCES table_sessions(id),
+  label TEXT NOT NULL,                 -- e.g. Service charge, Discount, Drink added at the bar
+  amount INTEGER NOT NULL,             -- whole KES, negative for discounts
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_adjust_session ON bill_adjustments(session_id);
+CREATE INDEX IF NOT EXISTS idx_payments_tracking ON payments(provider_tracking_id);
+`);
+
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {
   return db.prepare(sql).all(...params) as T[];

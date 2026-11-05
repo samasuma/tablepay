@@ -33,6 +33,13 @@
   .rq-ic.other { background: #6d28d9; }
   .rq-note { background: var(--field); border-radius: 10px; padding: 8px 10px; font-size: 14px; margin: -2px 0 10px; }
   .req.acknowledged { opacity: .65; }
+  .rq-ic.pay { background: var(--ok); }
+  .rq-ic.card, .rq-ic.cash { background: #b45309; }
+  .late { background: var(--danger-soft); color: var(--danger); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+  .tile.overdue { border: 1.5px solid var(--danger); }
+  .inpos { background: var(--ok-soft); color: var(--ok); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+  .adj { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; }
+  .adj button { border: 0; background: transparent; color: var(--danger); cursor: pointer; font-size: 13px; font-weight: 700; }
   .tab-tile { cursor: pointer; }
   .tab-tile:hover { border-color: var(--accent); }
   .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
@@ -120,7 +127,10 @@ function start() {
     beep();
     flashKey = a.table;
     const AL = { waiter: ["bell", `${a.table} is calling a waiter`], bill: ["receipt", `${a.table} wants the bill`], water: ["water", `${a.table} would like water`],
-      other: ["message", `${a.table}: ${a.note || "sent a message"}`], order: ["dish", `New order from ${a.table}`] }[a.kind] || ["bell", a.table];
+      other: ["message", `${a.table}: ${a.note || "sent a message"}`], order: ["dish", `New order from ${a.table}`],
+      pay: ["receipt", `${a.table} is ready to pay. Check the bill`],
+      card: ["card", `${a.table}: bring the card machine (${TP.kes(a.amount)})`],
+      cash: ["cash", `${a.table} wants to pay ${TP.kes(a.amount)} in cash`] }[a.kind] || ["bell", a.table];
     toast(AL[1], 5000, TP.icon(AL[0], 18));
     if ("vibrate" in navigator) navigator.vibrate([120, 60, 120]);
   });
@@ -134,56 +144,81 @@ function start() {
 }
 function setLive(on) { document.getElementById("live")?.classList.toggle("off", !on); }
 
+const PAY_NAME = { mpesa: "M-Pesa", pesapal: "Pesapal", card: "Card machine", cash: "Cash" };
 function render() {
   const b = board;
+  const st = b.settings || {};
   const app = document.getElementById("app");
-  const waiting = b.requests.filter((r) => r.status === "open").length;
+  const waiting = b.requests.filter((r) => r.status === "open").length + (b.assists || []).length;
+  const notInPos = b.orders.filter((o) => !o.pos_entered_at && o.status === "new").length;
+  const REQ_IC = { waiter: "bell", bill: "receipt", water: "water", other: "message", pay: "receipt" };
+  const REQ_T = { waiter: "Calling a waiter", bill: "Wants the bill", water: "Would like water", other: "Message", pay: "Ready to pay · check the bill" };
   app.innerHTML = `
   <div class="bar"><div class="in">
     <h1><span class="live" id="live"></span>${esc(restaurant?.name || "Staff board")}</h1>
     <div class="stat"><b class="num">${kes(b.today.sales)}</b><span>Sales today</span></div>
     <div class="stat"><b class="num">${kes(b.today.mpesa)}</b><span>M-Pesa</span></div>
-    <div class="stat"><b class="num">${kes(b.today.cash)}</b><span>Cash/card</span></div>
+    ${st.payMethods?.pesapal ? `<div class="stat"><b class="num">${kes(b.today.pesapal)}</b><span>Pesapal</span></div>` : ""}
+    <div class="stat"><b class="num">${kes(b.today.card)}</b><span>Card machine</span></div>
+    <div class="stat"><b class="num">${kes(b.today.cash)}</b><span>Cash</span></div>
     <div class="stat"><b class="num">${kes(b.today.tips)}</b><span>Tips</span></div>
     <div style="margin-left:auto" class="row">
-      <button class="btn sm primary" id="newOrder" style="background:var(--accent);border-color:var(--accent);color:#fff">${TP.icon("plus", 16, 2.4)} New order</button>
-      <a class="btn sm" href="/admin">Menu & tables</a>
+      ${st.ordering !== "off" ? `<button class="btn sm primary" id="newOrder" style="background:var(--accent);border-color:var(--accent);color:#fff">${TP.icon("plus", 16, 2.4)} New order</button>` : ""}
+      <a class="btn sm" href="/admin">Menu & settings</a>
       <button class="btn sm" id="logout">Sign out</button>
     </div>
   </div></div>
   <div class="cols">
     <section class="col">
       <h2>Calls ${waiting ? `<span class="count">${waiting}</span>` : ""}</h2>
+      ${(b.assists || []).map((p) => `
+        <div class="card tile req ${flashKey === p.table_label ? "flash" : ""}">
+          <div class="row between"><span class="tl">${esc(p.table_label)}</span><span class="muted small">${ago(p.created_at)}</span></div>
+          <div class="rq"><span class="rq-ic ${p.method}">${TP.icon(p.method === "cash" ? "cash" : "card", 18)}</span>
+            ${p.method === "card" ? "Bring the card machine" : "Collect cash"} · ${kes(p.amount + p.tip)}</div>
+          ${p.payer_label ? `<div class="muted small" style="margin:-4px 0 8px">For ${esc(p.payer_label)}${p.tip ? ` · includes ${kes(p.tip)} tip` : ""}</div>` : ""}
+          <div class="row">
+            <button class="btn sm ok" data-assist="${p.id}" data-result="paid" data-method="${p.method}">Paid</button>
+            <button class="btn sm ghost danger" data-assist="${p.id}" data-result="failed">Didn't happen</button>
+          </div>
+        </div>`).join("")}
       ${b.requests.length ? b.requests.map((r) => `
         <div class="card tile req req-${r.kind} ${r.status} ${flashKey === r.table_label ? "flash" : ""}">
           <div class="row between"><span class="tl">${esc(r.table_label)}</span><span class="muted small">${ago(r.created_at)}</span></div>
-          <div class="rq"><span class="rq-ic ${r.kind}">${TP.icon({ waiter: "bell", bill: "receipt", water: "water", other: "message" }[r.kind] || "bell", 18)}</span>
-            ${{ waiter: "Calling a waiter", bill: "Wants the bill", water: "Would like water", other: "Message" }[r.kind] || r.kind}
+          <div class="rq"><span class="rq-ic ${r.kind}">${TP.icon(REQ_IC[r.kind] || "bell", 18)}</span>
+            ${REQ_T[r.kind] || r.kind}${r.kind === "pay" && r.total ? ` · ${kes(r.total)}` : ""}
             ${r.status === "acknowledged" ? '<span class="pill preparing">On the way</span>' : ""}</div>
           ${r.note ? `<div class="rq-note">“${esc(r.note)}”</div>` : ""}
           <div class="row">
-            ${r.status === "open" ? `<button class="btn sm primary" data-ack="${r.id}">I'm going</button>` : ""}
-            <button class="btn sm" data-done="${r.id}">Done</button>
+            ${r.kind === "pay" ? `<button class="btn sm primary" data-tab="${r.session_id}">Check & confirm</button>`
+              : r.status === "open" ? `<button class="btn sm primary" data-ack="${r.id}">I'm going</button>` : ""}
+            <button class="btn sm" data-done="${r.id}">${r.kind === "pay" ? "Dismiss" : "Done"}</button>
             ${r.kind === "bill" ? `<button class="btn sm ghost" data-tab="${r.session_id}">Open bill</button>` : ""}
           </div>
-        </div>`).join("") : `<div class="empty card">No one is calling.</div>`}
+        </div>`).join("") : (b.assists || []).length ? "" : `<div class="empty card">No one is calling.</div>`}
     </section>
 
     <section class="col">
-      <h2>Kitchen & bar ${b.orders.length ? `<span class="count">${b.orders.length}</span>` : ""}</h2>
-      ${b.orders.length ? b.orders.map((o) => `
-        <div class="card tile ${flashKey === o.table_label && o.status === "new" ? "flash" : ""}">
+      <h2>${st.posHandoff ? "Orders to enter" : "Kitchen & bar"} ${b.orders.length ? `<span class="count">${st.posHandoff ? notInPos || b.orders.length : b.orders.length}</span>` : ""}</h2>
+      ${b.orders.length ? b.orders.map((o) => {
+        const late = st.posHandoff && !o.pos_entered_at && o.status === "new" && o.age_min >= (st.posReminderMin || 3);
+        return `
+        <div class="card tile ${late ? "overdue" : ""} ${flashKey === o.table_label && o.status === "new" ? "flash" : ""}">
           <div class="row between"><span class="tl">${esc(o.table_label)}</span>
-            <span class="row"><span class="muted small">${time(o.created_at)}</span><span class="pill ${o.status}">${o.status}</span></span></div>
-          ${o.guest_name ? `<div class="muted small">${esc(o.guest_name)}</div>` : ""}
+            <span class="row"><span class="muted small">${time(o.created_at)}</span>
+            ${st.posHandoff ? (o.pos_entered_at ? '<span class="inpos">In POS</span>' : late ? `<span class="late">Not in POS · ${Math.floor(o.age_min)} min</span>` : '<span class="pill new">New</span>')
+              : `<span class="pill ${o.status}">${o.status}</span>`}</span></div>
+          ${o.guest_name ? `<div class="muted small">${esc(o.guest_name)}${o.placed_by === "staff" ? " · added by staff" : ""}</div>` : ""}
           <ul style="margin:8px 0;padding-left:18px">${o.items.map((i) => `<li><strong>${i.qty}×</strong> ${esc(i.name)}</li>`).join("")}</ul>
           ${o.note ? `<div class="banner warn small" style="padding:6px 10px;margin-bottom:8px">${esc(o.note)}</div>` : ""}
           <div class="row">
-            ${o.status === "new" ? `<button class="btn sm primary" data-order="${o.id}" data-status="preparing">Start</button>` : ""}
+            ${st.posHandoff && !o.pos_entered_at ? `<button class="btn sm primary" data-entered="${o.id}">${TP.icon("pos", 16)} Entered in POS</button>`
+              : o.status === "new" ? `<button class="btn sm primary" data-order="${o.id}" data-status="preparing">Start</button>` : ""}
             <button class="btn sm ok" data-order="${o.id}" data-status="served">Served</button>
             <button class="btn sm ghost danger" data-order="${o.id}" data-status="cancelled" style="margin-left:auto">Cancel</button>
           </div>
-        </div>`).join("") : `<div class="empty card">No open orders.</div>`}
+        </div>`;
+      }).join("") : `<div class="empty card">No open orders.</div>`}
     </section>
 
     <section class="col">
@@ -191,7 +226,8 @@ function render() {
       ${b.tabs.length ? b.tabs.map((t) => `
         <div class="card tile tab-tile" data-tab="${t.id}">
           <div class="row between"><span class="tl">${esc(t.label)}</span>
-            ${t.balance === 0 ? '<span class="pill paid">Paid</span>' : t.pending ? '<span class="pill pending">Paying…</span>' : ""}</div>
+            ${t.balance === 0 ? '<span class="pill paid">Paid</span>' : t.pending ? '<span class="pill pending">Paying…</span>'
+              : t.payRequested ? '<span class="late">Confirm bill</span>' : st.confirmBill && t.confirmed ? '<span class="inpos">Confirmed</span>' : ""}</div>
           <div class="row between small" style="margin-top:4px"><span class="muted">${t.orders} order${t.orders === 1 ? "" : "s"} · opened ${time(t.opened_at)}</span>
             <span class="num"><strong>${kes(t.balance)}</strong> <span class="muted">of ${kes(t.subtotal)}</span></span></div>
           <div class="progress"><i style="width:${t.subtotal ? Math.round((t.paid / t.subtotal) * 100) : 0}%"></i></div>
@@ -200,7 +236,13 @@ function render() {
   </div>`;
   flashKey = null;
 
-  app.querySelector("#newOrder").onclick = () => newOrder();
+  app.querySelector("#newOrder")?.addEventListener("click", () => newOrder());
+  app.querySelectorAll("[data-entered]").forEach((x) => (x.onclick = (e) => { e.stopPropagation(); act(`/api/staff/orders/${x.dataset.entered}/entered`, {}); }));
+  app.querySelectorAll("[data-assist]").forEach((x) => (x.onclick = () => {
+    let reference = "";
+    if (x.dataset.result === "paid" && x.dataset.method === "card") reference = prompt("Card slip reference (optional)") || "";
+    act(`/api/staff/payments/${x.dataset.assist}`, { result: x.dataset.result, reference });
+  }));
   app.querySelector("#logout").onclick = () => { localStorage.removeItem("tp_staff_token"); es?.close(); loginView(); };
   app.querySelectorAll("[data-ack]").forEach((x) => (x.onclick = () => act(`/api/staff/requests/${x.dataset.ack}`, { status: "acknowledged" })));
   app.querySelectorAll("[data-done]").forEach((x) => (x.onclick = () => act(`/api/staff/requests/${x.dataset.done}`, { status: "done" })));
@@ -218,12 +260,24 @@ async function act(path, body) {
 
 async function openTab(id) {
   const { session: s, bill: b } = await api(`/api/staff/sessions/${id}`);
+  const st = board?.settings || {};
+  const canConfirm = st.confirmBill && b.balance > 0 && !b.confirmed && b.subtotal > 0;
   const sh = sheet(`
     <div class="row between"><h2>${esc(s.label)} · bill</h2><span class="muted small">opened ${time(s.opened_at)}</span></div>
     <div style="margin-top:10px">${b.lines.map((l) => `<div class="row between" style="padding:5px 0"><span>${l.qty} × ${esc(l.name)}</span><span class="num">${kes(l.total)}</span></div>`).join("")}</div>
+    ${b.adjustments.map((a) => `<div class="adj"><span>${esc(a.label)}</span><span class="row" style="gap:10px"><span class="num">${a.amount < 0 ? "− " + kes(-a.amount) : kes(a.amount)}</span>
+      ${b.balance > 0 ? `<button data-rmadj="${a.id}" aria-label="Remove ${esc(a.label)}">Remove</button>` : ""}</span></div>`).join("")}
+    ${b.balance > 0 ? `<details style="margin-top:6px" ${canConfirm ? "open" : ""}><summary class="muted small" style="cursor:pointer">Add a line to match the POS: service charge, discount or an item rung up at the bar</summary>
+      <div class="row" style="margin-top:8px;gap:6px"><input class="field" id="adjLabel" placeholder="e.g. Service charge" style="flex:2;min-height:40px" />
+        <input class="field num" id="adjAmt" inputmode="numeric" placeholder="KES, −200 for a discount" style="flex:1;min-height:40px" />
+        <button class="btn sm" id="adjAdd">Add</button></div></details>` : ""}
     <div class="row between" style="border-top:1px solid var(--line);padding-top:8px;margin-top:6px;font-weight:700"><span>Total</span><span class="num">${kes(b.subtotal)}</span></div>
+    ${st.confirmBill && b.balance > 0 ? (b.confirmed
+      ? `<div class="row small" style="margin-top:8px;color:var(--ok);font-weight:700">${TP.icon("check", 16, 2.6)} Confirmed at ${time(b.confirmedAt)}. Guests can split and pay.</div>`
+      : `<button class="btn primary lg block" id="confirmBill" style="margin-top:10px">${TP.icon("check", 18, 2.6)} Matches the POS · confirm ${kes(b.subtotal)}</button>
+         <p class="muted small" style="margin:6px 0 0">Guests can only pay once you confirm. Any new order re-opens the check.</p>`) : ""}
     ${b.payments.filter((p) => p.status !== "failed").map((p) => `<div class="row between small" style="padding:4px 0">
-      <span>${p.method === "mpesa" ? "M-Pesa" : p.method} ${p.provider_ref ? `<span class="muted">${esc(p.provider_ref)}</span>` : ""} ${p.tip ? `<span class="muted">+ ${kes(p.tip)} tip</span>` : ""}</span>
+      <span>${PAY_NAME[p.method] || p.method}${p.payer_label && p.payer_label !== "Recorded by staff" ? ` · ${esc(p.payer_label)}` : ""} ${p.provider_ref ? `<span class="muted">${esc(p.provider_ref)}</span>` : ""} ${p.tip ? `<span class="muted">+ ${kes(p.tip)} tip</span>` : ""}</span>
       <span><span class="pill ${p.status}">${p.status}</span> <span class="num">${kes(p.amount)}</span></span></div>`).join("")}
     <div class="row between" style="font-size:22px;font-weight:800;margin-top:8px"><span>Balance</span><span class="num">${kes(b.balance)}</span></div>
     ${b.balance > 0 ? `<label class="lbl" for="cash">Record cash or card payment</label>
@@ -234,6 +288,24 @@ async function openTab(id) {
     <div class="row" style="margin-top:8px"><button class="btn block" data-additems style="flex:1">${TP.icon("plus", 16, 2.4)} Add items</button>
       <a class="btn ghost block" style="flex:1" href="/r/${s.receipt_token}" target="_blank">Open receipt</a></div>`);
   sh.querySelector("[data-additems]").onclick = () => newOrder(s.table_id);
+  if (st.ordering === "off") sh.querySelector("[data-additems]").remove();
+  sh.querySelector("#adjAdd")?.addEventListener("click", async () => {
+    try {
+      await api(`/api/staff/sessions/${id}/adjustments`, { method: "POST", body: {
+        label: sh.querySelector("#adjLabel").value, amount: Number(String(sh.querySelector("#adjAmt").value).replace(/[^\d-]/g, "")) } });
+      openTab(id); refresh();
+    } catch (e) { toast(e.message); }
+  });
+  sh.querySelectorAll("[data-rmadj]").forEach((x) => (x.onclick = async () => {
+    try { await api(`/api/staff/sessions/${id}/adjustments/${x.dataset.rmadj}`, { method: "DELETE" }); openTab(id); refresh(); }
+    catch (e) { toast(e.message); }
+  }));
+  sh.querySelector("#confirmBill")?.addEventListener("click", async () => {
+    try {
+      await api(`/api/staff/sessions/${id}/confirm`, { method: "POST", body: { total: b.subtotal } });
+      toast(`${s.label}: bill confirmed`, 3000, TP.icon("check", 18, 2.6)); openTab(id); refresh();
+    } catch (e) { toast(e.message); openTab(id); }
+  });
   sh.querySelectorAll("[data-m]").forEach((x) => (x.onclick = async () => {
     try {
       await api(`/api/staff/sessions/${id}/cash`, { method: "POST", body: { amount: Number(sh.querySelector("#cash").value), method: x.dataset.m } });
