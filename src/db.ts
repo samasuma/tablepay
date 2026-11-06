@@ -122,6 +122,12 @@ addColumn("restaurants", "brand_color", "TEXT");
 addColumn("restaurants", "logo_url", "TEXT");
 addColumn("restaurants", "menu_only", "INTEGER NOT NULL DEFAULT 0");
 addColumn("restaurants", "dish_art", "INTEGER NOT NULL DEFAULT 0");
+// TablePay Custom (boutique) template and its few options
+addColumn("restaurants", "template", "TEXT NOT NULL DEFAULT 'standard'");
+addColumn("restaurants", "display_font", "TEXT");
+addColumn("restaurants", "paper", "TEXT");
+addColumn("restaurants", "hero_url", "TEXT");
+addColumn("restaurants", "story", "TEXT");
 
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {

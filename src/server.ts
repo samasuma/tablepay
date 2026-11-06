@@ -22,6 +22,7 @@ app.use(express.static(join(process.cwd(), "public"), { extensions: ["html"] }))
 type Restaurant = {
   id: number; slug: string; name: string; branch: string; tagline: string; phone: string; email: string;
   staff_pin: string; admin_pin: string; brand_color: string | null; logo_url: string | null; menu_only: number; dish_art: number;
+  template: string; display_font: string | null; paper: string | null; hero_url: string | null; story: string | null;
 };
 type Table = { id: number; restaurant_id: number; label: string; code: string; active: number };
 type Session = { id: number; table_id: number; status: string; receipt_token: string; opened_at: string; closed_at: string | null };
@@ -539,12 +540,17 @@ app.post("/api/staff/tables/:id/orders", requireStaff(), wrap((req, res) => {
 
 // ================= ADMIN API =================
 // Look & mode: logo, one brand colour, menu-only, illustrated placeholders
-const LOOK_FIELDS = ["name", "branch", "tagline", "brand_color", "logo_url", "menu_only", "dish_art"] as const;
+const LOOK_FIELDS = ["name", "branch", "tagline", "brand_color", "logo_url", "menu_only", "dish_art",
+  "template", "display_font", "paper", "hero_url", "story"] as const;
+// TablePay Custom: a short, fixed list of choices keeps every Custom menu on-brand and quick to set up
+export const CUSTOM_FONTS = ["Cormorant Garamond", "Playfair Display", "Fraunces", "DM Serif Display"];
+export const CUSTOM_PAPERS = ["#F3ECE1", "#F7F4EE", "#ECE6DA", "#1D1915"];
+const IMAGE_RE = /^(https:\/\/\S+|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+)$/;
 function lookOf(rid: number) {
   return get<Record<string, unknown>>(`SELECT ${LOOK_FIELDS.join(", ")} FROM restaurants WHERE id = ?`, rid);
 }
 app.get("/api/admin/look", requireStaff(), wrap((req, res) => {
-  res.json(lookOf(ridOf(req)));
+  res.json({ ...lookOf(ridOf(req)), options: { fonts: CUSTOM_FONTS, papers: CUSTOM_PAPERS } });
 }));
 app.patch("/api/admin/look", requireStaff("admin"), wrap((req, res) => {
   const rid = ridOf(req);
@@ -569,6 +575,21 @@ app.patch("/api/admin/look", requireStaff("admin"), wrap((req, res) => {
     put("logo_url", u || null);
   }
   for (const k of ["menu_only", "dish_art"]) if (k in b) put(k, b[k] ? 1 : 0);
+  if ("template" in b) put("template", b.template === "custom" ? "custom" : "standard");
+  if ("display_font" in b) {
+    if (b.display_font && !CUSTOM_FONTS.includes(b.display_font)) throw new HttpError(400, "Pick one of the listed fonts");
+    put("display_font", b.display_font || null);
+  }
+  if ("paper" in b) {
+    if (b.paper && !CUSTOM_PAPERS.includes(b.paper)) throw new HttpError(400, "Pick one of the listed paper colours");
+    put("paper", b.paper || null);
+  }
+  if ("hero_url" in b) {
+    const u = String(b.hero_url || "").trim();
+    if ((u && !IMAGE_RE.test(u)) || u.length > 300_000) throw new HttpError(400, "Venue photo must be an image under 200 KB or an https link");
+    put("hero_url", u || null);
+  }
+  if ("story" in b) put("story", String(b.story || "").trim().slice(0, 240) || null);
   if (sets.length) run(`UPDATE restaurants SET ${sets.join(", ")} WHERE id = ?`, ...vals, rid);
   res.json(lookOf(rid));
 }));

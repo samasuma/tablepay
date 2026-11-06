@@ -228,6 +228,45 @@
   .empty-card .ei { width: 56px; height: 56px; border-radius: 18px; background: var(--field); display: grid; place-items: center; }
   body.has-summary .toast { bottom: 250px; }
   @media (min-width: 560px) { .shell { box-shadow: 0 0 0 1px var(--line); } }
+
+  /* ===== TablePay Custom: a printed-menu template with a few fixed choices ===== */
+  :root { --cx-font: "Cormorant Garamond", Georgia, serif; }
+  .cx { background: var(--cx-paper); color: var(--cx-ink); }
+  .cx .dock { background: var(--cx-paper); }
+  html.custom, html.custom body { background: var(--cx-paper); }
+  .cx-hero { position: relative; height: 300px; background: #2b241e; color: #f3ece1; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px 22px; overflow: hidden; }
+  .cx-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cx-hero.has-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0) 55%); }
+  .cx-hero > * { position: relative; z-index: 1; }
+  .cx-mark { font-family: var(--cx-font); font-size: 17px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+  .cx-hero .cx-top { position: absolute; top: 14px; left: 22px; right: 14px; display: flex; align-items: center; justify-content: space-between; z-index: 1; }
+  .cx-hero .cx-top span { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #e6dccd; }
+  .cx-hero .iconbtn { background: rgba(0,0,0,.35); border: 0; color: #fff; }
+  .cx-intro { padding: 26px 22px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .cx-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-text, var(--accent)); }
+  .cx-intro h1 { margin: 0; font-family: var(--cx-font); font-size: 42px; font-weight: 500; line-height: 1.02; letter-spacing: -.01em; }
+  .cx-intro p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--cx-muted); }
+  .cx .acts { margin-top: 4px; }
+  .cx .hp { background: transparent; border-color: var(--cx-line); color: var(--cx-ink); }
+  .cx .chips { background: var(--cx-paper); border-block: 1px solid var(--cx-line); padding: 0 40px 0 22px; gap: 22px; }
+  .cx .chip { height: 46px; padding: 0 1px; border: 0; border-radius: 0; background: transparent; color: var(--cx-muted); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .cx .chip.on { background: transparent; color: var(--accent-text, var(--accent)); box-shadow: inset 0 -2px 0 var(--accent); }
+  .cx-sec { padding: 26px 22px 6px; display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 48px; }
+  .cx-sec h2 { margin: 0; font-family: var(--cx-font); font-size: 32px; font-weight: 500; line-height: 1.05; }
+  .cx-item { display: flex; flex-direction: column; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid var(--cx-line); }
+  .cx-item:last-child { border-bottom: 0; }
+  .cx-item.out { opacity: .5; }
+  .cx-pic { height: 200px; border-radius: 4px; overflow: hidden; background: var(--cx-line); margin-bottom: 4px; }
+  .cx-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cx-row { display: flex; align-items: baseline; gap: 10px; }
+  .cx-name { font-family: var(--cx-font); font-size: 23px; font-weight: 600; line-height: 1.15; }
+  .cx-dots { flex: 1; min-width: 16px; border-bottom: 1px dotted var(--cx-muted); opacity: .6; transform: translateY(-4px); }
+  .cx-price { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .cx-desc { font-family: var(--cx-font); font-style: italic; font-size: 17px; line-height: 1.35; color: var(--cx-muted); }
+  .cx-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cx-tags { display: flex; gap: 10px; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-text, var(--accent)); }
+  .cx .ctrl-in .add { background: transparent; border-color: var(--cx-line); }
+  .cx-end { padding: 18px 22px 40px; font-size: 11px; color: var(--cx-muted); letter-spacing: .04em; display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
@@ -291,6 +330,69 @@ function applyBrand(r) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", c);
 }
 
+// ----- TablePay Custom -----
+const isCustom = () => R().template === "custom";
+const CX_PAPERS = { "#1D1915": { ink: "#F3ECE1", muted: "#c9bca9", line: "rgba(243,236,225,.18)" } };
+function applyCustom(r) {
+  if (r.template !== "custom") return;
+  const paper = r.paper || "#F3ECE1";
+  const t = CX_PAPERS[paper] || { ink: "#1D1915", muted: "#5a5047", line: "#d9cfc0" };
+  const root = document.documentElement;
+  root.classList.add("custom");
+  root.style.setProperty("--cx-paper", paper);
+  root.style.setProperty("--cx-ink", t.ink);
+  root.style.setProperty("--cx-muted", t.muted);
+  root.style.setProperty("--cx-line", t.line);
+  const font = r.display_font || "Cormorant Garamond";
+  root.style.setProperty("--cx-font", `"${font}", Georgia, serif`);
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "/fonts/custom/custom.css";
+  document.head.appendChild(link);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", paper);
+}
+function cxItem(i) {
+  const tags = (i.tags || "").split(",").filter((t) => t && t !== "chef").map((t) => `<span>${esc(TAGS[t] || t)}</span>`).join("");
+  return `<article class="cx-item ${i.available ? "" : "out"}">
+    ${i.image_url ? `<div class="cx-pic"><img src="${esc(i.image_url)}" alt="" loading="lazy"></div>` : ""}
+    <div class="cx-row"><span class="cx-name">${esc(i.name)}</span><span class="cx-dots"></span>
+      <span class="cx-price">${i.available ? kes(i.price).replace(/^KES\s*/, "") : "Sold out"}</span></div>
+    ${i.description ? `<div class="cx-desc">${esc(i.description)}</div>` : ""}
+    ${tags || (!menuOnly() && i.available) ? `<div class="cx-foot"><div class="cx-tags">${tags}</div>${ctrl(i, "ctrl-in")}</div>` : ""}
+  </article>`;
+}
+function customMenuView() {
+  const d = state.data, r = d.restaurant, b = state.bill;
+  const picks = allItems().filter((i) => (i.tags || "").includes("chef") && i.available);
+  const cats = d.menu.filter((c) => c.items.length);
+  return `<div class="shell cx ${menuOnly() ? "" : "pad-dock"}">
+  <header class="cx-hero ${r.hero_url ? "has-photo" : ""}">
+    ${r.hero_url ? `<img src="${esc(r.hero_url)}" alt="">` : ""}
+    <div class="cx-top"><span>${esc(tableName())}</span><button class="iconbtn" data-act="search" aria-label="Search the menu">${icon("search", 18)}</button></div>
+    ${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="${esc(r.name)}" style="position:relative;width:auto;height:56px;object-fit:contain;align-self:flex-start;inset:auto">`
+      : `<span class="cx-mark">${esc(r.name)}</span>`}
+  </header>
+  <div class="cx-intro">
+    ${r.branch || r.tagline ? `<span class="cx-eyebrow">${esc([r.branch, r.tagline].filter(Boolean).join(" · "))}</span>` : ""}
+    <h1>${esc(r.name)}</h1>
+    ${r.story ? `<p>${esc(r.story)}</p>` : ""}
+    ${menuOnly() ? "" : `<div class="acts">${servicePill()}
+      <button class="hp" data-go="bill">${icon("receipt", 18)}Bill${b.subtotal ? `<span class="sub">${kes(b.balance)}</span>` : ""}</button></div>`}
+  </div>
+  ${menuOnly() ? "" : `<div id="statusBox">${statusCards()}</div>`}
+  <nav class="chips" aria-label="Courses">
+    ${picks.length ? `<button class="chip" data-cat="picks">Recommended</button>` : ""}
+    ${cats.map((c) => `<button class="chip" data-cat="${c.id}">${esc(c.name)}</button>`).join("")}
+  </nav>
+  <main>
+    ${picks.length ? `<section class="cx-sec" id="sec-picks" data-sec="picks"><h2>Recommended</h2>${picks.map(cxItem).join("")}</section>` : ""}
+    ${cats.map((c) => `<section class="cx-sec" id="sec-${c.id}" data-sec="${c.id}"><h2>${esc(c.name)}</h2>${c.items.map(cxItem).join("")}</section>`).join("")}
+  </main>
+  <footer class="cx-end"><span>Prices in KES</span><span>Menu by TablePay</span></footer>
+  ${dock()}
+  </div>`;
+}
+
 function setView(v) { state.view = v; render(); window.scrollTo(0, 0); }
 
 // ---------- data ----------
@@ -301,6 +403,7 @@ async function load() {
     state.bill = d.bill;
     state.receiptToken = d.session.receipt_token;
     applyBrand(d.restaurant);
+    applyCustom(d.restaurant);
     document.title = `${d.restaurant.name} · ${tableName()}`;
     state.requests = await api(`/api/t/${code}/requests`);
     render();
@@ -432,6 +535,7 @@ function pickCard(i) {
 }
 
 function menuView() {
+  if (isCustom() && !state.searching) return customMenuView();
   const d = state.data, b = state.bill;
   const picks = allItems().filter((i) => (i.tags || "").includes("chef") && i.available);
   const q = state.q.trim().toLowerCase();
