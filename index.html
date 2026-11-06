@@ -84,6 +84,14 @@ section.band { padding-block: 72px; }
 .pillar .who { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
 .pillar p { color: var(--muted); font-size: 15px; }
 .pillar svg { color: var(--blue); }
+.products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.product { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.product p { color: var(--muted); font-size: 15px; }
+.product .model { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); font-size: 14px; font-weight: 700; color: var(--ink); }
+.product.soon { background: transparent; border-style: dashed; }
+.soon-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+.now-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); border-radius: 999px; padding: 3px 10px; }
+.products-sub { margin: 32px 0 14px; font-family: var(--display); font-size: 22px; font-weight: 600; }
 
 /* feature rows */
 .feature { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
@@ -169,7 +177,7 @@ footer { padding-bottom: 72px; }
 @media (max-width: 900px) {
   .hero-body, .feature { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .feature.flip .feature-media { order: 0; }
-  .pillars, .path { grid-template-columns: minmax(0, 1fr); }
+  .pillars, .path, .products { grid-template-columns: minmax(0, 1fr); }
   .faq { grid-template-columns: minmax(0, 1fr); }
   .hero-body { padding-block: 16px 48px; }
 }
@@ -197,6 +205,7 @@ footer { padding-bottom: 72px; }
       </a>
       <div class="nav-links">
         <a href="#how">How it works</a>
+        <a href="#products">Products</a>
         <a href="#owners">For owners</a>
         <a href="#brand">Your brand</a>
         <a class="btn btn-primary" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo" target="_blank" rel="noopener">Book a demo</a>
@@ -299,6 +308,27 @@ footer { padding-bottom: 72px; }
       <div class="feature-media compare">
         <figure><img src="assets/talker-default.jpg" alt="A TablePay talker in standard navy" loading="lazy" width="827" height="1165"><figcaption>Standard</figcaption></figure>
         <figure><img src="assets/talker-brand.jpg" alt="The same talker in an example restaurant's colours" loading="lazy" width="827" height="1165"><figcaption>In your colours</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band feature-alt" id="products">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Products</span>
+        <h2>Start with the menu, add more as you grow</h2>
+        <p class="lead">Every product runs on the same talkers, so you never reprint or change your setup to upgrade.</p>
+      </div>
+      <div class="products">
+        <div class="product"><span class="now-tag">Available now</span><h3>TablePay Menu</h3><p>Your digital menu on every table, opened by QR code or tap, in your logo and brand colour.</p><span class="model">Setup + monthly fee</span></div>
+        <div class="product"><span class="now-tag">Available now</span><h3>TablePay Insights</h3><p>A monthly report on menu and table activity: busiest tables, peak hours and the dishes guests look at most.</p><span class="model">Monthly add-on</span></div>
+        <div class="product"><span class="now-tag">Available now</span><h3>TablePay Custom</h3><p>A boutique, printed-menu design made for your venue, with your venue photo, story and large dish photos.</p><span class="model">Premium setup, ask us for a quote</span></div>
+      </div>
+      <h3 class="products-sub">Coming soon</h3>
+      <div class="products">
+        <div class="product soon"><span class="soon-tag">Coming soon</span><h3>TablePay Order</h3><p>Guests order from the table and orders reach your team straight away.</p><span class="model">Monthly upgrade</span></div>
+        <div class="product soon"><span class="soon-tag">Coming soon</span><h3>TablePay Pay</h3><p>Guests pay by M-Pesa at the table and split the bill, straight to your own till.</p><span class="model">Small fee per payment</span></div>
+        <div class="product soon"><span class="soon-tag">Coming soon</span><h3>TablePay POS</h3><p>Restaurant operations and order management, built around how you serve.</p><span class="model">Subscription</span></div>
       </div>
     </div>
   </section>
