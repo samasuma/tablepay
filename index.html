@@ -91,6 +91,12 @@ section.band { padding-block: 72px; }
 .product.soon { background: transparent; border-style: dashed; }
 .soon-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
 .now-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); border-radius: 999px; padding: 3px 10px; }
+.product.featured { border: 2px solid var(--blue); box-shadow: 0 12px 32px rgba(30,94,184,0.14); }
+.pop-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #FFFFFF; background: var(--blue); border-radius: 999px; padding: 3px 10px; }
+.partner-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 3px 10px; }
+.incl { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.incl li { padding-left: 22px; position: relative; }
+.incl li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 10px; height: 6px; border-left: 2px solid var(--green); border-bottom: 2px solid var(--green); transform: rotate(-45deg); }
 .products-sub { margin: 32px 0 14px; font-family: var(--display); font-size: 22px; font-weight: 600; }
 
 /* feature rows */
@@ -205,7 +211,7 @@ footer { padding-bottom: 72px; }
       </a>
       <div class="nav-links">
         <a href="#how">How it works</a>
-        <a href="#products">Products</a>
+        <a href="#products">Packages</a>
         <a href="#owners">For owners</a>
         <a href="#brand">Your brand</a>
         <a class="btn btn-primary" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo" target="_blank" rel="noopener">Book a demo</a>
@@ -315,18 +321,22 @@ footer { padding-bottom: 72px; }
   <section class="band feature-alt" id="products">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">Products</span>
-        <h2>Start with the menu, add more as you grow</h2>
-        <p class="lead">Every product runs on the same talkers, so you never reprint or change your setup to upgrade.</p>
+        <span class="eyebrow">Packages</span>
+        <h2>Pick the package that fits your restaurant</h2>
+        <p class="lead">Every package includes branded talkers with QR code and tap, your menu typed up for you, hosting, unlimited menu updates and WhatsApp support.</p>
       </div>
       <div class="products">
-        <div class="product"><span class="now-tag">Available now</span><h3>TablePay Menu</h3><p>Your digital menu on every table, opened by QR code or tap, in your logo and brand colour.</p><span class="model">Setup + monthly fee</span></div>
-        <div class="product"><span class="now-tag">Available now</span><h3>TablePay Insights</h3><p>A monthly report on menu and table activity: busiest tables, peak hours and the dishes guests look at most.</p><span class="model">Monthly add-on</span></div>
-        <div class="product"><span class="now-tag">Available now</span><h3>TablePay Menu Premium</h3><p>Boutique differs from Standard on purpose: venue photo, a serif chosen for the brand, a short story, courses set like a printed menu, and a photo of every dish. Priced as a higher setup fee.</p><span class="model">Premium setup, ask us for a quote</span></div>
+        <div class="product"><h3>Menu</h3><p>Your digital menu on every table, in your logo and brand colour, with dish photos or a clean text list.</p>
+          <ul class="incl"><li>TablePay Menu</li><li>Standard template</li></ul><span class="model">Setup + monthly fee</span></div>
+        <div class="product featured"><span class="pop-tag">Most popular</span><h3>Menu + Insights</h3><p>Everything in Menu, plus a monthly report on how guests use your menu and tables.</p>
+          <ul class="incl"><li>TablePay Menu</li><li>TablePay Insights: busiest tables, peak hours, most viewed dishes</li></ul><span class="model">Setup + monthly fee</span></div>
+        <div class="product"><h3>Premium</h3><p>Boutique differs from Standard on purpose: venue photo, a serif chosen for the brand, a short story, courses set like a printed menu, and a photo of every dish.</p>
+          <ul class="incl"><li>TablePay Menu Premium</li><li>TablePay Insights included</li><li>Premium talkers</li></ul><span class="model">Premium setup, ask us for a quote</span></div>
       </div>
-      <h3 class="products-sub">Coming soon</h3>
+      <p style="margin-top: 18px; text-align: center;"><a class="btn" style="background: var(--blue); color: #FFFFFF;" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo" target="_blank" rel="noopener">Book a demo and get a quote</a></p>
+      <h3 class="products-sub">Grow with TablePay</h3>
       <div class="products">
-        <div class="product soon"><span class="soon-tag">Coming soon</span><h3>TablePay Order</h3><p>Guests order from the table and orders reach your team straight away.</p><span class="model">Monthly upgrade</span></div>
+        <div class="product soon"><span class="partner-tag">Available for partner venues</span><h3>TablePay Order</h3><p>Guests order from the table and orders reach your team instantly. Set up around how your kitchen works.</p><a class="model" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20to%20talk%20about%20TablePay%20Order" target="_blank" rel="noopener" style="text-decoration: none; color: var(--blue);">Talk to us &rarr;</a></div>
         <div class="product soon"><span class="soon-tag">Coming soon</span><h3>TablePay Pay</h3><p>Guests pay by M-Pesa at the table and split the bill, straight to your own till.</p><span class="model">Small fee per payment</span></div>
         <div class="product soon"><span class="soon-tag">Coming soon</span><h3>TablePay POS</h3><p>Restaurant operations and order management, built around how you serve.</p><span class="model">Subscription</span></div>
       </div>
