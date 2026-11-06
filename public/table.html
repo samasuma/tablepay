@@ -11,6 +11,9 @@
 <style>
   :root { --ph: #d5dee8; --ph-ink: #7b8896; --tag-ink: #a14a00; --tag-bg: #fdf0e1; --blue-tint: #f3f8ff; }
   @media (prefers-color-scheme: dark) { :root { --ph: #233040; --ph-ink: #6f7d8c; --tag-ink: #f0a868; --tag-bg: #3a2614; --blue-tint: #15233a; } }
+  @media not (prefers-color-scheme: dark) {
+    :root { --page: #f6f2ec; --line: #e8e1d6; --field: #faf7f2; --ph: #efe7db; --ph-ink: #9a8b78; }
+  }
   html, body { background: var(--page); }
   body { font-variant-numeric: tabular-nums; }
   .shell { max-width: 520px; margin: 0 auto; min-height: 100vh; position: relative; }
@@ -19,16 +22,18 @@
   /* header */
   .hdr { background: var(--card); padding: 18px 16px 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
   .brand { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--bar); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 20px; }
+  .logo { width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--accent); color: var(--accent-ink); overflow: hidden; display: grid; place-items: center; font-weight: 800; font-size: 20px; }
+  .logo.img { background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+  .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .bt { flex: 1; min-width: 0; }
   .rname { font-size: 17px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rsub { font-size: 13px; color: var(--muted); }
-  .tchip { background: var(--bar); color: #fff; border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .tchip { background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 700; white-space: nowrap; }
   .acts { display: flex; align-items: center; gap: 8px; }
   .hp { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-  .hp svg { color: var(--accent); }
+  .hp svg { color: var(--accent-text, var(--accent)); }
   .hp .sub { color: var(--muted); font-weight: 600; }
-  .hp.called { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .hp.called { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text, var(--accent)); }
   .hp.ontheway { border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
   .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent); animation: pulse 1.6s ease-in-out infinite; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 6%, transparent); } }
@@ -39,13 +44,13 @@
   .searchrow { display: flex; align-items: center; gap: 10px; }
   .searchbox { flex: 1; height: 44px; border-radius: 12px; background: var(--field); border: 1px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 12px; color: var(--muted); }
   .searchbox input { border: 0; outline: none; background: transparent; flex: 1; min-width: 0; font-size: 15px; color: var(--ink); }
-  .linkbtn { border: 0; background: transparent; color: var(--accent); font-weight: 700; font-size: 14px; padding: 10px 4px; cursor: pointer; }
+  .linkbtn { border: 0; background: transparent; color: var(--accent-text, var(--accent)); font-weight: 700; font-size: 14px; padding: 10px 4px; cursor: pointer; }
 
   /* status cards */
   .status { margin: 12px 16px 0; background: var(--card); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
   .status-row { display: flex; align-items: center; gap: 12px; }
-  .status-ic { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; color: #fff; background: var(--accent); }
-  .status.ack .status-ic { background: var(--ok); }
+  .status-ic { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; color: var(--accent-ink); background: var(--accent); }
+  .status.ack .status-ic { background: var(--ok); color: #fff; }
   .status-t { font-size: 15px; font-weight: 800; }
   .status-s { font-size: 13px; color: var(--muted); }
   .status-note { font-size: 13px; background: var(--field); border-radius: 10px; padding: 8px 10px; }
@@ -58,14 +63,15 @@
   .btn-sm { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
 
   /* chips */
-  .chips { position: sticky; top: 0; z-index: 15; background: var(--page); display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; scrollbar-width: none; }
+  .chips { position: sticky; top: 0; z-index: 15; background: var(--page); display: flex; gap: 8px; padding: 12px 40px 12px 16px; overflow-x: auto; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
   .chips::-webkit-scrollbar { display: none; }
   .chip { flex: none; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer; }
-  .chip.on { background: var(--bar); border-color: var(--bar); color: #fff; font-weight: 700; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
 
   /* menu */
   .sec { padding: 6px 16px 10px; display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 64px; }
-  .sec h2 { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin: 6px 0 2px; }
+  .sec h2 { font-size: 21px; font-weight: 800; letter-spacing: -.02em; margin: 14px 0 2px; }
   .picks { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 4px; }
   .picks::-webkit-scrollbar { display: none; }
   .pick { width: 172px; flex: none; background: var(--card); border-radius: 18px; overflow: hidden; }
@@ -73,6 +79,12 @@
   .pick .ctrl { right: 8px; bottom: 8px; }
   .pick-b { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; font-weight: 700; }
   .pick-b .p { color: var(--muted); }
+  .pick.text { width: 232px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .pick.text .pn { font-size: 15px; font-weight: 700; }
+  .pick.text .pd { font-size: 13px; line-height: 1.4; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .pick.text .pr { margin-top: auto; padding-top: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 700; }
+  .ctrl-in { flex: none; align-self: center; }
+  .ctrl-in .add { box-shadow: none; border: 1px solid var(--line); }
   .item { background: var(--card); border-radius: 18px; padding: 14px; display: flex; gap: 14px; }
   .item.out { opacity: .55; }
   .item-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -81,26 +93,26 @@
   .item-p { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 15px; font-weight: 700; flex-wrap: wrap; }
   .tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 2px 6px; color: var(--muted); background: var(--field); }
   .tag.spicy { color: var(--tag-ink); background: var(--tag-bg); }
-  .tag.chef { color: var(--accent); background: var(--accent-soft); }
+  .tag.chef { color: var(--accent-text, var(--accent)); background: var(--accent-soft); }
   .photo { width: 92px; height: 92px; flex: none; border-radius: 14px; background: var(--ph); color: var(--ph-ink); position: relative; display: grid; place-items: center; }
   .photo img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
   .ctrl { position: absolute; right: -6px; bottom: -6px; }
-  .add { width: 36px; height: 36px; border-radius: 999px; border: 0; background: var(--card); color: var(--accent); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(17,24,39,.18); cursor: pointer; }
-  .stepper-d { height: 36px; border-radius: 999px; background: var(--bar); color: #fff; display: flex; align-items: center; gap: 2px; padding: 0 4px; }
-  .stepper-d button { width: 28px; height: 28px; border: 0; background: transparent; color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .add { width: 36px; height: 36px; border-radius: 999px; border: 0; background: var(--card); color: var(--accent-text, var(--accent)); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(17,24,39,.18); cursor: pointer; }
+  .stepper-d { height: 36px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+  .stepper-d button { width: 28px; height: 28px; border: 0; background: transparent; color: inherit; display: grid; place-items: center; cursor: pointer; }
   .stepper-d span { min-width: 16px; text-align: center; font-size: 14px; font-weight: 800; }
   .soldout { font-size: 13px; font-weight: 700; margin-top: 4px; }
 
   /* dock */
   .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--page); padding: 12px 16px calc(18px + env(safe-area-inset-bottom)); }
   .dock-in { max-width: 488px; margin: 0 auto; display: flex; gap: 10px; }
-  .bar { flex: 1; height: 60px; border: 0; border-radius: 18px; color: #fff; display: flex; align-items: center; gap: 12px; padding: 0 18px; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; }
-  .bar.dark { background: var(--bar); box-shadow: 0 8px 24px rgba(17,24,39,.25); }
-  .bar.blue { background: var(--accent); box-shadow: 0 8px 24px rgba(26,115,231,.3); }
-  .bar.green { background: var(--ok); justify-content: center; }
+  .bar { flex: 1; height: 60px; border: 0; border-radius: 18px; color: var(--accent-ink); display: flex; align-items: center; gap: 12px; padding: 0 18px; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; }
+  .bar.dark { background: var(--accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .bar.blue { background: var(--accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .bar.green { background: var(--ok); color: #fff; justify-content: center; }
   .bar.center { justify-content: center; }
   .bar .amt { margin-left: auto; }
-  .badge { width: 28px; height: 28px; border-radius: 999px; background: var(--accent); display: grid; place-items: center; font-size: 14px; font-weight: 800; }
+  .badge { width: 28px; height: 28px; border-radius: 999px; background: var(--accent-ink); color: var(--accent); display: grid; place-items: center; font-size: 14px; font-weight: 800; }
   .bar-2 { height: 60px; padding: 0 20px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); color: var(--ink); display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
   .bar:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -123,7 +135,7 @@
   .line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 14px; }
   .line .q { color: var(--muted); }
   .sep { height: 1px; background: var(--line); margin: 6px 0; }
-  .status-pill { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 3px 7px; background: var(--accent-soft); color: var(--accent); }
+  .status-pill { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 3px 7px; background: var(--accent-soft); color: var(--accent-text, var(--accent)); }
   .status-pill.preparing { background: var(--warn-soft); color: var(--warn); }
   .status-pill.served { background: var(--ok-soft); color: var(--ok); }
   .status-pill.cancelled { background: var(--danger-soft); color: var(--danger); text-decoration: line-through; }
@@ -140,11 +152,11 @@
   .opt .os { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
   .opt .oa { font-size: 15px; font-weight: 700; }
   .mini-step { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
-  .mini-step button { width: 30px; height: 28px; border: 0; background: transparent; color: var(--accent); font-weight: 800; font-size: 16px; cursor: pointer; }
+  .mini-step button { width: 30px; height: 28px; border: 0; background: transparent; color: var(--accent-text, var(--accent)); font-weight: 800; font-size: 16px; cursor: pointer; }
   .mini-step b { min-width: 16px; text-align: center; color: var(--ink); }
   .tips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .tipb { height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
-  .tipb.on { background: var(--bar); border-color: var(--bar); color: #fff; }
+  .tipb.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .field-row { height: 52px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px; }
   .field-row:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
   .field-row input { border: 0; outline: none; background: transparent; font-size: 16px; font-weight: 600; flex: 1; min-width: 0; color: var(--ink); }
@@ -154,7 +166,7 @@
   .summary-in { max-width: 488px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
   .sumline { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
   .sumtotal { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; padding-top: 4px; }
-  .primary { height: 58px; border: 0; border-radius: 16px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; width: 100%; text-decoration: none; }
+  .primary { height: 58px; border: 0; border-radius: 16px; background: var(--accent); color: var(--accent-ink); font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; width: 100%; text-decoration: none; }
   .primary:disabled { opacity: .5; cursor: not-allowed; }
   .secondary { height: 56px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; }
   .ghost-danger { height: 44px; border: 0; background: transparent; color: var(--danger); font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
@@ -193,9 +205,9 @@
   .sheet-h > div { flex: 1; display: flex; flex-direction: column; gap: 4px; }
   .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .tile { min-height: 112px; border-radius: 18px; border: 1px solid var(--line); background: var(--field); padding: 14px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 10px; text-align: left; color: var(--ink); cursor: pointer; }
-  .tile .ti { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .tile .ti { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text, var(--accent)); display: grid; place-items: center; }
   .tile.primary-t { border: 1.5px solid var(--accent); background: var(--blue-tint); }
-  .tile.primary-t .ti { background: var(--accent); color: #fff; }
+  .tile.primary-t .ti { background: var(--accent); color: var(--accent-ink); }
   .tile.sent { border-color: var(--ok); background: var(--ok-soft); }
   .tile.sent .ti { background: var(--ok); color: #fff; }
   .tile b { font-size: 15px; display: block; }
@@ -207,7 +219,7 @@
   .cart-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .cart-line .n { font-weight: 700; }
   .stepper-l { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 12px; }
-  .stepper-l button { width: 40px; height: 40px; border: 0; background: transparent; color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+  .stepper-l button { width: 40px; height: 40px; border: 0; background: transparent; color: var(--accent-text, var(--accent)); display: grid; place-items: center; cursor: pointer; }
   .stepper-l span { min-width: 22px; text-align: center; font-weight: 800; }
   textarea.field { min-height: 88px; resize: vertical; }
 
@@ -259,6 +271,26 @@ const available = () => Math.max(0, state.bill.balance - state.bill.pending);
 const okIcon = icon("check", 18, 2.6);
 const errIcon = icon("alert", 18, 2.2);
 
+const R = () => state.data.restaurant;
+const menuOnly = () => !!R().menu_only;
+const hasPic = (i) => !!i.image_url || !!R().dish_art;
+
+// The standard template's only customisation: one brand colour (+ logo)
+function applyBrand(r) {
+  const c = /^#[0-9a-f]{6}$/i.test(r.brand_color || "") ? r.brand_color : null;
+  const root = document.documentElement.style;
+  if (!c) return;
+  const [rr, gg, bb] = [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const light = 0.2126 * rr + 0.7152 * gg + 0.0722 * bb > 0.4;
+  root.setProperty("--accent", c);
+  root.setProperty("--accent-ink", light ? "#111111" : "#ffffff");
+  root.setProperty("--accent-text", light ? `color-mix(in srgb, ${c} 45%, #000)` : c);
+  root.setProperty("--accent-soft", `color-mix(in srgb, ${c} 14%, var(--card))`);
+  root.setProperty("--blue-tint", `color-mix(in srgb, ${c} 7%, var(--card))`);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", c);
+}
+
 function setView(v) { state.view = v; render(); window.scrollTo(0, 0); }
 
 // ---------- data ----------
@@ -268,6 +300,7 @@ async function load() {
     state.data = d;
     state.bill = d.bill;
     state.receiptToken = d.session.receipt_token;
+    applyBrand(d.restaurant);
     document.title = `${d.restaurant.name} · ${tableName()}`;
     state.requests = await api(`/api/t/${code}/requests`);
     render();
@@ -368,13 +401,14 @@ function artFor(i) {
   return (CAT_RULES.find(([re]) => re.test(cat)) || [0, "default"])[1];
 }
 function photo(i, extra = "") {
+  if (!hasPic(i)) return "";
   const src = i.image_url || `/img/dishes/${artFor(i)}.svg`;
   return `<div class="photo ${extra}"><img src="${esc(src)}" alt="" loading="lazy">${ctrl(i)}</div>`;
 }
-function ctrl(i) {
-  if (!i.available) return "";
+function ctrl(i, cls = "ctrl") {
+  if (!i.available || menuOnly()) return "";
   const q = state.cart.get(i.id) || 0;
-  return `<div class="ctrl">${q
+  return `<div class="${cls}">${q
     ? `<div class="stepper-d"><button data-dec="${i.id}" aria-label="Remove one ${esc(i.name)}">${icon("minus", 16, 2.4)}</button><span>${q}</span><button data-inc="${i.id}" aria-label="Add one ${esc(i.name)}">${icon("plus", 16, 2.4)}</button></div>`
     : `<button class="add" data-inc="${i.id}" aria-label="Add ${esc(i.name)}">${icon("plus", 18, 2.4)}</button>`}</div>`;
 }
@@ -387,10 +421,13 @@ function itemCard(i) {
       ${i.description ? `<div class="item-d">${esc(i.description)}</div>` : ""}
       ${i.available ? `<div class="item-p"><span>${kes(i.price)}</span>${tags}</div>` : `<div class="soldout">Sold out today</div>`}
     </div>
-    ${photo(i)}
+    ${hasPic(i) ? photo(i) : ctrl(i, "ctrl-in")}
   </article>`;
 }
 function pickCard(i) {
+  if (!hasPic(i)) return `<article class="pick text"><div class="pn">${esc(i.name)}</div>
+    ${i.description ? `<div class="pd">${esc(i.description)}</div>` : ""}
+    <div class="pr"><span>${kes(i.price)}</span>${ctrl(i, "ctrl-in")}</div></article>`;
   return `<article class="pick">${photo(i)}<div class="pick-b"><span>${esc(i.name)}</span><span class="p">${kes(i.price)}</span></div></article>`;
 }
 
@@ -402,7 +439,8 @@ function menuView() {
   return `<div class="shell pad-dock">
   <header class="hdr">
     <div class="brand">
-      <div class="logo" aria-hidden="true">${esc(d.restaurant.name.trim()[0] || "R")}</div>
+      ${d.restaurant.logo_url ? `<div class="logo img"><img src="${esc(d.restaurant.logo_url)}" alt=""></div>`
+        : `<div class="logo" aria-hidden="true">${esc(d.restaurant.name.trim()[0] || "R")}</div>`}
       <div class="bt"><div class="rname">${esc(d.restaurant.name)}</div><div class="rsub">${esc(d.restaurant.branch || d.restaurant.tagline || "")}</div></div>
       <div class="tchip">${esc(tableName())}</div>
     </div>
@@ -410,12 +448,12 @@ function menuView() {
       <label class="searchbox">${icon("search", 18)}<input id="q" type="search" placeholder="Search dishes and drinks" aria-label="Search dishes and drinks" value="${esc(state.q)}" autocomplete="off"></label>
       <button class="linkbtn" data-act="search-close">Cancel</button></div>`
     : `<div class="acts">
-      ${servicePill()}
-      <button class="hp" data-go="bill">${icon("receipt", 18)}Bill${b.subtotal ? `<span class="sub">${kes(b.balance)}</span>` : ""}</button>
+      ${menuOnly() ? "" : `${servicePill()}
+      <button class="hp" data-go="bill">${icon("receipt", 18)}Bill${b.subtotal ? `<span class="sub">${kes(b.balance)}</span>` : ""}</button>`}
       <button class="iconbtn" data-act="search" aria-label="Search the menu">${icon("search", 18)}</button>
     </div>`}
   </header>
-  <div id="statusBox">${statusCards()}</div>
+  <div id="statusBox">${menuOnly() ? "" : statusCards()}</div>
   ${state.searching ? `<main class="sec" style="padding-top:14px">
       ${q ? (results.length ? results.map(itemCard).join("") : `<div class="empty-card card"><div class="ei">${icon("search", 24)}</div>No dishes match “${esc(state.q)}”.</div>`)
           : `<p class="fine" style="margin:20px 0">Type a dish or drink, e.g. “chicken” or “juice”.</p>`}
@@ -433,6 +471,7 @@ function menuView() {
 }
 
 function dock() {
+  if (menuOnly()) return "";
   if (cartCount()) return `<div class="dock"><div class="dock-in"><button class="bar dark" data-act="cart">
     <span class="badge">${cartCount()}</span><span>View order</span><span class="amt">${kes(cartTotal())}</span></button></div></div>`;
   if (state.bill.balance > 0) return `<div class="dock"><div class="dock-in"><button class="bar blue" data-go="bill">

@@ -117,6 +117,11 @@ function addColumn(table: string, column: string, definition: string) {
 addColumn("menu_items", "image_url", "TEXT");
 addColumn("service_requests", "note", "TEXT");
 addColumn("orders", "placed_by", "TEXT NOT NULL DEFAULT 'guest'");
+// Per-venue look and mode (the standard template's only customisations)
+addColumn("restaurants", "brand_color", "TEXT");
+addColumn("restaurants", "logo_url", "TEXT");
+addColumn("restaurants", "menu_only", "INTEGER NOT NULL DEFAULT 0");
+addColumn("restaurants", "dish_art", "INTEGER NOT NULL DEFAULT 0");
 
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {

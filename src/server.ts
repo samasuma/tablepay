@@ -15,11 +15,14 @@ const CALLBACK_SECRET = process.env.MPESA_CALLBACK_SECRET || "cb";
 seedDemo();
 
 const app = express();
-app.use(express.json({ limit: "100kb" }));
+app.use(express.json({ limit: "400kb" }));
 app.use(express.static(join(process.cwd(), "public"), { extensions: ["html"] }));
 
 // ---------- helpers ----------
-type Restaurant = { id: number; slug: string; name: string; branch: string; tagline: string; phone: string; email: string; staff_pin: string; admin_pin: string };
+type Restaurant = {
+  id: number; slug: string; name: string; branch: string; tagline: string; phone: string; email: string;
+  staff_pin: string; admin_pin: string; brand_color: string | null; logo_url: string | null; menu_only: number; dish_art: number;
+};
 type Table = { id: number; restaurant_id: number; label: string; code: string; active: number };
 type Session = { id: number; table_id: number; status: string; receipt_token: string; opened_at: string; closed_at: string | null };
 
@@ -265,13 +268,17 @@ function placeOrder(table: Table, restaurant: Restaurant, body: any, placedBy: "
   return orderId;
 }
 
+const MENU_ONLY = "This restaurant uses TablePay for its menu only. Please ask a member of staff.";
+
 app.post("/api/t/:code/orders", wrap((req, res) => {
   const { table, restaurant } = tableByCode(req.params.code);
+  if (restaurant.menu_only) throw new HttpError(403, MENU_ONLY);
   res.json({ ok: true, orderId: placeOrder(table, restaurant, req.body, "guest") });
 }));
 
 app.post("/api/t/:code/requests", wrap((req, res) => {
   const { table, restaurant } = tableByCode(req.params.code);
+  if (restaurant.menu_only) throw new HttpError(403, MENU_ONLY);
   const KINDS = ["waiter", "bill", "water", "other"];
   const kind = KINDS.includes(req.body?.kind) ? req.body.kind : "waiter";
   const note = String(req.body?.note || "").trim().slice(0, 140) || null;
@@ -531,6 +538,41 @@ app.post("/api/staff/tables/:id/orders", requireStaff(), wrap((req, res) => {
 }));
 
 // ================= ADMIN API =================
+// Look & mode: logo, one brand colour, menu-only, illustrated placeholders
+const LOOK_FIELDS = ["name", "branch", "tagline", "brand_color", "logo_url", "menu_only", "dish_art"] as const;
+function lookOf(rid: number) {
+  return get<Record<string, unknown>>(`SELECT ${LOOK_FIELDS.join(", ")} FROM restaurants WHERE id = ?`, rid);
+}
+app.get("/api/admin/look", requireStaff(), wrap((req, res) => {
+  res.json(lookOf(ridOf(req)));
+}));
+app.patch("/api/admin/look", requireStaff("admin"), wrap((req, res) => {
+  const rid = ridOf(req);
+  const b = req.body || {};
+  const sets: string[] = [], vals: unknown[] = [];
+  const put = (k: string, v: unknown) => { sets.push(`${k} = ?`); vals.push(v); };
+  if ("name" in b) {
+    const name = String(b.name || "").trim().slice(0, 60);
+    if (!name) throw new HttpError(400, "The restaurant needs a name");
+    put("name", name);
+  }
+  for (const k of ["branch", "tagline"]) if (k in b) put(k, String(b[k] || "").trim().slice(0, 80) || null);
+  if ("brand_color" in b) {
+    const c = String(b.brand_color || "").trim();
+    if (c && !/^#[0-9a-fA-F]{6}$/.test(c)) throw new HttpError(400, "Brand colour must look like #1a73e7");
+    put("brand_color", c || null);
+  }
+  if ("logo_url" in b) {
+    const u = String(b.logo_url || "").trim();
+    const ok = !u || /^https:\/\/\S+$/.test(u) || /^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(u);
+    if (!ok || u.length > 300_000) throw new HttpError(400, "Logo must be an image under 200 KB or an https link");
+    put("logo_url", u || null);
+  }
+  for (const k of ["menu_only", "dish_art"]) if (k in b) put(k, b[k] ? 1 : 0);
+  if (sets.length) run(`UPDATE restaurants SET ${sets.join(", ")} WHERE id = ?`, ...vals, rid);
+  res.json(lookOf(rid));
+}));
+
 app.get("/api/admin/menu", requireStaff(), wrap((req, res) => {
   res.json(menuFor(ridOf(req)));
 }));
