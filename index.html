@@ -240,8 +240,14 @@ footer { padding-bottom: 72px; }
 .p-row i { flex: 1; border-bottom: 1px dotted #9C8F7E; transform: translateY(-3px); }
 .p-row em { font-family: var(--body); font-style: normal; font-size: 13px; font-weight: 700; }
 .p-desc { font-style: italic; font-size: 15px; color: #5A5047; }
-.look.talkers .compare { height: 300px; display: flex; gap: 12px; justify-content: center; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
-.look.talkers .compare img { width: 46%; height: auto; aspect-ratio: 105 / 148; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+.look.talkers .compare { height: 300px; display: flex; gap: 10px; justify-content: center; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 0 12px; }
+.look.talkers .compare > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.look.talkers .compare img { width: 100%; height: auto; aspect-ratio: 105 / 148; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.look.talkers .compare span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.premium-talkers { margin: 28px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.premium-talkers img { width: 100%; height: auto; border-radius: 22px; border: 1px solid var(--line); }
+.premium-talkers b { display: block; font-family: var(--display); font-size: 19px; font-weight: 600; }
+.premium-talkers span { color: var(--muted); font-size: 15px; }
 .hero-contact { margin-top: 14px; font-size: 15px; color: var(--on-navy-muted); }
 .hero-contact a { color: var(--on-navy); font-weight: 700; }
 .closer { background: var(--navy); color: var(--on-navy); }
@@ -386,12 +392,17 @@ footer { padding-bottom: 72px; }
         </figure>
         <figure class="look talkers">
           <div class="compare">
-            <img src="assets/talker-default.jpg" alt="A TablePay talker in standard navy" loading="lazy" width="827" height="1165">
-            <img src="assets/talker-brand.jpg" alt="The same talker in an example restaurant's colours" loading="lazy" width="827" height="1165">
+            <div><img src="assets/talker-kaya-standard.jpg" alt="A TablePay talker for Kaya Kitchen and Bar in standard navy" loading="lazy" width="827" height="1165"><span>Standard</span></div>
+            <div><img src="assets/talker-kaya-brand.jpg" alt="The same Kaya Kitchen and Bar talker in its own teal brand colour" loading="lazy" width="827" height="1165"><span>Your colours</span></div>
+            <div><img src="assets/talker-premium.jpg" alt="A premium talker for Ember and Salt on cream with a serif heading" loading="lazy" width="827" height="1165"><span>Premium</span></div>
           </div>
           <figcaption><b>Talkers in your colours</b><span>Tent, tower, or a panel on a wooden base, with QR code and tap on every table.</span></figcaption>
         </figure>
       </div>
+      <figure class="premium-talkers">
+        <img src="assets/premium-talkers.jpg" alt="Four premium talkers for Ember and Salt: cream card, charcoal card, wood and brushed brass" loading="lazy" width="1600" height="613">
+        <figcaption><b>Premium talkers</b><span>For TablePay Menu Premium: textured card, wood or brushed metal, on a walnut base or weighted metal block.</span></figcaption>
+      </figure>
     </div>
   </section>
 
