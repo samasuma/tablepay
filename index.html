@@ -136,6 +136,26 @@ section.band { padding-block: 72px; }
 .vbars i { display: block; background: var(--bar); border-radius: 5px 5px 0 0; }
 .vbars i.peak { background: var(--blue); }
 .vlabels { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 6px; font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.kpi { background: var(--ground); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.kpi span { font-size: 13px; color: var(--muted); }
+.kpi b { font-family: var(--display); font-size: 28px; font-weight: 800; line-height: 1.1; }
+.kpi em { font-style: normal; font-size: 13px; color: var(--muted); }
+.kpi em.up { color: var(--green); font-weight: 700; }
+.split { display: flex; align-items: center; gap: 24px; }
+.donut { width: 132px; height: 132px; flex: none; border-radius: 999px; background: conic-gradient(var(--blue) 0 52%, var(--green) 52% 82%, #F0A35B 82% 100%); display: flex; align-items: center; justify-content: center; }
+.donut > div { width: 84px; height: 84px; border-radius: 999px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.donut b { font-family: var(--display); font-size: 22px; }
+.donut span { font-size: 12px; color: var(--muted); }
+.legend { flex: 1; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.legend h4 { margin: 0 0 2px; }
+.legend span { display: flex; align-items: center; gap: 10px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend em { margin-left: auto; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+.top { list-style: none; counter-reset: t; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.top li { counter-increment: t; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.top li::before { content: counter(t); width: 24px; height: 24px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+.top em { margin-left: auto; font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
 .insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin-top: 26px; }
 .insights div { border-top: 1px solid var(--line); padding-top: 12px; }
 .insights b { display: block; font-size: 15px; }
@@ -275,24 +295,28 @@ footer { padding-bottom: 72px; }
         </div>
       </div>
       <div class="feature-media">
-        <div class="report" role="img" aria-label="Example monthly report: Table 4 is the busiest table and 8 pm is the peak hour">
+        <div class="report" role="img" aria-label="Example monthly report: 2,140 menu views, up 12 percent; busiest time Friday 8 pm; visits by area indoor 52 percent, terrace 30 percent, bar 18 percent; most viewed dish Nyama Choma">
           <div class="report-head"><b>Monthly report</b><span class="tag">Example</span></div>
-          <div>
-            <h4>Busiest tables (visits this month)</h4>
-            <div class="hbars">
-              <div class="hbar"><span>Table 4</span><span class="track"><span class="fill" style="width: 100%; display: block;"></span></span><span class="v">86</span></div>
-              <div class="hbar"><span>Table 1</span><span class="track"><span class="fill" style="width: 86%; display: block;"></span></span><span class="v">74</span></div>
-              <div class="hbar"><span>Terrace 2</span><span class="track"><span class="fill" style="width: 71%; display: block;"></span></span><span class="v">61</span></div>
-              <div class="hbar"><span>Table 6</span><span class="track"><span class="fill" style="width: 56%; display: block;"></span></span><span class="v">48</span></div>
-              <div class="hbar"><span>Bar 1</span><span class="track"><span class="fill" style="width: 38%; display: block;"></span></span><span class="v">33</span></div>
+          <div class="kpis">
+            <div class="kpi"><span>Menu views</span><b>2,140</b><em class="up">+12% vs last month</em></div>
+            <div class="kpi"><span>Busiest time</span><b>Fri 8 pm</b><em>Add a waiter here</em></div>
+          </div>
+          <div class="split">
+            <div class="donut" aria-hidden="true"><div><b>52%</b><span>indoor</span></div></div>
+            <div class="legend">
+              <h4>Visits by area</h4>
+              <span><i style="background: var(--blue);"></i>Indoor<em>52%</em></span>
+              <span><i style="background: var(--green);"></i>Terrace<em>30%</em></span>
+              <span><i style="background: #F0A35B;"></i>Bar<em>18%</em></span>
             </div>
           </div>
           <div>
-            <h4>Peak hours (share of visits)</h4>
-            <div class="vbars" aria-hidden="true">
-              <i style="height: 20%"></i><i style="height: 55%"></i><i style="height: 40%"></i><i style="height: 18%"></i><i style="height: 15%"></i><i style="height: 25%"></i><i style="height: 48%"></i><i style="height: 82%"></i><i class="peak" style="height: 100%"></i><i style="height: 71%"></i><i style="height: 30%"></i>
-            </div>
-            <div class="vlabels" aria-hidden="true"><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span></div>
+            <h4>Most viewed dishes</h4>
+            <ol class="top">
+              <li><span>Nyama Choma</span><em>412 views</em></li>
+              <li><span>Kaya Burger</span><em>356 views</em></li>
+              <li><span>Chicken Wings</span><em>298 views</em></li>
+            </ol>
           </div>
         </div>
       </div>
