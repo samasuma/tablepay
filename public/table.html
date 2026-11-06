@@ -238,6 +238,12 @@
   .cx-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cx-hero.has-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0) 55%); }
   .cx-hero > * { position: relative; z-index: 1; }
+  /* No venue photo: a slim bar on the paper instead of an empty dark panel */
+  .cx-hero:not(.has-photo) { height: 64px; background: transparent; color: var(--cx-ink); padding: 0; }
+  .cx-hero:not(.has-photo) .cx-mark, .cx-hero:not(.has-photo) > img { display: none; }
+  .cx-hero:not(.has-photo) .cx-top span { color: var(--cx-muted); }
+  .cx-hero:not(.has-photo) .iconbtn { background: transparent; border: 1px solid var(--cx-line); color: var(--cx-ink); }
+  .cx-hero:not(.has-photo) + .cx-intro { padding-top: 6px; }
   .cx-mark { font-family: var(--cx-font); font-size: 17px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
   .cx-hero .cx-top { position: absolute; top: 14px; left: 22px; right: 14px; display: flex; align-items: center; justify-content: space-between; z-index: 1; }
   .cx-hero .cx-top span { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #e6dccd; }

@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { all, get, run, tx } from "./db.js";
 import { publish, subscribe } from "./events.js";
 import { MOCK, normalisePhone, parseCallback, stkPush, stkQuery, type StkCallbackOutcome } from "./mpesa.js";
-import { seedDemo, token } from "./seed.js";
+import { renameOldDemo, seedDemo, seedPremiumDemo, token } from "./seed.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
@@ -13,6 +13,8 @@ const SECRET = process.env.APP_SECRET || randomBytes(32).toString("hex");
 const CALLBACK_SECRET = process.env.MPESA_CALLBACK_SECRET || "cb";
 
 seedDemo();
+renameOldDemo();
+seedPremiumDemo();
 
 const app = express();
 app.use(express.json({ limit: "400kb" }));

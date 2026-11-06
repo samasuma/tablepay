@@ -11,7 +11,7 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-Open `http://localhost:3000` for a launcher with demo tables. A demo restaurant is seeded on first run.
+Open `http://localhost:3000` for a launcher with demo tables. Two demo venues are seeded on first run: **Kaya Kitchen & Bar** (TablePay Menu, the standard template) and **Ember & Salt** (TablePay Menu Premium, the boutique template) with one table at `/t/premium`.
 
 | Screen | URL | Who |
 |---|---|---|
