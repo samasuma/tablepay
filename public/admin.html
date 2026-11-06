@@ -181,10 +181,10 @@ function lookView(admin) {
     <div class="small">Template
       <div class="row" style="gap:16px;margin-top:6px;flex-wrap:wrap">
         <label class="toggle"><input type="radio" name="template" value="standard" ${look.template !== "custom" ? "checked" : ""} ${dis}/> TablePay Menu (standard)</label>
-        <label class="toggle"><input type="radio" name="template" value="custom" ${look.template === "custom" ? "checked" : ""} ${dis}/> TablePay Custom (boutique)</label>
+        <label class="toggle"><input type="radio" name="template" value="custom" ${look.template === "custom" ? "checked" : ""} ${dis}/> TablePay Menu Premium (boutique)</label>
       </div></div>
     ${look.template === "custom" ? `<fieldset style="border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:14px;margin:0">
-      <legend class="small" style="padding:0 6px"><strong>Custom options</strong></legend>
+      <legend class="small" style="padding:0 6px"><strong>Premium options</strong></legend>
       <label class="small">Heading font
         <select class="field" name="display_font" ${dis}>${lookOptions.fonts.map((f) => `<option ${f === (look.display_font || lookOptions.fonts[0]) ? "selected" : ""}>${esc(f)}</option>`).join("")}</select></label>
       <div class="small">Paper colour
