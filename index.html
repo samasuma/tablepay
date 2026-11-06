@@ -142,6 +142,15 @@ section.band { padding-block: 72px; }
 .kpi b { font-family: var(--display); font-size: 28px; font-weight: 800; line-height: 1.1; }
 .kpi em { font-style: normal; font-size: 13px; color: var(--muted); }
 .kpi em.up { color: var(--green); font-weight: 700; }
+.line { width: 100%; height: 120px; display: block; overflow: visible; }
+.line .base { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.line .area { fill: var(--blue); opacity: 0.12; }
+.line .stroke { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.linewrap { position: relative; }
+.peakdot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 999px; background: var(--surface); border: 3px solid var(--blue); box-sizing: border-box; }
+.xlabels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.peak-note { font-size: 14px; color: var(--muted); margin-top: 8px; }
+.peak-note b { color: var(--ink); }
 .split { display: flex; align-items: center; gap: 24px; }
 .donut { width: 132px; height: 132px; flex: none; border-radius: 999px; background: conic-gradient(var(--blue) 0 52%, var(--green) 52% 82%, #F0A35B 82% 100%); display: flex; align-items: center; justify-content: center; }
 .donut > div { width: 84px; height: 84px; border-radius: 999px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
@@ -295,20 +304,24 @@ footer { padding-bottom: 72px; }
         </div>
       </div>
       <div class="feature-media">
-        <div class="report" role="img" aria-label="Example monthly report: 2,140 menu views, up 12 percent; busiest time Friday 8 pm; visits by area indoor 52 percent, terrace 30 percent, bar 18 percent; most viewed dish Nyama Choma">
+        <div class="report" role="img" aria-label="Example monthly report: 2,140 menu views, up 12 percent; busiest time Friday 8 pm; guests peak at 8 pm with a lunch rush at 1 pm; most viewed dish Nyama Choma">
           <div class="report-head"><b>Monthly report</b><span class="tag">Example</span></div>
           <div class="kpis">
             <div class="kpi"><span>Menu views</span><b>2,140</b><em class="up">+12% vs last month</em></div>
             <div class="kpi"><span>Busiest time</span><b>Fri 8 pm</b><em>Add a waiter here</em></div>
           </div>
-          <div class="split">
-            <div class="donut" aria-hidden="true"><div><b>52%</b><span>indoor</span></div></div>
-            <div class="legend">
-              <h4>Visits by area</h4>
-              <span><i style="background: var(--blue);"></i>Indoor<em>52%</em></span>
-              <span><i style="background: var(--green);"></i>Terrace<em>30%</em></span>
-              <span><i style="background: #F0A35B;"></i>Bar<em>18%</em></span>
+          <div>
+            <h4>Guests through the day</h4>
+            <div class="linewrap">
+            <svg class="line" viewBox="0 -10 300 115" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="0" y1="100" x2="300" y2="100" class="base"/>
+              <polygon points="0,100 0,77 30,45.5 60,59 90,78.8 120,81.5 150,72.5 180,51.8 210,21.2 240,5 270,31.1 300,68 300,100" class="area"/>
+              <polyline points="0,77 30,45.5 60,59 90,78.8 120,81.5 150,72.5 180,51.8 210,21.2 240,5 270,31.1 300,68" class="stroke"/>
+            </svg>
+            <span class="peakdot" style="left: 80%; top: 13%;"></span>
             </div>
+            <div class="xlabels" aria-hidden="true"><span>12</span><span>2 pm</span><span>4 pm</span><span>6 pm</span><span>8 pm</span><span>10 pm</span></div>
+            <p class="peak-note">Peaks at <b>8 pm</b>, with a smaller lunch rush at 1 pm</p>
           </div>
           <div>
             <h4>Most viewed dishes</h4>
