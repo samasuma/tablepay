@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>See your menu on TablePay</title>
+<meta name="description" content="A two-minute tour: see your restaurant's menu on TablePay, the way your guests will see it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --navy: #1B2E4B; --navy-2: #24395A; --blue: #1E5EB8; --blue-soft: #E3EDFB; --green: #12805C;
+  --ground: #F3F5F9; --surface: #FFFFFF; --ink: #17233A; --muted: #3D4859; --line: #D8DEE8;
+  --on-navy: #FFFFFF; --on-navy-muted: #C7D3E6; --sky: #9CC2F5;
+  --display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+  --body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --accent: #B5452B; --accent-text: #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
+    --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
+  --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: var(--blue); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 24px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; border: 0; }
+.btn-white { background: #FFFFFF; color: #1B2E4B; }
+.btn-wa { background: #128C4A; color: #FFFFFF; }
+.btn-wa:hover { background: #0E7A40; }
+.btn-line { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+
+/* top */
+.top { background: var(--navy); color: var(--on-navy); }
+.bar { display: flex; align-items: center; justify-content: space-between; padding-block: 16px; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 21px; color: var(--on-navy); text-decoration: none; }
+.progress { font-size: 13px; font-weight: 600; color: var(--on-navy-muted); }
+.intro { padding-block: 20px 44px; display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+.intro .kick { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky); }
+.intro h1 { font-size: clamp(34px, 7vw, 54px); font-weight: 800; }
+.intro p { color: var(--on-navy-muted); font-size: 17px; }
+
+/* personalise card */
+.make { background: var(--surface); color: var(--ink); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 16px; margin-top: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+.make label { font-size: 14px; font-weight: 700; display: block; margin-bottom: 6px; }
+.make input[type=text] { width: 100%; min-height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--ground); color: var(--ink); padding: 0 16px; font: 600 17px var(--body); }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { width: 44px; height: 44px; border-radius: 999px; border: 3px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); padding: 0; }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+.make .btn { align-self: stretch; background: var(--blue); color: #FFFFFF; }
+
+/* chapters */
+.ch { padding-block: 64px; }
+.ch.alt { background: var(--surface); border-block: 1px solid var(--line); }
+.ch-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+.ch-grid.flip > :first-child { order: 2; }
+.step { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px; }
+.step i { font-style: normal; width: 28px; height: 28px; border-radius: 999px; background: var(--blue); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; letter-spacing: 0; }
+.ch h2 { font-size: clamp(28px, 5vw, 40px); font-weight: 800; }
+.ch .say { color: var(--muted); font-size: 17px; margin-top: 14px; }
+.hint { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; font-size: 14px; font-weight: 700; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 8px 14px; }
+.stage { display: flex; justify-content: center; }
+.stage.stack { flex-direction: column; align-items: center; gap: 0; }
+.stage.stack .panel { width: 100%; max-width: 400px; margin-top: 18px; }
+.screen.short { height: 420px; }
+
+/* talker */
+.table { width: 100%; max-width: 380px; aspect-ratio: 1 / 0.92; border-radius: 26px; background: linear-gradient(180deg, #E9DCC8 0 66%, #C9AE8A 66% 100%); position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12%; overflow: hidden; }
+.talker { width: 50%; aspect-ratio: 105 / 148; background: #FFFFFF; border-radius: 10px; box-shadow: 0 18px 30px rgba(60,40,20,0.28); display: flex; flex-direction: column; align-items: center; padding: 9% 8% 6%; gap: 5%; color: #17130F; border: 0; position: relative; }
+.talker .t-top { width: 100%; display: flex; align-items: center; gap: 6px; }
+.talker .t-logo { width: 24px; height: 24px; border-radius: 7px; background: var(--accent); color: var(--accent-text); font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+.talker .t-name { font-weight: 800; font-size: 12px; line-height: 1.15; text-align: left; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.talker .t-q { font-weight: 800; font-size: 13px; line-height: 1.15; text-align: center; }
+.talker svg.qr { width: 58%; height: auto; }
+.talker .t-foot { margin-top: auto; width: 100%; display: flex; justify-content: space-between; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5D554B; }
+.talker .t-band { position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--accent); border-radius: 10px 10px 0 0; }
+.ripple { position: absolute; left: 50%; top: 52%; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 999px; border: 3px solid var(--blue); opacity: 0; pointer-events: none; }
+.table.tapped .ripple { animation: ripple 900ms ease-out; }
+@keyframes ripple { from { transform: scale(0.4); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
+.hand { position: absolute; right: 9%; bottom: 9%; width: 56px; height: 56px; border-radius: 999px; background: var(--blue); color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(30,94,184,0.4); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .hand { animation: bob 1.6s ease-in-out infinite; } @keyframes bob { 50% { transform: translate(-6px, -6px); } } }
+
+/* phone */
+.phone { width: 300px; max-width: 100%; background: #10141B; border-radius: 40px; padding: 9px; box-shadow: 0 24px 60px rgba(16,20,27,0.28); }
+.screen { border-radius: 32px; overflow: hidden; height: 560px; display: flex; flex-direction: column; position: relative; }
+.notch { position: absolute; top: 8px; left: 50%; width: 84px; height: 22px; margin-left: -42px; background: #10141B; border-radius: 999px; z-index: 3; }
+/* standard look */
+.std { background: #F6F2EC; color: #17130F; font-family: var(--body); }
+.std .m-head { background: #FFFFFF; padding: 40px 14px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #E8E1D6; }
+.std .m-logo { width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: var(--accent-text); font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center; flex: none; }
+.std .m-title { font-weight: 800; font-size: 15px; line-height: 1.2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.std .m-title small { display: block; font-weight: 500; font-size: 12px; color: #5D554B; }
+.std .chips { display: flex; gap: 6px; padding: 10px 14px; overflow-x: auto; scrollbar-width: none; flex: none; }
+.std .chips::-webkit-scrollbar { display: none; }
+.std .chip { flex: none; min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E8E1D6; background: #FFFFFF; font-weight: 600; font-size: 13px; color: #17130F; }
+.std .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.std .list { flex: 1; overflow-y: auto; padding: 2px 14px 16px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none; }
+.std .list::-webkit-scrollbar { display: none; }
+.std .sec { font-weight: 800; font-size: 18px; margin: 8px 0 2px; }
+.std .dish { background: #FFFFFF; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 3px; text-align: left; border: 0; width: 100%; color: #17130F; transition: opacity 200ms; }
+.std .row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.std .row b { font-size: 14px; }
+.std .row span { font-weight: 700; font-size: 14px; white-space: nowrap; }
+.std .dish .d { display: block; font-size: 12.5px; color: #5D554B; line-height: 1.4; }
+.std .tags { display: flex; gap: 5px; margin-top: 3px; }
+.std .tg { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 6px; padding: 2px 6px; color: #8A3B00; background: #FBEADB; }
+.std .tg.veg { color: #3F4A3A; background: #E9EFE4; }
+.std .dish.out { opacity: 0.5; }
+.std .dish.out .row span { text-decoration: line-through; }
+.std .soldtag { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #FFFFFF; background: #17130F; border-radius: 6px; padding: 2px 6px; align-self: flex-start; }
+.std .dish.open { box-shadow: 0 0 0 2px var(--accent); }
+.std .more { font-size: 12.5px; color: #17130F; background: #F6F2EC; border-radius: 10px; padding: 8px 10px; margin-top: 6px; }
+/* premium look */
+.prem { background: #F3ECE1; color: #1D1915; font-family: "Cormorant Garamond", Georgia, serif; }
+.prem .p-hero { height: 150px; flex: none; position: relative; background: linear-gradient(160deg, #3B2A20, #1D1915 70%); display: flex; align-items: flex-end; padding: 0 18px 14px; color: #F3ECE1; }
+.prem .p-hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 75% 35%, rgba(217,163,91,0.45), transparent 45%), radial-gradient(circle at 25% 60%, rgba(181,69,43,0.35), transparent 40%); }
+.prem .p-hero b { position: relative; font-size: 30px; font-weight: 500; line-height: 1; }
+.prem .p-body { flex: 1; overflow-y: auto; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; }
+.prem .p-body::-webkit-scrollbar { display: none; }
+.prem .p-story { font-family: var(--body); font-size: 12px; line-height: 1.55; color: #5A5047; }
+.prem .p-tabs { display: flex; gap: 14px; border-block: 1px solid #D9CFC0; padding: 8px 0; font-family: var(--body); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6156; }
+.prem .p-tabs button { border: 0; background: none; padding: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+.prem .p-tabs button[aria-pressed="true"] { color: var(--accent); }
+.prem .p-course { font-size: 22px; font-weight: 600; text-align: center; margin-top: 4px; }
+.prem .p-item { display: flex; flex-direction: column; gap: 1px; }
+.prem .p-row { display: flex; align-items: baseline; gap: 8px; }
+.prem .p-row b { font-size: 18px; font-weight: 600; }
+.prem .p-row i { flex: 1; border-bottom: 1px dotted #9C8F7E; transform: translateY(-3px); min-width: 12px; }
+.prem .p-row em { font-family: var(--body); font-style: normal; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.prem .p-desc { font-style: italic; font-size: 14.5px; color: #5A5047; line-height: 1.3; }
+.prem .p-item.out { opacity: 0.45; }
+.prem .p-item.out em { text-decoration: line-through; }
+
+/* owner panel */
+.panel { background: var(--ground); border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+.panel h3 { font-size: 16px; font-family: var(--body); font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+.panel h3 small { font-size: 12px; font-weight: 700; color: var(--green); }
+.ctl { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; }
+.ctl b { font-size: 14px; display: block; line-height: 1.25; }
+.ctl small { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pm { display: flex; gap: 4px; }
+.pm button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--ground); font-weight: 800; font-size: 18px; line-height: 1; }
+.tog { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--ground); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.tog[aria-pressed="true"] { background: #17130F; border-color: #17130F; color: #FFFFFF; }
+.flash { animation: flash 700ms ease-out; }
+@keyframes flash { from { box-shadow: 0 0 0 4px var(--green); } to { box-shadow: 0 0 0 0 transparent; } }
+
+/* look switch */
+.switch { display: inline-flex; background: var(--ground); border: 1px solid var(--line); border-radius: 999px; padding: 4px; margin-top: 22px; }
+.switch button { border: 0; background: none; min-height: 44px; padding: 0 20px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+.switch button[aria-pressed="true"] { background: var(--navy); color: #FFFFFF; }
+.lookinfo { margin-top: 16px; color: var(--muted); font-size: 15px; min-height: 72px; }
+
+/* insights */
+.report { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 440px; }
+.report-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.report-head b { font-family: var(--display); font-size: 18px; }
+.report-head span { font-size: 12px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--ground); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; }
+.kpi span { font-size: 12.5px; color: var(--muted); }
+.kpi b { font-family: var(--display); font-size: 26px; line-height: 1.1; }
+.kpi em { font-style: normal; font-size: 12.5px; color: var(--green); font-weight: 700; }
+.chart { width: 100%; height: 110px; display: block; overflow: visible; }
+.chart .area { fill: var(--blue); opacity: 0.12; }
+.chart .stroke { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.chart .base { stroke: var(--line); vector-effect: non-scaling-stroke; }
+.xl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.r-note { font-size: 14px; color: var(--muted); }
+.r-note b { color: var(--ink); }
+
+/* live + close */
+.live { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+.live a { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; gap: 6px; }
+.live a:hover { border-color: var(--blue); }
+.live b { font-family: var(--display); font-size: 19px; }
+.live span { font-size: 14px; color: var(--muted); }
+.live em { font-style: normal; font-size: 14px; font-weight: 700; color: var(--blue); margin-top: 4px; }
+.close { background: var(--navy); color: var(--on-navy); padding-block: 64px 110px; }
+.close h2 { font-size: clamp(30px, 6vw, 44px); font-weight: 800; }
+.close p { color: var(--on-navy-muted); margin-top: 14px; font-size: 17px; max-width: 600px; }
+.close-btns { display: flex; flex-direction: column; gap: 12px; margin-top: 26px; max-width: 420px; }
+.steps3 { list-style: none; padding: 0; margin: 28px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.steps3 li { background: var(--navy-2); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 16px; font-size: 14px; color: var(--on-navy-muted); }
+.steps3 b { display: block; color: var(--on-navy); font-size: 15px; margin-bottom: 4px; }
+.fab { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom, 0px)); z-index: 40; width: min(420px, calc(100% - 32px)); box-shadow: 0 12px 30px rgba(0,0,0,0.3); transition: opacity 200ms, transform 200ms; }
+.fab.hide { opacity: 0; pointer-events: none; transform: translate(-50%, 20px); }
+
+.reveal { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 500ms ease-out, transform 500ms ease-out; }
+  .js .reveal.in { opacity: 1; transform: none; }
+}
+@media (max-width: 860px) {
+  .ch-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .ch-grid.flip > :first-child { order: 0; }
+  .ch { padding-block: 52px; }
+  .steps3 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .live { grid-template-columns: minmax(0, 1fr); }
+  .screen { height: 520px; }
+  .screen.short { height: 380px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <a class="brand" href="/">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="9" height="16" rx="2"/><path d="M8.5 15.5h2"/><path d="M17 8.5a4 4 0 0 1 0 5"/><path d="M19.5 6.5a7 7 0 0 1 0 9"/></svg>
+        TablePay
+      </a>
+      <span class="progress">2-minute tour</span>
+    </div>
+    <div class="intro">
+      <span class="kick">Built for Nairobi restaurants</span>
+      <h1>See your menu the way your guests will</h1>
+      <p>You just scanned a code with your phone. That is all your guests will do. Type your restaurant's name and we'll build a sample menu for you as you scroll.</p>
+      <form class="make" id="make" autocomplete="off">
+        <div>
+          <label for="rname">Your restaurant's name</label>
+          <input type="text" id="rname" maxlength="32" placeholder="e.g. Kaya Kitchen &amp; Bar">
+        </div>
+        <div>
+          <label id="cl">Pick a brand colour</label>
+          <div class="swatches" role="group" aria-labelledby="cl" id="swatches"></div>
+        </div>
+        <button class="btn" type="submit">Show me my menu
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="ch" id="c1">
+    <div class="wrap ch-grid">
+      <div class="reveal">
+        <span class="step"><i>1</i>On the table</span>
+        <h2>A talker on every table</h2>
+        <p class="say">Each table gets a small stand with your name, your colour and the table number. Guests scan the code or tap their phone on it. No app to download, no waiting for a paper menu.</p>
+        <span class="hint">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>
+          Tap the talker to open the menu
+        </span>
+      </div>
+      <div class="stage reveal">
+        <div class="table" id="table">
+          <button class="talker" id="talker" type="button" aria-label="Tap the table talker to open the menu">
+            <span class="t-band"></span>
+            <span class="t-top"><span class="t-logo" data-initial></span><span class="t-name" data-name></span></span>
+            <span class="t-q">Scan or tap for our menu</span>
+            <svg class="qr" id="qr" viewBox="0 0 25 25" aria-hidden="true" shape-rendering="crispEdges"></svg>
+            <span class="t-foot"><span>Table 4</span><span>TablePay</span></span>
+          </button>
+          <span class="ripple"></span>
+          <span class="hand" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5a1.5 1.5 0 0 1 3 0v5"/><path d="M12 10V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v3a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.2-2.3L4.5 14.5a1.5 1.5 0 0 1 2.4-1.8L9 15"/></svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch alt" id="c2">
+    <div class="wrap ch-grid flip">
+      <div class="reveal">
+        <span class="step"><i>2</i>In the guest's hand</span>
+        <h2>Your menu opens on their phone</h2>
+        <p class="say">Clear sections, prices and short descriptions, in your colours. Guests browse at their own pace while your waiters look after the room. Try it: switch sections and tap a dish.</p>
+        <span class="hint">This phone works. Have a go</span>
+      </div>
+      <div class="stage reveal"><div class="phone"><div class="screen" id="phone1"></div></div></div>
+    </div>
+  </section>
+
+  <section class="ch" id="c3">
+    <div class="wrap ch-grid">
+      <div class="reveal">
+        <span class="step"><i>3</i>You stay in control</span>
+        <h2>Change a price in seconds. Every table sees it</h2>
+        <p class="say">Ran out of goat? Price of beef went up? Change it from your own phone and it shows on every table straight away. No reprinting, ever.</p>
+        <span class="hint">Use the buttons under the phone</span>
+      </div>
+      <div class="stage stack reveal"><div class="phone"><div class="screen short" id="phone2"></div></div>
+          <div class="panel" id="panel">
+          <h3>Your menu settings <small id="saved" aria-live="polite"></small></h3>
+        </div>
+        </div>
+    </div>
+  </section>
+
+  <section class="ch alt" id="c4">
+    <div class="wrap ch-grid flip">
+      <div class="reveal">
+        <span class="step"><i>4</i>Your look</span>
+        <h2>Simple and clean, or a boutique menu</h2>
+        <p class="say">Most places use the standard menu with their logo and colour. Upmarket venues can choose TablePay Menu Premium, designed for your space.</p>
+        <div class="switch" role="group" aria-label="Menu look">
+          <button type="button" data-look="std" aria-pressed="true">Standard</button>
+          <button type="button" data-look="prem" aria-pressed="false">Premium</button>
+        </div>
+        <p class="lookinfo" id="lookinfo"></p>
+      </div>
+      <div class="stage reveal"><div class="phone"><div class="screen" id="phone3"></div></div></div>
+    </div>
+  </section>
+
+  <section class="ch" id="c5">
+    <div class="wrap ch-grid">
+      <div class="reveal">
+        <span class="step"><i>5</i>Know your business</span>
+        <h2>Learn what your guests look at</h2>
+        <p class="say">With TablePay Insights you get a short report every month: when guests visit, which dishes they look at most, and which tables are busiest. Use it to plan staff and stock.</p>
+      </div>
+      <div class="stage reveal">
+        <div class="report" aria-label="Example monthly report">
+          <div class="report-head"><b data-name></b><span>Example · October</span></div>
+          <div class="kpis">
+            <div class="kpi"><span>Menu views</span><b>3,120</b><em>+18% on September</em></div>
+            <div class="kpi"><span>Busiest table</span><b>Table 4</b><em>Fridays, 8 pm</em></div>
+          </div>
+          <div>
+            <svg class="chart" viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true">
+              <line class="base" x1="0" y1="109" x2="300" y2="109"/>
+              <path class="area" d="M0 98 L30 92 L60 70 L90 78 L120 88 L150 84 L180 66 L210 40 L240 18 L270 34 L300 72 L300 110 L0 110 Z"/>
+              <path class="stroke" d="M0 98 L30 92 L60 70 L90 78 L120 88 L150 84 L180 66 L210 40 L240 18 L270 34 L300 72"/>
+            </svg>
+            <div class="xl"><span>11 am</span><span>2 pm</span><span>5 pm</span><span>8 pm</span><span>10 pm</span></div>
+          </div>
+          <p class="r-note">Most looked at: <b id="topdish">Nyama Choma</b>. Guests peak at <b>8 pm</b>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch alt" id="c6">
+    <div class="wrap">
+      <div class="reveal">
+        <span class="step"><i>6</i>The real thing</span>
+        <h2>Open a live menu</h2>
+        <p class="say">These are working TablePay menus for two demo restaurants. They open in a new tab and can take a few seconds to load the first time.</p>
+      </div>
+      <div class="live reveal">
+        <a href="https://tablepay.onrender.com/t/b64jfbgt" target="_blank" rel="noopener"><b>Kaya Kitchen &amp; Bar</b><span>Standard menu, the one most restaurants use</span><em>Open live menu →</em></a>
+        <a href="https://tablepay.onrender.com/t/premium" target="_blank" rel="noopener"><b>Ember &amp; Salt</b><span>TablePay Menu Premium, the boutique look</span><em>Open live menu →</em></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="close" id="c7">
+    <div class="wrap">
+      <h2 id="closeh">Want this for your restaurant?</h2>
+      <p>Send us a WhatsApp and we'll come by, show you a demo on your own tables and set up your menu. We do the setup for you: send us your menu and logo and we'll do the rest.</p>
+      <div class="close-btns">
+        <a class="btn btn-wa wa-link" href="#" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.7a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
+          Book a demo on WhatsApp
+        </a>
+        <a class="btn btn-white" href="/">See packages and FAQ</a>
+      </div>
+      <ol class="steps3">
+        <li><b>1. We visit</b>A short demo at your restaurant, on your own phone.</li>
+        <li><b>2. We set up</b>Your menu, logo and colour, plus talkers for every table.</li>
+        <li><b>3. You go live</b>Guests scan or tap, and you update the menu any time.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<a class="btn btn-wa fab hide wa-link" id="fab" href="#" target="_blank" rel="noopener">Book a demo on WhatsApp</a>
+
+<script>
+document.documentElement.classList.add('js');
+(function () {
+  var COLORS = ['#B5452B', '#1F5E3B', '#1A4FA0', '#6B2D5C', '#C98A1B', '#17130F'];
+  var WA = '254797334783';
+  var params = new URLSearchParams(location.search);
+  var src = (params.get('src') || '').slice(0, 40);
+  var state = {
+    name: '', color: COLORS[0], look: 'std', cat: 'Popular', open: null,
+    pcat: 'Starters',
+    dishes: [
+      { id: 'nc', cat: 'Grill', name: 'Nyama Choma (500g)', desc: 'Charcoal-grilled goat with kachumbari and ugali', price: 1400, tags: [], pop: true, more: 'Ask for it spicy. Serves one, or two as a starter.' },
+      { id: 'sr', cat: 'Grill', name: 'Beef Short Ribs', desc: 'Slow cooked, smoky BBQ glaze', price: 1800, tags: [], pop: true, more: 'Cooked for six hours. Comes with masala chips.' },
+      { id: 'kc', cat: 'Grill', name: 'Kuku Choma (half)', desc: 'Grilled chicken, lemon and garlic', price: 1100, tags: [], pop: false, more: 'Free-range chicken from Limuru.' },
+      { id: 'bs', cat: 'Starters', name: 'Beef Samosas (3)', desc: 'Crisp pastry, spiced minced beef, tamarind dip', price: 450, tags: [], pop: true, more: 'Made fresh every morning.' },
+      { id: 'cw', cat: 'Starters', name: 'Chicken Wings', desc: 'BBQ, honey-chilli or lemon pepper', price: 850, tags: ['Spicy'], pop: false, more: 'Six wings. Tell your waiter which sauce.' },
+      { id: 'bh', cat: 'Starters', name: 'Bhajia', desc: 'Crispy potato fritters with kachumbari', price: 400, tags: ['Veg'], pop: false, more: 'Gluten free.' },
+      { id: 'pf', cat: 'Mains', name: 'Pilau Beef', desc: 'Spiced rice, tender beef, kachumbari', price: 950, tags: [], pop: true, more: 'Our Sunday favourite.' },
+      { id: 'tf', cat: 'Mains', name: 'Tilapia Fry', desc: 'Whole fish, ugali and sukuma wiki', price: 1300, tags: [], pop: false, more: 'From Lake Victoria. About 20 minutes.' },
+      { id: 'vc', cat: 'Mains', name: 'Vegetable Curry', desc: 'Coconut curry with chapati', price: 800, tags: ['Veg'], pop: false, more: 'Can be made vegan.' },
+      { id: 'dw', cat: 'Drinks', name: 'Dawa', desc: 'Vodka, lime, honey, crushed ice', price: 650, tags: [], pop: false, more: 'Ask for it without alcohol.' },
+      { id: 'pj', cat: 'Drinks', name: 'Passion Juice', desc: 'Fresh, no added sugar', price: 300, tags: ['Veg'], pop: false, more: 'Large glass.' },
+      { id: 'tk', cat: 'Drinks', name: 'Tusker Lager', desc: '500 ml bottle', price: 350, tags: [], pop: false, more: 'Served cold.' }
+    ],
+    out: {}
+  };
+  var CATS = ['Popular', 'Starters', 'Grill', 'Mains', 'Drinks'];
+  var DEFAULT_NAME = 'Your Restaurant';
+
+  function nm() { return state.name.trim() || DEFAULT_NAME; }
+  function initial() { var n = nm().replace(/^the\s+/i, ''); return (n[0] || 'T').toUpperCase(); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function kes(n) { return 'KES ' + n.toLocaleString('en-US'); }
+  function lum(hex) {
+    var c = [1, 3, 5].map(function (i) { var v = parseInt(hex.substr(i, 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function dish(id) { return state.dishes.filter(function (d) { return d.id === id; })[0]; }
+
+  // try a saved name for this viewer
+  try { var saved = JSON.parse(localStorage.getItem('tp-demo') || 'null'); if (saved) { state.name = saved.name || ''; if (COLORS.indexOf(saved.color) > -1) state.color = saved.color; } } catch (e) {}
+  if (params.get('r')) state.name = params.get('r').slice(0, 32);
+  function save() { try { localStorage.setItem('tp-demo', JSON.stringify({ name: state.name, color: state.color })); } catch (e) {} }
+
+  // swatches
+  var sw = document.getElementById('swatches');
+  COLORS.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'sw'; b.style.background = c;
+    b.setAttribute('aria-label', ['Terracotta', 'Forest green', 'Royal blue', 'Plum', 'Mustard', 'Charcoal'][i]);
+    b.addEventListener('click', function () { state.color = c; save(); renderAll(); });
+    sw.appendChild(b);
+  });
+  var input = document.getElementById('rname');
+  input.value = state.name;
+  input.addEventListener('input', function () { state.name = input.value; save(); renderAll(); });
+  document.getElementById('make').addEventListener('submit', function (e) { e.preventDefault(); input.blur(); document.getElementById('c1').scrollIntoView(); });
+
+  // decorative QR pattern
+  (function () {
+    var svg = document.getElementById('qr'), s = '', seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    function finder(x, y) { return '<rect x="' + x + '" y="' + y + '" width="7" height="7" fill="#17130F"/><rect x="' + (x + 1) + '" y="' + (y + 1) + '" width="5" height="5" fill="#fff"/><rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3" fill="#17130F"/>'; }
+    for (var y = 0; y < 25; y++) for (var x = 0; x < 25; x++) {
+      var inF = (x < 8 && y < 8) || (x > 16 && y < 8) || (x < 8 && y > 16);
+      if (!inF && rnd() > 0.52) s += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="#17130F"/>';
+    }
+    svg.innerHTML = s + finder(0, 0) + finder(18, 0) + finder(0, 18);
+  })();
+
+  function stdMenu(interactive) {
+    var cat = interactive ? state.cat : 'Popular';
+    var list = state.dishes.filter(function (d) { return cat === 'Popular' ? d.pop : d.cat === cat; });
+    if (!interactive) list = state.dishes.filter(function (d) { return ['nc', 'sr', 'bs', 'pf'].indexOf(d.id) > -1; });
+    var h = '<span class="notch"></span><div class="m-head"><span class="m-logo">' + esc(initial()) + '</span><span class="m-title">' + esc(nm()) + '<small>Table 4 · Menu</small></span></div>';
+    h += '<div class="chips">' + CATS.map(function (c) { return '<button type="button" class="chip" data-cat="' + c + '" aria-pressed="' + (c === cat) + '"' + (interactive ? '' : ' tabindex="-1"') + '>' + c + '</button>'; }).join('') + '</div>';
+    h += '<div class="list"><div class="sec">' + (cat === 'Popular' ? "Chef's picks" : cat) + '</div>';
+    list.forEach(function (d) {
+      var out = !!state.out[d.id], open = interactive && state.open === d.id;
+      h += '<button type="button" class="dish' + (out ? ' out' : '') + (open ? ' open' : '') + '" data-dish="' + d.id + '" data-id="' + d.id + '"' + (interactive ? '' : ' tabindex="-1"') + '>';
+      h += '<span class="row"><b>' + esc(d.name) + '</b><span>' + kes(d.price) + '</span></span><span class="d">' + esc(d.desc) + '</span>';
+      if (out) h += '<span class="soldtag">Sold out today</span>';
+      else if (d.tags.length) h += '<span class="tags">' + d.tags.map(function (t) { return '<span class="tg' + (t === 'Veg' ? ' veg' : '') + '">' + t + '</span>'; }).join('') + '</span>';
+      if (open) h += '<span class="more">' + esc(d.more) + '</span>';
+      h += '</button>';
+    });
+    return h + '</div>';
+  }
+  function premMenu() {
+    var pc = state.pcat;
+    var list = state.dishes.filter(function (d) { return d.cat === pc; });
+    var h = '<span class="notch"></span><div class="p-hero"><b>' + esc(nm()) + '</b></div><div class="p-body">';
+    h += '<p class="p-story">Open fire, local produce and a long table for friends. Welcome to ' + esc(nm()) + '.</p>';
+    h += '<div class="p-tabs">' + ['Starters', 'Grill', 'Mains', 'Drinks'].map(function (c) { return '<button type="button" data-pcat="' + c + '" aria-pressed="' + (c === pc) + '">' + c + '</button>'; }).join('') + '</div>';
+    h += '<div class="p-course">' + pc + '</div>';
+    list.forEach(function (d) {
+      h += '<div class="p-item' + (state.out[d.id] ? ' out' : '') + '" data-id="' + d.id + '"><div class="p-row"><b>' + esc(d.name) + '</b><i></i><em>' + (state.out[d.id] ? 'Sold out' : d.price.toLocaleString('en-US')) + '</em></div><span class="p-desc">' + esc(d.desc) + '</span></div>';
+    });
+    return h + '</div>';
+  }
+
+  var p1 = document.getElementById('phone1'), p2 = document.getElementById('phone2'), p3 = document.getElementById('phone3');
+  function renderPhones() {
+    var keep = p1.querySelector('.list'), top = keep ? keep.scrollTop : 0;
+    p1.className = 'screen std'; p1.innerHTML = stdMenu(true);
+    var nl = p1.querySelector('.list'); if (nl) nl.scrollTop = top;
+    p2.className = 'screen std'; p2.innerHTML = stdMenu(false);
+    p3.className = 'screen ' + state.look; p3.innerHTML = state.look === 'std' ? stdMenu(false) : premMenu();
+  }
+  p1.addEventListener('click', function (e) {
+    var c = e.target.closest('[data-cat]'), d = e.target.closest('[data-dish]');
+    if (c) { state.cat = c.dataset.cat; state.open = null; renderPhones(); var l = p1.querySelector('.list'); if (l) l.scrollTop = 0; p1.querySelector('[data-cat="' + state.cat + '"]').focus(); }
+    else if (d) { state.open = state.open === d.dataset.dish ? null : d.dataset.dish; renderPhones(); var nd = p1.querySelector('[data-dish="' + d.dataset.dish + '"]'); if (nd) nd.focus(); }
+  });
+  p3.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-pcat]');
+    if (t) { state.pcat = t.dataset.pcat; renderPhones(); }
+  });
+
+  // owner panel
+  var panel = document.getElementById('panel'), savedEl = document.getElementById('saved'), savedT;
+  ['nc', 'sr', 'bs'].forEach(function (id) {
+    var d = dish(id), row = document.createElement('div');
+    row.className = 'ctl';
+    row.innerHTML = '<div><b>' + esc(d.name) + '</b><small data-price></small></div><div class="pm"><button type="button" data-step="-50" aria-label="Lower price of ' + esc(d.name) + '">−</button><button type="button" data-step="50" aria-label="Raise price of ' + esc(d.name) + '">+</button></div><button type="button" class="tog" data-out aria-pressed="false">Sold out</button>';
+    row.addEventListener('click', function (e) {
+      var st = e.target.closest('[data-step]'), o = e.target.closest('[data-out]');
+      if (st) d.price = Math.max(50, d.price + parseInt(st.dataset.step, 10));
+      else if (o) state.out[id] = !state.out[id];
+      else return;
+      renderAll();
+      [p2, p3].forEach(function (p) { var el = p.querySelector('[data-id="' + id + '"]'); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } });
+      savedEl.textContent = 'Updated on every table';
+      clearTimeout(savedT); savedT = setTimeout(function () { savedEl.textContent = ''; }, 2200);
+    });
+    row.dataset.id = id;
+    panel.appendChild(row);
+  });
+
+  // look switch
+  var INFO = {
+    std: 'Standard: your logo and one brand colour, with photo or text mode. Quick to set up and easy to read.',
+    prem: 'Premium: a photo of your venue, an elegant heading font, your story and courses set like a printed menu, with wood or metal talkers. Tap the courses to browse.'
+  };
+  document.querySelectorAll('[data-look]').forEach(function (b) {
+    b.addEventListener('click', function () { state.look = b.dataset.look; renderAll(); });
+  });
+
+  function renderAll() {
+    var r = document.documentElement.style;
+    r.setProperty('--accent', state.color);
+    r.setProperty('--accent-text', lum(state.color) > 0.45 ? '#17130F' : '#FFFFFF');
+    document.querySelectorAll('[data-name]').forEach(function (el) { el.textContent = nm(); });
+    document.querySelectorAll('[data-initial]').forEach(function (el) { el.textContent = initial(); });
+    sw.querySelectorAll('.sw').forEach(function (b, i) { b.setAttribute('aria-pressed', COLORS[i] === state.color); });
+    panel.querySelectorAll('.ctl').forEach(function (row) {
+      var d = dish(row.dataset.id);
+      row.querySelector('[data-price]').textContent = state.out[d.id] ? 'Sold out today' : kes(d.price);
+      row.querySelector('[data-out]').setAttribute('aria-pressed', !!state.out[d.id]);
+    });
+    document.querySelectorAll('[data-look]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.look === state.look); });
+    document.getElementById('lookinfo').textContent = INFO[state.look];
+    document.getElementById('closeh').textContent = state.name.trim() ? 'Want this for ' + state.name.trim() + '?' : 'Want this for your restaurant?';
+    var msg = 'Hi Samuel, I just tried the TablePay demo' + (state.name.trim() ? ' for ' + state.name.trim() : '') + '. I\'d like a demo at my restaurant.' + (src ? ' (ref: ' + src + ')' : '');
+    document.querySelectorAll('.wa-link').forEach(function (a) { a.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(msg); });
+    renderPhones();
+  }
+  renderAll();
+
+  // tap the talker
+  var table = document.getElementById('table');
+  document.getElementById('talker').addEventListener('click', function () {
+    table.classList.remove('tapped'); void table.offsetWidth; table.classList.add('tapped');
+    setTimeout(function () { document.getElementById('c2').scrollIntoView(); }, 450);
+  });
+
+  // reveal + floating button
+  var fab = document.getElementById('fab');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+    var showAfter = document.getElementById('c1'), closeEl = document.getElementById('c7'), past = false, atClose = false;
+    function upd() { fab.classList.toggle('hide', !past || atClose); }
+    new IntersectionObserver(function (es) { past = es[0].boundingClientRect.top < 0 || es[0].isIntersecting; upd(); }).observe(showAfter);
+    new IntersectionObserver(function (es) { atClose = es[0].isIntersecting; upd(); }).observe(closeEl);
+  } else {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+    fab.classList.remove('hide');
+  }
+})();
+</script>
+</body>
+</html>
