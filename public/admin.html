@@ -161,7 +161,7 @@ const PAPER_NOW = { "#F7F4EE": "#EFEDE8", "#ECE6DA": "#EFEDE8", "#1D1915": "#1A1
 function lookView(admin) {
   const paperNow = PAPER_NOW[(look.paper || "").toUpperCase()] || look.paper || "#F3ECE1";
   const dis = admin ? "" : "disabled";
-  const color = look.brand_color || "#1a73e7";
+  const color = look.brand_color || "#13464A";
   const first = tables.tables[0];
   return `<form class="card no-print" id="lookForm" style="padding:18px;margin-top:14px;display:grid;gap:16px;max-width:640px">
     <div><strong>How the menu looks to guests</strong>
@@ -171,7 +171,7 @@ function lookView(admin) {
     <div class="small">Brand colour
       <div class="row" style="gap:10px;margin-top:6px">
         <input type="color" id="colorPick" value="${esc(color)}" ${dis} style="width:52px;height:44px;border:0;background:none;padding:0" />
-        <input class="field" name="brand_color" id="colorHex" value="${esc(look.brand_color || "")}" placeholder="#1a73e7" maxlength="7" ${dis} style="max-width:140px" />
+        <input class="field" name="brand_color" id="colorHex" value="${esc(look.brand_color || "")}" placeholder="#13464A" maxlength="7" ${dis} style="max-width:140px" />
         <span class="muted">Used for buttons, the selected section and the order bar.</span>
       </div></div>
     <div class="small">Logo

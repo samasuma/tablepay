@@ -5,19 +5,19 @@
 @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/jakarta-700.woff2') format('woff2'); }
 @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 800; font-display: swap; src: url('/fonts/jakarta-800.woff2') format('woff2'); }
 :root {
-  --bg: #dbe3ec;          /* cool blue-grey page, like the Supawash receipt */
+  --bg: #EFECE6;          /* warm ground, Table Green identity */
   --card: #ffffff;
-  --ink: #111111;
-  --muted: #5b6673;
-  --line: #d3dbe5;
-  --bar: #19120c;         /* near-black top bars */
-  --accent: #1a73e7;      /* brand blue: primary actions */
+  --ink: #1C1B19;
+  --muted: #5B5750;
+  --line: #E6E1D8;
+  --bar: #0E3438;         /* Deep Green top bars */
+  --accent: #13464A;      /* Table Green: primary actions */
   --accent-ink: #ffffff;
-  --accent-soft: #e3eefd;
-  --ok: #007a55;          /* paid green, dark enough for white text */
+  --accent-soft: #E3EEEC;
+  --ok: #12805C;          /* paid green, dark enough for white text */
   --ok-soft: #e1f3ec;
-  --page: #e3e9f0;        /* guest screens */
-  --field: #f5f8fb;
+  --page: #F8F6F2;        /* guest screens */
+  --field: #FBFAF7;
   --warn: #a15c00;
   --warn-soft: #fdf0d9;
   --danger: #c62828;
@@ -29,8 +29,8 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f141a; --card: #18202a; --ink: #eef2f6; --muted: #9aa6b4; --line: #2a3542; --bar: #0a0d11;
-    --accent: #3d86ec; --accent-soft: #17283f; --ok: #1d9a6c; --ok-soft: #12302a; --page: #0f141a; --field: #141b23;
+    --bg: #0D1A1B; --card: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; --bar: #0A2426;
+    --accent: #3E8F88; --accent-soft: #17393C; --ok: #1d9a6c; --ok-soft: #12302a; --page: #0D1A1B; --field: #112122;
     --warn: #e2a33b; --warn-soft: #362812; --danger: #f0675c; --danger-soft: #3a1c19;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
   }

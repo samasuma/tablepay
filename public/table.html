@@ -182,7 +182,7 @@
   .pins { display: flex; gap: 6px; justify-content: center; }
   .pins i { width: 9px; height: 9px; border-radius: 999px; border: 1.5px solid #9aa6b4; animation: pin 2.4s infinite; }
   .pins i:nth-child(2) { animation-delay: .3s; } .pins i:nth-child(3) { animation-delay: .6s; } .pins i:nth-child(4) { animation-delay: .9s; }
-  @keyframes pin { 30%, 70% { background: #19120c; border-color: #19120c; } }
+  @keyframes pin { 30%, 70% { background: #0E3438; border-color: #0E3438; } }
   .prompt .okb { height: 22px; border-radius: 7px; background: var(--accent); }
   .h-big { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
   .lead { font-size: 15px; line-height: 1.5; color: var(--muted); margin: 0; }
@@ -492,7 +492,7 @@ function setVars(vars) {
 
 // Standard: one brand colour. Ordering pages (bill, pay) keep using --accent.
 function applyBrand(r) {
-  const brand = validHex(r.brand_color) ? r.brand_color : "#1B2E4B";
+  const brand = validHex(r.brand_color) ? r.brand_color : "#13464A";
   const b = hx(brand), W = [255, 255, 255], I = hx("#1C1B19"), G = hx("#F8F6F2");
   const on = cr(b, W) < 4.5 ? I : W;
   setVars({
