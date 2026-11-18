@@ -1,16 +1,16 @@
-:root { --ground: #F3F5F9; --surface: #FFFFFF; --ink: #17233A; --muted: #3D4859; --line: #D8DEE8; --navy: #1B2E4B; --blue: #1E5EB8; --warn: #FFF4DB; --warn-ink: #6B4A00; }
+:root { --ground: #F8F6F2; --surface: #FFFFFF; --ink: #1C1B19; --muted: #5B5750; --line: #E6E1D8; --navy: #13464A; --blue: #13464A; --warn: #FFF4DB; --warn-ink: #6B4A00; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; --navy: #13223A; --blue: #6FA3EE; --warn: #3A2E10; --warn-ink: #F3D58A; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --ground: #0D1A1B; --surface: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; --navy: #0E3438; --blue: #7CC4BC; --warn: #3A2E10; --warn-ink: #F3D58A; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; --navy: #13223A; --blue: #6FA3EE; --warn: #3A2E10; --warn-ink: #F3D58A; color-scheme: dark; }
+:root[data-theme="dark"] { --ground: #0D1A1B; --surface: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; --navy: #0E3438; --blue: #7CC4BC; --warn: #3A2E10; --warn-ink: #F3D58A; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--ground); color: var(--ink); font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.65; }
 a { color: var(--blue); }
 .wrap { max-width: 820px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .top { background: var(--navy); color: #FFFFFF; }
 .top .wrap { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 18px; flex-wrap: wrap; }
-.top .brand { color: #FFFFFF; font-weight: 800; font-size: 22px; text-decoration: none; }
-.top span { color: #C7D3E6; font-size: 14px; }
+.top .brand { color: #FFFFFF; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; text-decoration: none; }
+.top span { color: #C9DDD8; font-size: 14px; }
 .doc { padding-block: 40px 56px; }
 .doc h1 { font-size: clamp(30px, 5vw, 40px); line-height: 1.15; margin: 0 0 6px; }
 .doc h2 { font-size: 20px; margin: 32px 0 8px; }
