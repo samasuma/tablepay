@@ -7,38 +7,40 @@
 <meta name="description" content="Hospitality technology from Nairobi. TablePay gives your restaurant or hotel its own app, with no download for guests: your brand, your story and your dishes on every phone today, growing into ordering, payments and loyalty. Built in Nairobi.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: full-width bands; a navy hero, three pillar bands (guests, team, owners), a navy growth band, FAQ */
 :root {
-  --navy: #1B2E4B;
-  --navy-2: #24395A;
-  --blue: #1E5EB8;
-  --blue-soft: #E3EDFB;
+  --navy: #13464A;
+  --navy-2: #0E3438;
+  --blue: #13464A;
+  --blue-soft: #E3EEEC;
   --green: #12805C;
-  --ground: #F3F5F9;
+  --ground: #F8F6F2;
   --surface: #FFFFFF;
-  --ink: #17233A;
-  --muted: #3D4859;
-  --line: #D8DEE8;
-  --bar: #C9D9F2;
+  --ink: #1C1B19;
+  --muted: #5B5750;
+  --line: #E6E1D8;
+  --bar: #C9DDD8;
   --on-navy: #FFFFFF;
-  --on-navy-muted: #C7D3E6;
-  --sky: #9CC2F5;
+  --on-navy-muted: #C9DDD8;
+  --sky: #E2B865;
+  --brass-ink: #8A6420;
+  --deep: #0E3438;
   --display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
   --body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
-    --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; --bar: #2C4569;
-    --on-navy: #FFFFFF; --on-navy-muted: #B9C7DC; --sky: #9CC2F5; color-scheme: dark;
+    --navy: #0E3438; --navy-2: #13464A; --blue: #7CC4BC; --blue-soft: #17393C; --green: #4CC59A;
+    --ground: #0D1A1B; --surface: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; --bar: #2C5553;
+    --on-navy: #FFFFFF; --on-navy-muted: #C9DDD8; --sky: #E2B865; --brass-ink: #E2B865; --deep: #0A2426; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
-  --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; --bar: #2C4569;
-  --on-navy: #FFFFFF; --on-navy-muted: #B9C7DC; --sky: #9CC2F5; color-scheme: dark;
+  --navy: #0E3438; --navy-2: #13464A; --blue: #7CC4BC; --blue-soft: #17393C; --green: #4CC59A;
+    --ground: #0D1A1B; --surface: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; --bar: #2C5553;
+    --on-navy: #FFFFFF; --on-navy-muted: #C9DDD8; --sky: #E2B865; --brass-ink: #E2B865; --deep: #0A2426; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; } body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
@@ -50,20 +52,20 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; text-wrap: balance; 
 h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 800; }
 h3 { font-size: 20px; font-weight: 600; }
 p { margin: 0; text-wrap: pretty; }
-.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass-ink); }
 .lead { font-size: 18px; color: var(--muted); max-width: 660px; }
 .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; }
-.btn-primary { background: #FFFFFF; color: #1B2E4B; }
+.btn-primary { background: #FFFFFF; color: #13464A; }
 .btn-ghost { color: var(--on-navy); border: 1.5px solid rgba(255,255,255,0.45); }
 
 /* hero */
 .hero { background: var(--navy); color: var(--on-navy); }
 .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 20px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 24px; color: var(--on-navy); text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -0.02em; color: var(--on-navy); text-decoration: none; }
 .nav-links { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 .nav-links a { color: var(--on-navy-muted); text-decoration: none; font-weight: 600; font-size: 15px; }
 .nav-links a:hover { color: var(--on-navy); }
-.nav-links .btn { min-height: 40px; padding: 0 18px; font-size: 15px; color: #1B2E4B; }
+.nav-links .btn { min-height: 40px; padding: 0 18px; font-size: 15px; color: #13464A; }
 .hero-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 48px; align-items: center; padding-block: 40px 64px; }
 .hero h1 { font-size: clamp(40px, 5.2vw, 60px); font-weight: 800; }
 .hero h1 em { font-style: normal; color: var(--sky); }
@@ -92,7 +94,7 @@ section.band { padding-block: 72px; }
 .soon-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
 .now-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); border-radius: 999px; padding: 3px 10px; }
 .product.featured { border: 2px solid var(--blue); box-shadow: 0 12px 32px rgba(30,94,184,0.14); }
-.pop-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #FFFFFF; background: var(--blue); border-radius: 999px; padding: 3px 10px; }
+.pop-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1C1B19; background: #E2B865; border-radius: 999px; padding: 3px 10px; }
 .partner-tag { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 3px 10px; }
 .incl { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 .incl li { padding-left: 22px; position: relative; }
@@ -190,7 +192,7 @@ section.band { padding-block: 72px; }
 .cta-box { margin-top: 28px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--blue-soft); color: var(--ink); border-radius: 18px; padding: 22px 26px; }
 .cta-box b { font-family: var(--display); font-size: 22px; }
 .cta-box p { color: var(--muted); margin-top: 4px; }
-.cta-box .btn { background: #1E5EB8; color: #FFFFFF; }
+.cta-box .btn { background: #13464A; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.18); }
 
 .faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; }
 .faq details { border-bottom: 1px solid var(--line); padding-block: 16px; }
@@ -200,7 +202,7 @@ section.band { padding-block: 72px; }
 .faq details[open] summary::after { content: "\2013"; }
 .faq details p { color: var(--muted); margin-top: 10px; }
 
-footer { background: var(--navy); color: var(--on-navy-muted); }
+footer { background: var(--deep); color: var(--on-navy-muted); }
 .foot { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; padding-block: 40px; }
 .foot .brand { font-size: 22px; }
 .wa { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 50; display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 20px 0 16px; border-radius: 999px; background: #128C4A; color: #FFFFFF; font-weight: 700; text-decoration: none; box-shadow: 0 10px 28px rgba(0,0,0,0.25); }
@@ -240,6 +242,26 @@ footer { padding-bottom: 72px; }
 .p-row i { flex: 1; border-bottom: 1px dotted #9C8F7E; transform: translateY(-3px); }
 .p-row em { font-family: var(--body); font-style: normal; font-size: 13px; font-weight: 700; }
 .p-desc { font-style: italic; font-size: 15px; color: #5A5047; }
+.mock.std { padding: 0; gap: 0; }
+.mk-band { background: #13464A; color: #FFFFFF; padding: 14px 16px 16px; }
+.mk-r1 { display: flex; justify-content: space-between; align-items: center; }
+.mk-logo { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; font-size: 13px; }
+.mk-tbl { font-size: 10px; font-weight: 700; letter-spacing: .06em; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; padding: 3px 9px; }
+.mk-name { font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1.05; margin-top: 12px; letter-spacing: -.02em; }
+.mk-meta { font-size: 11px; color: #CFE0DE; margin-top: 6px; }
+.mk-wel { font-family: var(--display); font-weight: 600; font-size: 15px; padding: 12px 16px 0; }
+.mk-note { margin: 10px 16px 4px; background: #E2E8E4; border-radius: 10px; padding: 8px 10px; font-size: 11.5px; line-height: 1.35; display: flex; flex-direction: column; gap: 2px; }
+.mk-note span { font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #13464A; }
+.mk-row { display: flex; justify-content: space-between; gap: 10px; margin: 0 16px; padding: 9px 0; border-bottom: 1px solid #E6E1D8; font-size: 12.5px; }
+.mk-row b { font-weight: 600; }
+.mk-row em { font-style: normal; font-weight: 700; }
+.mock.prem { padding: 0; gap: 0; }
+.pk-photo { height: 72px; flex: none; background: #DCD2C3; }
+.pk-in { padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
+.pk-rule { width: 30px; height: 1px; background: #7A2E2A; margin: 4px 0; }
+.pk-toc { display: flex; flex-direction: column; }
+.pk-toc span { display: flex; gap: 12px; align-items: baseline; padding: 6px 0; border-top: 1px solid #DDD2C2; font-size: 17px; }
+.pk-toc i { width: 22px; color: #7A2E2A; font-size: 14px; }
 .look.talkers .compare { height: 300px; display: flex; gap: 10px; justify-content: center; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 0 12px; }
 .look.talkers .compare > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .look.talkers .compare img { width: 100%; height: auto; aspect-ratio: 105 / 148; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
@@ -272,6 +294,8 @@ footer { padding-bottom: 72px; }
   .hero-photo { animation: rise 700ms ease-out both; }
   @keyframes rise { from { transform: translateY(14px); } to { transform: none; } }
 }
+.brand .lock { display: flex; flex-direction: column; line-height: 1; }
+.brand .desc { font-family: var(--body); font-weight: 700; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--on-navy-muted); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -281,8 +305,8 @@ footer { padding-bottom: 72px; }
   <div class="wrap">
     <nav class="nav" aria-label="Main">
       <a class="brand" href="#top" id="top">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="9" height="16" rx="2"/><path d="M8.5 15.5h2"/><path d="M17 8.5a4 4 0 0 1 0 5"/><path d="M19.5 6.5a7 7 0 0 1 0 9"/></svg>
-        TablePay
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.8" width="12" height="15.4" rx="2.6"/><circle cx="12" cy="12.4" r="2.7"/><path d="M3.5 21.2h17"/></svg>
+        <span class="lock"><span class="wm">TablePay</span><span class="desc">Digital hospitality</span></span>
       </a>
       <div class="nav-links">
         <a href="#how">How it works</a>
@@ -376,24 +400,25 @@ footer { padding-bottom: 72px; }
       <div class="looks">
         <figure class="look">
           <div class="mock std" aria-hidden="true">
-            <div class="m-top"><span class="m-logo">K</span><span class="m-name">Kaya Kitchen<small>Westlands</small></span></div>
-            <div class="m-chips"><span class="on">Popular</span><span>Starters</span><span>Grill</span></div>
-            <div class="m-h">Chef's picks</div>
-            <div class="m-card"><b>Nyama Choma (500g)</b><span>Charcoal-grilled goat, kachumbari</span><em>KES 1,400</em></div>
-            <div class="m-card"><b>Beef Short Ribs</b><span>Slow cooked, smoky BBQ glaze</span><em>KES 1,800</em></div>
+            <div class="mk-band"><div class="mk-r1"><span class="mk-logo">K</span><span class="mk-tbl">TABLE 4</span></div><div class="mk-name">Kaya Kitchen &amp; Bar</div><div class="mk-meta">Westlands · Kitchen open until 11 pm</div></div>
+            <div class="mk-wel">Karibu to Kaya.</div>
+            <div class="mk-note"><span>From the kitchen today</span>Tilapia came in from Kisumu this morning.</div>
+            <div class="mk-row"><b>Nyama Choma (500g)</b><em>KSh 1,400</em></div>
+            <div class="mk-row"><b>Beef Short Ribs</b><em>KSh 1,800</em></div>
           </div>
           <figcaption><b>Essential and Signature</b><span>One clean look in your logo and brand colour, with dish photos or a clear text layout.</span></figcaption>
         </figure>
         <figure class="look">
           <div class="mock prem" aria-hidden="true">
-            <div class="p-eyebrow">Karen, Nairobi · Since 2019</div>
-            <div class="p-name">Ember &amp; Salt</div>
-            <div class="p-story">Everything is cooked over a wood fire, with produce from farms around Limuru.</div>
-            <div class="p-tabs"><span class="on">From the fire</span><span>Small plates</span></div>
-            <div class="p-item"><span class="p-row"><b>Ember lamb shoulder</b><i></i><em>2,400</em></span><span class="p-desc">Twelve-hour lamb, smoked aubergine</span></div>
-            <div class="p-item"><span class="p-row"><b>Whole tilapia</b><i></i><em>1,900</em></span><span class="p-desc">Charred lime, coconut and coriander</span></div>
+            <div class="pk-photo"></div>
+            <div class="pk-in">
+              <div class="p-eyebrow">Table 7 · Dinner from 6 pm</div>
+              <div class="p-name">Ember &amp; Salt</div>
+              <div class="pk-rule"></div>
+              <div class="pk-toc"><span><i>I</i>Small plates</span><span><i>II</i>From the fire</span><span><i>III</i>To finish</span></div>
+            </div>
           </div>
-          <figcaption><b>Premium Experience</b><span>A printed-menu feel: venue photo, a serif chosen for your brand, your story and a photo of every dish.</span></figcaption>
+          <figcaption><b>Premium Experience</b><span>Photo-led and editorial: your venue photo, a serif chosen for your brand, your story, and courses with one signature dish each.</span></figcaption>
         </figure>
         <figure class="look talkers">
           <div class="compare">
@@ -516,8 +541,8 @@ footer { padding-bottom: 72px; }
 <footer>
   <div class="wrap foot">
     <span class="brand">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="9" height="16" rx="2"/><path d="M8.5 15.5h2"/><path d="M17 8.5a4 4 0 0 1 0 5"/><path d="M19.5 6.5a7 7 0 0 1 0 9"/></svg>
-      TablePay
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.8" width="12" height="15.4" rx="2.6"/><circle cx="12" cy="12.4" r="2.7"/><path d="M3.5 21.2h17"/></svg>
+        <span class="lock"><span class="wm">TablePay</span><span class="desc">Digital hospitality</span></span>
     </span>
     <div class="contact">
       <span><b>TablePay</b>Digital hospitality experiences, Nairobi</span>
