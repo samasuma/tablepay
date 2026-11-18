@@ -240,6 +240,26 @@ footer { padding-bottom: 72px; }
 .p-row i { flex: 1; border-bottom: 1px dotted #9C8F7E; transform: translateY(-3px); }
 .p-row em { font-family: var(--body); font-style: normal; font-size: 13px; font-weight: 700; }
 .p-desc { font-style: italic; font-size: 15px; color: #5A5047; }
+.mock.std { padding: 0; gap: 0; }
+.mk-band { background: #13464A; color: #FFFFFF; padding: 14px 16px 16px; }
+.mk-r1 { display: flex; justify-content: space-between; align-items: center; }
+.mk-logo { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; font-size: 13px; }
+.mk-tbl { font-size: 10px; font-weight: 700; letter-spacing: .06em; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; padding: 3px 9px; }
+.mk-name { font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1.05; margin-top: 12px; letter-spacing: -.02em; }
+.mk-meta { font-size: 11px; color: #CFE0DE; margin-top: 6px; }
+.mk-wel { font-family: var(--display); font-weight: 600; font-size: 15px; padding: 12px 16px 0; }
+.mk-note { margin: 10px 16px 4px; background: #E2E8E4; border-radius: 10px; padding: 8px 10px; font-size: 11.5px; line-height: 1.35; display: flex; flex-direction: column; gap: 2px; }
+.mk-note span { font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #13464A; }
+.mk-row { display: flex; justify-content: space-between; gap: 10px; margin: 0 16px; padding: 9px 0; border-bottom: 1px solid #E6E1D8; font-size: 12.5px; }
+.mk-row b { font-weight: 600; }
+.mk-row em { font-style: normal; font-weight: 700; }
+.mock.prem { padding: 0; gap: 0; }
+.pk-photo { height: 72px; flex: none; background: #DCD2C3; }
+.pk-in { padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
+.pk-rule { width: 30px; height: 1px; background: #7A2E2A; margin: 4px 0; }
+.pk-toc { display: flex; flex-direction: column; }
+.pk-toc span { display: flex; gap: 12px; align-items: baseline; padding: 6px 0; border-top: 1px solid #DDD2C2; font-size: 17px; }
+.pk-toc i { width: 22px; color: #7A2E2A; font-size: 14px; }
 .look.talkers .compare { height: 300px; display: flex; gap: 10px; justify-content: center; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 0 12px; }
 .look.talkers .compare > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .look.talkers .compare img { width: 100%; height: auto; aspect-ratio: 105 / 148; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
@@ -376,24 +396,25 @@ footer { padding-bottom: 72px; }
       <div class="looks">
         <figure class="look">
           <div class="mock std" aria-hidden="true">
-            <div class="m-top"><span class="m-logo">K</span><span class="m-name">Kaya Kitchen<small>Westlands</small></span></div>
-            <div class="m-chips"><span class="on">Popular</span><span>Starters</span><span>Grill</span></div>
-            <div class="m-h">Chef's picks</div>
-            <div class="m-card"><b>Nyama Choma (500g)</b><span>Charcoal-grilled goat, kachumbari</span><em>KES 1,400</em></div>
-            <div class="m-card"><b>Beef Short Ribs</b><span>Slow cooked, smoky BBQ glaze</span><em>KES 1,800</em></div>
+            <div class="mk-band"><div class="mk-r1"><span class="mk-logo">K</span><span class="mk-tbl">TABLE 4</span></div><div class="mk-name">Kaya Kitchen &amp; Bar</div><div class="mk-meta">Westlands · Kitchen open until 11 pm</div></div>
+            <div class="mk-wel">Karibu to Kaya.</div>
+            <div class="mk-note"><span>From the kitchen today</span>Tilapia came in from Kisumu this morning.</div>
+            <div class="mk-row"><b>Nyama Choma (500g)</b><em>KSh 1,400</em></div>
+            <div class="mk-row"><b>Beef Short Ribs</b><em>KSh 1,800</em></div>
           </div>
           <figcaption><b>Essential and Signature</b><span>One clean look in your logo and brand colour, with dish photos or a clear text layout.</span></figcaption>
         </figure>
         <figure class="look">
           <div class="mock prem" aria-hidden="true">
-            <div class="p-eyebrow">Karen, Nairobi · Since 2019</div>
-            <div class="p-name">Ember &amp; Salt</div>
-            <div class="p-story">Everything is cooked over a wood fire, with produce from farms around Limuru.</div>
-            <div class="p-tabs"><span class="on">From the fire</span><span>Small plates</span></div>
-            <div class="p-item"><span class="p-row"><b>Ember lamb shoulder</b><i></i><em>2,400</em></span><span class="p-desc">Twelve-hour lamb, smoked aubergine</span></div>
-            <div class="p-item"><span class="p-row"><b>Whole tilapia</b><i></i><em>1,900</em></span><span class="p-desc">Charred lime, coconut and coriander</span></div>
+            <div class="pk-photo"></div>
+            <div class="pk-in">
+              <div class="p-eyebrow">Table 7 · Dinner from 6 pm</div>
+              <div class="p-name">Ember &amp; Salt</div>
+              <div class="pk-rule"></div>
+              <div class="pk-toc"><span><i>I</i>Small plates</span><span><i>II</i>From the fire</span><span><i>III</i>To finish</span></div>
+            </div>
           </div>
-          <figcaption><b>Premium Experience</b><span>A printed-menu feel: venue photo, a serif chosen for your brand, your story and a photo of every dish.</span></figcaption>
+          <figcaption><b>Premium Experience</b><span>Photo-led and editorial: your venue photo, a serif chosen for your brand, your story, and courses with one signature dish each.</span></figcaption>
         </figure>
         <figure class="look talkers">
           <div class="compare">
