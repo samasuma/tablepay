@@ -128,6 +128,10 @@ addColumn("restaurants", "display_font", "TEXT");
 addColumn("restaurants", "paper", "TEXT");
 addColumn("restaurants", "hero_url", "TEXT");
 addColumn("restaurants", "story", "TEXT");
+// Hospitality touches on the guest menu: opening hours, a welcome line and a daily house note
+addColumn("restaurants", "hours", "TEXT");
+addColumn("restaurants", "welcome", "TEXT");
+addColumn("restaurants", "house_note", "TEXT");
 
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {

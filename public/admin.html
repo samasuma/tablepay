@@ -156,7 +156,10 @@ function tablesView(admin) {
     </div></div>`).join("")}</div>`;
 }
 
+const PAPER_NAMES = { "#F3ECE1": "Cream", "#EFEDE8": "Linen", "#1A1714": "Ink" };
+const PAPER_NOW = { "#F7F4EE": "#EFEDE8", "#ECE6DA": "#EFEDE8", "#1D1915": "#1A1714" };
 function lookView(admin) {
+  const paperNow = PAPER_NOW[(look.paper || "").toUpperCase()] || look.paper || "#F3ECE1";
   const dis = admin ? "" : "disabled";
   const color = look.brand_color || "#1a73e7";
   const first = tables.tables[0];
@@ -183,20 +186,24 @@ function lookView(admin) {
         <label class="toggle"><input type="radio" name="template" value="standard" ${look.template !== "custom" ? "checked" : ""} ${dis}/> Standard look (Essential and Signature Experience)</label>
         <label class="toggle"><input type="radio" name="template" value="custom" ${look.template === "custom" ? "checked" : ""} ${dis}/> Premium Experience (boutique look)</label>
       </div></div>
+    <div class="small">Venue photo (wide, shown at the top)
+        <div class="row" style="gap:12px;margin-top:6px;align-items:center">
+          <div style="width:120px;height:68px;border-radius:8px;background:#2b241e;overflow:hidden">${look.hero_url ? `<img src="${esc(look.hero_url)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ""}</div>
+          ${admin ? `<label class="btn sm">Upload photo<input type="file" id="heroFile" accept="image/*" hidden /></label>
+            ${look.hero_url ? `<button class="btn sm ghost danger" type="button" id="heroRm">Remove</button>` : ""}` : ""}
+        </div></div>
+    <label class="small">Opening hours (under the name)<input class="field" name="hours" value="${esc(look.hours || "")}" placeholder="e.g. Kitchen open until 11 pm" maxlength="60" ${dis} /></label>
+    <label class="small">Welcome line<input class="field" name="welcome" value="${esc(look.welcome || "")}" placeholder="e.g. Karibu to Kaya." maxlength="120" ${dis} /></label>
+    <label class="small">House note, change it daily (optional)
+      <textarea class="field" name="house_note" maxlength="200" rows="2" ${dis} placeholder="e.g. Tilapia came in from Kisumu this morning. Ask for it pili pili.">${esc(look.house_note || "")}</textarea></label>
     ${look.template === "custom" ? `<fieldset style="border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:14px;margin:0">
       <legend class="small" style="padding:0 6px"><strong>Premium options</strong></legend>
       <label class="small">Heading font
         <select class="field" name="display_font" ${dis}>${lookOptions.fonts.map((f) => `<option ${f === (look.display_font || lookOptions.fonts[0]) ? "selected" : ""}>${esc(f)}</option>`).join("")}</select></label>
       <div class="small">Paper colour
         <div class="row" style="gap:10px;margin-top:6px">${lookOptions.papers.map((c) => `<label title="${c}" style="display:flex;align-items:center;gap:6px">
-          <input type="radio" name="paper" value="${c}" ${c === (look.paper || lookOptions.papers[0]) ? "checked" : ""} ${dis}/>
-          <span style="width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:${c}"></span></label>`).join("")}</div></div>
-      <div class="small">Venue photo (wide, shown at the top)
-        <div class="row" style="gap:12px;margin-top:6px;align-items:center">
-          <div style="width:120px;height:68px;border-radius:8px;background:#2b241e;overflow:hidden">${look.hero_url ? `<img src="${esc(look.hero_url)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ""}</div>
-          ${admin ? `<label class="btn sm">Upload photo<input type="file" id="heroFile" accept="image/*" hidden /></label>
-            ${look.hero_url ? `<button class="btn sm ghost danger" type="button" id="heroRm">Remove</button>` : ""}` : ""}
-        </div></div>
+          <input type="radio" name="paper" value="${c}" ${c === paperNow ? "checked" : ""} ${dis}/>
+          <span style="width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:${c}"></span>${PAPER_NAMES[c] || ""}</label>`).join("")}</div></div>
       <label class="small">Short story (up to 240 characters)
         <textarea class="field" name="story" maxlength="240" rows="3" ${dis} placeholder="e.g. Everything is cooked over our wood fire, with produce from farms around Limuru.">${esc(look.story || "")}</textarea></label>
       <label class="small">Line under the area (optional)<input class="field" name="tagline" value="${esc(look.tagline || "")}" placeholder="e.g. Since 2019" ${dis} /></label>
@@ -239,7 +246,8 @@ function bind(app) {
       e.preventDefault();
       const f = new FormData(lf);
       const body = { name: f.get("name"), branch: f.get("branch"), brand_color: f.get("brand_color"),
-        menu_only: f.has("menu_only"), dish_art: f.has("dish_art"), template: f.get("template") || "standard" };
+        menu_only: f.has("menu_only"), dish_art: f.has("dish_art"), template: f.get("template") || "standard",
+        hours: f.get("hours"), welcome: f.get("welcome"), house_note: f.get("house_note") };
       if (f.has("display_font")) Object.assign(body, { display_font: f.get("display_font"), paper: f.get("paper"),
         story: f.get("story"), tagline: f.get("tagline") });
       saveLook(body);

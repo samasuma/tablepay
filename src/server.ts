@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { all, get, run, tx } from "./db.js";
 import { publish, subscribe } from "./events.js";
 import { MOCK, normalisePhone, parseCallback, stkPush, stkQuery, type StkCallbackOutcome } from "./mpesa.js";
-import { renameOldDemo, seedDemo, seedPremiumDemo, token } from "./seed.js";
+import { fillDemoHospitality, renameOldDemo, seedDemo, seedPremiumDemo, token } from "./seed.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
@@ -15,6 +15,7 @@ const CALLBACK_SECRET = process.env.MPESA_CALLBACK_SECRET || "cb";
 seedDemo();
 renameOldDemo();
 seedPremiumDemo();
+fillDemoHospitality();
 
 const app = express();
 app.use(express.json({ limit: "400kb" }));
@@ -24,7 +25,7 @@ app.use(express.static(join(process.cwd(), "public"), { extensions: ["html"] }))
 type Restaurant = {
   id: number; slug: string; name: string; branch: string; tagline: string; phone: string; email: string;
   staff_pin: string; admin_pin: string; brand_color: string | null; logo_url: string | null; menu_only: number; dish_art: number;
-  template: string; display_font: string | null; paper: string | null; hero_url: string | null; story: string | null;
+  template: string; display_font: string | null; paper: string | null; hero_url: string | null; story: string | null; hours: string | null; welcome: string | null; house_note: string | null;
 };
 type Table = { id: number; restaurant_id: number; label: string; code: string; active: number };
 type Session = { id: number; table_id: number; status: string; receipt_token: string; opened_at: string; closed_at: string | null };
@@ -543,10 +544,12 @@ app.post("/api/staff/tables/:id/orders", requireStaff(), wrap((req, res) => {
 // ================= ADMIN API =================
 // Look & mode: logo, one brand colour, menu-only, illustrated placeholders
 const LOOK_FIELDS = ["name", "branch", "tagline", "brand_color", "logo_url", "menu_only", "dish_art",
-  "template", "display_font", "paper", "hero_url", "story"] as const;
+  "template", "display_font", "paper", "hero_url", "story", "hours", "welcome", "house_note"] as const;
 // TablePay Custom: a short, fixed list of choices keeps every Custom menu on-brand and quick to set up
 export const CUSTOM_FONTS = ["Cormorant Garamond", "Playfair Display", "Fraunces", "DM Serif Display"];
-export const CUSTOM_PAPERS = ["#F3ECE1", "#F7F4EE", "#ECE6DA", "#1D1915"];
+// Paper tones: Cream, Linen, Ink. Older saved values (ivory, linen, charcoal) still work and map to the nearest tone.
+export const CUSTOM_PAPERS = ["#F3ECE1", "#EFEDE8", "#1A1714"];
+const LEGACY_PAPERS = ["#F7F4EE", "#ECE6DA", "#1D1915"];
 const IMAGE_RE = /^(https:\/\/\S+|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+)$/;
 function lookOf(rid: number) {
   return get<Record<string, unknown>>(`SELECT ${LOOK_FIELDS.join(", ")} FROM restaurants WHERE id = ?`, rid);
@@ -583,7 +586,7 @@ app.patch("/api/admin/look", requireStaff("admin"), wrap((req, res) => {
     put("display_font", b.display_font || null);
   }
   if ("paper" in b) {
-    if (b.paper && !CUSTOM_PAPERS.includes(b.paper)) throw new HttpError(400, "Pick one of the listed paper colours");
+    if (b.paper && !CUSTOM_PAPERS.includes(b.paper) && !LEGACY_PAPERS.includes(b.paper)) throw new HttpError(400, "Pick one of the listed paper colours");
     put("paper", b.paper || null);
   }
   if ("hero_url" in b) {
@@ -592,6 +595,9 @@ app.patch("/api/admin/look", requireStaff("admin"), wrap((req, res) => {
     put("hero_url", u || null);
   }
   if ("story" in b) put("story", String(b.story || "").trim().slice(0, 240) || null);
+  if ("hours" in b) put("hours", String(b.hours || "").trim().slice(0, 60) || null);
+  if ("welcome" in b) put("welcome", String(b.welcome || "").trim().slice(0, 120) || null);
+  if ("house_note" in b) put("house_note", String(b.house_note || "").trim().slice(0, 200) || null);
   if (sets.length) run(`UPDATE restaurants SET ${sets.join(", ")} WHERE id = ?`, ...vals, rid);
   res.json(lookOf(rid));
 }));

@@ -147,5 +147,21 @@ if (process.argv[1]?.endsWith("seed.ts")) {
   seedDemo();
   renameOldDemo();
   seedPremiumDemo();
+  fillDemoHospitality();
   db.close();
+}
+
+// Hospitality copy for the two demo venues (only fills empty fields, so owner edits are kept)
+export function fillDemoHospitality() {
+  const fill = (slug: string, hours: string, welcome: string, note: string) => {
+    const r = get<{ id: number; hours: string | null; welcome: string | null; house_note: string | null }>(
+      "SELECT id, hours, welcome, house_note FROM restaurants WHERE slug = ?", slug);
+    if (!r) return;
+    run("UPDATE restaurants SET hours = COALESCE(hours, ?), welcome = COALESCE(welcome, ?), house_note = COALESCE(house_note, ?) WHERE id = ?",
+      hours, welcome, note, r.id);
+  };
+  fill("demo-grill", "Kitchen open until 11 pm", "Karibu to Kaya.",
+    "Tilapia came in from Kisumu this morning. We grill it whole: ask for it pili pili.");
+  fill("demo-premium", "Dinner from 6 pm", "Welcome to Ember & Salt.",
+    "Tonight the lamb has been on the fire since noon.");
 }
