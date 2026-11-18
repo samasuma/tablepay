@@ -180,8 +180,8 @@ function lookView(admin) {
       </div></div>
     <div class="small">Template
       <div class="row" style="gap:16px;margin-top:6px;flex-wrap:wrap">
-        <label class="toggle"><input type="radio" name="template" value="standard" ${look.template !== "custom" ? "checked" : ""} ${dis}/> TablePay Menu (standard)</label>
-        <label class="toggle"><input type="radio" name="template" value="custom" ${look.template === "custom" ? "checked" : ""} ${dis}/> TablePay Menu Premium (boutique)</label>
+        <label class="toggle"><input type="radio" name="template" value="standard" ${look.template !== "custom" ? "checked" : ""} ${dis}/> Standard look (Essential and Signature Experience)</label>
+        <label class="toggle"><input type="radio" name="template" value="custom" ${look.template === "custom" ? "checked" : ""} ${dis}/> Premium Experience (boutique look)</label>
       </div></div>
     ${look.template === "custom" ? `<fieldset style="border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:14px;margin:0">
       <legend class="small" style="padding:0 6px"><strong>Premium options</strong></legend>

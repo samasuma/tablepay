@@ -85,7 +85,7 @@ export function renameOldDemo() {
   console.log("Renamed demo restaurant to 'Kaya Kitchen & Bar'");
 }
 
-// A second demo venue on TablePay Menu Premium, with one table at /t/premium
+// A second demo venue on the Premium Experience, with one table at /t/premium
 export const PREMIUM_DEMO_CODE = "premium";
 export function seedPremiumDemo() {
   if (get("SELECT id FROM restaurants WHERE slug = 'demo-premium'")) return;
