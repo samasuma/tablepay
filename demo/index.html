@@ -7,25 +7,25 @@
 <meta name="description" content="A two-minute tour: see your restaurant's TablePay experience, the way your guests will.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
 :root {
-  --navy: #1B2E4B; --navy-2: #24395A; --blue: #1E5EB8; --blue-soft: #E3EDFB; --green: #12805C;
-  --ground: #F3F5F9; --surface: #FFFFFF; --ink: #17233A; --muted: #3D4859; --line: #D8DEE8;
-  --on-navy: #FFFFFF; --on-navy-muted: #C7D3E6; --sky: #9CC2F5;
+  --navy: #13464A; --navy-2: #0E3438; --blue: #13464A; --blue-soft: #E3EEEC; --green: #12805C;
+  --ground: #F8F6F2; --surface: #FFFFFF; --ink: #1C1B19; --muted: #5B5750; --line: #E6E1D8;
+  --on-navy: #FFFFFF; --on-navy-muted: #C9DDD8; --sky: #E2B865;
   --display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
   --body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --accent: #B5452B; --accent-text: #FFFFFF;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
-    --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; color-scheme: dark;
+    --navy: #0E3438; --navy-2: #13464A; --blue: #7CC4BC; --blue-soft: #17393C; --green: #4CC59A;
+    --ground: #0D1A1B; --surface: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --navy: #13223A; --navy-2: #1B2E4B; --blue: #6FA3EE; --blue-soft: #1C2D47; --green: #4CC59A;
-  --ground: #0E1522; --surface: #162033; --ink: #E8EEF7; --muted: #A9B5C7; --line: #2A3850; color-scheme: dark;
+  --navy: #0E3438; --navy-2: #13464A; --blue: #7CC4BC; --blue-soft: #17393C; --green: #4CC59A;
+  --ground: #0D1A1B; --surface: #142627; --ink: #EEF2F0; --muted: #AAB8B5; --line: #26403F; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -37,7 +37,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
 p { margin: 0; text-wrap: pretty; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 24px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; border: 0; }
-.btn-white { background: #FFFFFF; color: #1B2E4B; }
+.btn-white { background: #FFFFFF; color: #13464A; }
 .btn-wa { background: #128C4A; color: #FFFFFF; }
 .btn-wa:hover { background: #0E7A40; }
 .btn-line { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
@@ -45,7 +45,7 @@ p { margin: 0; text-wrap: pretty; }
 /* top */
 .top { background: var(--navy); color: var(--on-navy); }
 .bar { display: flex; align-items: center; justify-content: space-between; padding-block: 16px; gap: 12px; }
-.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 21px; color: var(--on-navy); text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 9px; font-family: var(--display); font-weight: 700; font-size: 21px; letter-spacing: -0.02em; color: var(--on-navy); text-decoration: none; }
 .progress { font-size: 13px; font-weight: 600; color: var(--on-navy-muted); }
 .intro { padding-block: 20px 44px; display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
 .intro .kick { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky); }
@@ -219,6 +219,8 @@ p { margin: 0; text-wrap: pretty; }
   .screen { height: 520px; }
   .screen.short { height: 380px; }
 }
+.brand .lock { display: flex; flex-direction: column; line-height: 1; }
+.brand .desc { font-family: var(--body); font-weight: 700; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--on-navy-muted); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -227,8 +229,8 @@ p { margin: 0; text-wrap: pretty; }
   <div class="wrap">
     <div class="bar">
       <a class="brand" href="/">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="9" height="16" rx="2"/><path d="M8.5 15.5h2"/><path d="M17 8.5a4 4 0 0 1 0 5"/><path d="M19.5 6.5a7 7 0 0 1 0 9"/></svg>
-        TablePay
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.8" width="12" height="15.4" rx="2.6"/><circle cx="12" cy="12.4" r="2.7"/><path d="M3.5 21.2h17"/></svg>
+        <span class="lock"><span class="wm">TablePay</span><span class="desc">Digital hospitality</span></span>
       </a>
       <span class="progress">2-minute tour</span>
     </div>
