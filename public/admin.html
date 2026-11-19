@@ -49,17 +49,18 @@ let menu = [], tables = null, look = {}, lookOptions = { fonts: [], papers: [] }
 const isAdmin = () => localStorage.getItem("tp_role") === "admin";
 const restaurant = () => JSON.parse(localStorage.getItem("tp_restaurant") || "{}");
 
+const venueSlug = new URLSearchParams(location.search).get("v") || "";
 function loginView() {
   document.getElementById("app").innerHTML = `<form class="card login" id="f">
-    <h2>Manager sign in</h2>
+    <h2>Manager sign in</h2>${venueSlug ? `<p class="small"><b>Venue:</b> ${esc(venueSlug)}</p>` : ""}
     <p class="muted small">Manager PIN can edit the menu and tables. Staff PIN can only mark items sold out.</p>
     <input class="field num" id="pin" type="password" inputmode="numeric" placeholder="PIN" autofocus />
     <button class="btn primary block" style="margin-top:12px">Sign in</button>
-    <p class="muted small">Demo manager PIN: 9999</p></form>`;
+    ${venueSlug ? "" : `<p class="muted small">Demo manager PIN: 9999</p>`}</form>`;
   document.getElementById("f").onsubmit = async (e) => {
     e.preventDefault();
     try {
-      const r = await api("/api/staff/login", { method: "POST", body: { pin: document.getElementById("pin").value } });
+      const r = await api("/api/staff/login", { method: "POST", body: { pin: document.getElementById("pin").value, ...(venueSlug ? { slug: venueSlug } : {}) } });
       localStorage.setItem("tp_staff_token", r.token);
       localStorage.setItem("tp_role", r.role);
       localStorage.setItem("tp_restaurant", JSON.stringify(r.restaurant));
@@ -310,6 +311,7 @@ function bind(app) {
   }));
 }
 
+if (venueSlug && restaurant().slug !== venueSlug) localStorage.removeItem("tp_staff_token");
 localStorage.getItem("tp_staff_token") ? load() : loginView();
 </script>
 </body>

@@ -6,11 +6,13 @@ import { all, get, run, tx } from "./db.js";
 import { publish, subscribe } from "./events.js";
 import { MOCK, normalisePhone, parseCallback, stkPush, stkQuery, type StkCallbackOutcome } from "./mpesa.js";
 import { fillDemoHospitality, renameOldDemo, seedDemo, seedPremiumDemo, token } from "./seed.js";
+import { parseMenu } from "./menuparse.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const SECRET = process.env.APP_SECRET || randomBytes(32).toString("hex");
 const CALLBACK_SECRET = process.env.MPESA_CALLBACK_SECRET || "cb";
+const STUDIO_KEY = process.env.STUDIO_KEY || "";
 
 seedDemo();
 renameOldDemo();
@@ -694,12 +696,105 @@ app.delete("/api/admin/tables/:id", requireStaff("admin"), wrap((req, res) => {
   res.json({ ok: true });
 }));
 
+// ================= STUDIO (TablePay team only) =================
+// Build a branded sample venue for a prospect from their menu text and logo, in a few minutes.
+// Protected by the STUDIO_KEY environment variable; off when it isn't set.
+function requireStudio(req: Request, _res: Response, next: NextFunction) {
+  if (!STUDIO_KEY) return next(new HttpError(503, "The studio is off. Set STUDIO_KEY on the server to turn it on."));
+  const given = Buffer.from(String(req.headers["x-studio-key"] || ""));
+  const want = Buffer.from(STUDIO_KEY);
+  if (given.length !== want.length || !timingSafeEqual(given, want)) return next(new HttpError(401, "Wrong studio key"));
+  next();
+}
+const pin6 = () => String(100000 + (randomBytes(4).readUInt32BE(0) % 900000));
+const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "venue";
+
+async function sampleCard(r: Restaurant & { is_sample: number; created_at: string }) {
+  const t = get<Table>("SELECT * FROM dining_tables WHERE restaurant_id=? AND active=1 ORDER BY id LIMIT 1", r.id);
+  const url = t ? `${PUBLIC_URL}/t/${t.code}` : "";
+  const counts = get<{ c: number; i: number }>(
+    "SELECT (SELECT COUNT(*) FROM categories WHERE restaurant_id=?) c, (SELECT COUNT(*) FROM menu_items WHERE restaurant_id=? AND deleted=0) i", r.id, r.id)!;
+  return {
+    id: r.id, name: r.name, branch: r.branch, look: r.template === "custom" ? "signature" : "standard", brand_color: r.brand_color,
+    created_at: r.created_at, sections: counts.c, dishes: counts.i, url,
+    qr: url ? await QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M" }) : "",
+    admin_url: `${PUBLIC_URL}/admin?v=${encodeURIComponent(r.slug)}`, admin_pin: r.admin_pin,
+  };
+}
+
+app.post("/api/studio/check", requireStudio, (_req, res) => res.json({ ok: true }));
+
+app.post("/api/studio/parse", requireStudio, wrap((req, res) => {
+  res.json(parseMenu(String(req.body?.menu || "").slice(0, 20000)));
+}));
+
+app.get("/api/studio/venues", requireStudio, wrap(async (_req, res) => {
+  const rows = all<Restaurant & { is_sample: number; created_at: string }>("SELECT * FROM restaurants WHERE is_sample = 1 ORDER BY id DESC");
+  res.json(await Promise.all(rows.map(sampleCard)));
+}));
+
+app.post("/api/studio/venues", requireStudio, wrap(async (req, res) => {
+  const b = req.body || {};
+  const name = String(b.name || "").trim().slice(0, 60);
+  if (!name) throw new HttpError(400, "The venue needs a name");
+  const color = String(b.brand_color || "").trim();
+  if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) throw new HttpError(400, "Brand colour must look like #13464A");
+  const logo = String(b.logo_url || "").trim();
+  if (logo && (!IMAGE_RE.test(logo) || logo.length > 300_000)) throw new HttpError(400, "Logo must be a PNG, JPEG or WebP under 200 KB");
+  const signature = b.look === "signature";
+  const parsed = parseMenu(String(b.menu || "").slice(0, 20000));
+  if (!parsed.sections.length) throw new HttpError(400, "No dishes found. Each dish line needs a price at the end, like 'Nyama Choma 1,400'.");
+  const tables = Math.min(10, Math.max(1, Number(b.tables) || 1));
+  const branch = String(b.branch || "").trim().slice(0, 80) || null;
+  const welcome = String(b.welcome || "").trim().slice(0, 120) || `Karibu to ${name}.`;
+  const story = String(b.story || "").trim().slice(0, 240) || null;
+
+  const rid = tx(() => {
+    const r = run(
+      `INSERT INTO restaurants (slug, name, branch, staff_pin, admin_pin, brand_color, logo_url, menu_only, template, display_font, paper, story, welcome, is_sample)
+       VALUES (?,?,?,?,?,?,?,1,?,?,?,?,?,1)`,
+      `s-${slugify(name)}-${token(4)}`, name, branch, pin6(), pin6(),
+      color || (signature ? "#7A2E2A" : "#13464A"), logo || null,
+      signature ? "custom" : "standard", signature ? "Cormorant Garamond" : null, signature ? "#F3ECE1" : null,
+      story, welcome
+    );
+    const id = Number(r.lastInsertRowid);
+    for (let i = 1; i <= tables; i++) run("INSERT INTO dining_tables (restaurant_id, label, code) VALUES (?,?,?)", id, `Table ${i}`, token(8));
+    parsed.sections.forEach((sec, si) => {
+      const c = run("INSERT INTO categories (restaurant_id, name, sort) VALUES (?,?,?)", id, sec.name, si);
+      const cid = Number(c.lastInsertRowid);
+      sec.items.forEach((it, ii) => run(
+        "INSERT INTO menu_items (restaurant_id, category_id, name, description, price, tags, sort) VALUES (?,?,?,?,?,?,?)",
+        id, cid, it.name, it.description || null, it.price, it.tags.join(",") || null, ii));
+    });
+    return id;
+  });
+  const r = get<Restaurant & { is_sample: number; created_at: string }>("SELECT * FROM restaurants WHERE id = ?", rid)!;
+  res.json({ ...(await sampleCard(r)), skipped: parsed.skipped });
+}));
+
+app.delete("/api/studio/venues/:id", requireStudio, wrap((req, res) => {
+  const id = Number(req.params.id);
+  const r = get<{ id: number }>("SELECT id FROM restaurants WHERE id = ? AND is_sample = 1", id);
+  if (!r) throw new HttpError(404, "Sample not found");
+  tx(() => {
+    const sess = "SELECT ts.id FROM table_sessions ts JOIN dining_tables dt ON dt.id = ts.table_id WHERE dt.restaurant_id = ?";
+    run(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE session_id IN (${sess}))`, id);
+    for (const t of ["orders", "service_requests", "payments"]) run(`DELETE FROM ${t} WHERE session_id IN (${sess})`, id);
+    run("DELETE FROM table_sessions WHERE table_id IN (SELECT id FROM dining_tables WHERE restaurant_id = ?)", id);
+    for (const t of ["dining_tables", "menu_items", "categories"]) run(`DELETE FROM ${t} WHERE restaurant_id = ?`, id);
+    run("DELETE FROM restaurants WHERE id = ?", id);
+  });
+  res.json({ ok: true });
+}));
+
 // ================= PAGES =================
 const page = (f: string) => (_req: Request, res: Response) => res.sendFile(join(process.cwd(), "public", f));
 app.get("/t/:code", page("table.html"));
 app.get("/r/:token", page("receipt.html"));
 app.get("/staff", page("staff.html"));
 app.get("/admin", page("admin.html"));
+app.get("/studio", page("studio.html"));
 
 // ---------- errors ----------
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

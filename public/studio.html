@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<title>TablePay Studio</title>
+<link rel="stylesheet" href="/app.css" />
+<style>
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 16px 16px 60px; }
+  .top { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; }
+  .top h1 { font-size: 22px; }
+  .top .desc { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .pad { padding: 18px; }
+  label.f { display: block; font-weight: 700; font-size: 14px; margin: 14px 0 6px; }
+  label.f:first-child { margin-top: 0; }
+  label.f span { font-weight: 500; color: var(--muted); }
+  textarea.field { min-height: 300px; font-family: var(--mono, ui-monospace, monospace); font-size: 13.5px; line-height: 1.5; resize: vertical; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .sw { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+  .sw.on { border-color: var(--ink); box-shadow: inset 0 0 0 3px var(--card); }
+  .sw input { opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  .sw.custom { background: conic-gradient(#e2b865, #9a3b24, #7a2e2a, #1b2e4b, #13464a, #4f5b2e, #e2b865); position: relative; overflow: hidden; }
+  .logo-row { display: flex; align-items: center; gap: 12px; }
+  .logo-prev { width: 56px; height: 56px; border-radius: 50%; background: var(--bg); border: 1px dashed var(--line); display: flex; align-items: center; justify-content: center; overflow: hidden; flex: none; }
+  .logo-prev img { width: 100%; height: 100%; object-fit: cover; }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .preview h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 14px 0 6px; }
+  .preview .it { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .preview .it small { display: block; color: var(--muted); font-size: 12.5px; }
+  .preview .tg { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-left: 6px; }
+  .warn { background: #FBF3E2; color: #6B4E12; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 10px; }
+  .result { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 560px) { .result { grid-template-columns: minmax(0, 1fr); } }
+  .result svg { width: 100%; height: auto; background: #fff; border-radius: 10px; padding: 6px; }
+  .mono { font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; word-break: break-all; }
+  .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .list .s { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+  .list .s svg { width: 64px; height: 64px; background: #fff; border-radius: 6px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 6px; }
+  .gate { max-width: 380px; margin: 12vh auto; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script src="/common.js"></script>
+<script>
+const { esc, toast } = TP;
+const KEY = "tp_studio_key";
+const SWATCHES = [["#13464A","Table Green"],["#7A2E2A","Oxblood"],["#1B2E4B","Navy"],["#9A3B24","Terracotta"],["#4F5B2E","Olive"],["#2B2B2B","Charcoal"],["#8A6420","Brass"]];
+const st = { look: "standard", color: "#13464A", logo: "", last: null };
+
+async function sapi(path, opts = {}) {
+  const res = await fetch(path, { method: opts.method || "GET", headers: { "Content-Type": "application/json", "x-studio-key": localStorage.getItem(KEY) || "" }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || `Request failed (${res.status})`); e.status = res.status; throw e; }
+  return data;
+}
+
+function gate(msg) {
+  document.getElementById("app").innerHTML = `<form class="card pad gate" id="g">
+    <h2>TablePay Studio</h2>
+    <p class="muted small">Build a branded sample for a prospect from their menu and logo. For the TablePay team only.</p>
+    ${msg ? `<p class="warn">${esc(msg)}</p>` : ""}
+    <input class="field" id="k" type="password" placeholder="Studio key" autocomplete="current-password" autofocus />
+    <button class="btn primary block" style="margin-top:12px">Open studio</button></form>`;
+  document.getElementById("g").onsubmit = async (e) => {
+    e.preventDefault();
+    localStorage.setItem(KEY, document.getElementById("k").value.trim());
+    try { await sapi("/api/studio/check", { method: "POST" }); main(); }
+    catch (err) { localStorage.removeItem(KEY); gate(err.message); }
+  };
+}
+
+function main() {
+  document.getElementById("app").innerHTML = `
+  <div class="top">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#13464A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.8" width="12" height="15.4" rx="2.6"/><circle cx="12" cy="12.4" r="2.7"/><path d="M3.5 21.2h17"/></svg>
+    <div><h1>TablePay Studio</h1><div class="desc">Branded samples for prospects</div></div>
+    <button class="btn sm ghost" id="out" style="margin-left:auto">Lock</button>
+  </div>
+  <div id="res"></div>
+  <form class="grid" id="f">
+    <div class="card pad">
+      <label class="f" for="n">Venue name</label>
+      <input class="field" id="n" maxlength="60" placeholder="Mama Oliech Restaurant" required />
+      <div class="two">
+        <div><label class="f" for="b">Area <span>(optional)</span></label><input class="field" id="b" maxlength="80" placeholder="Kilimani, Nairobi" /></div>
+        <div><label class="f" for="t">Tables</label><input class="field num" id="t" type="number" min="1" max="10" value="1" /></div>
+      </div>
+      <label class="f">Look</label>
+      <div class="seg" id="look"><button type="button" data-v="standard" class="on">Standard (Start, Plus)</button><button type="button" data-v="signature">Signature</button></div>
+      <label class="f">Brand colour <span>(from their logo)</span></label>
+      <div class="swatches" id="sw"></div>
+      <label class="f">Logo <span>(PNG or JPEG from WhatsApp)</span></label>
+      <div class="logo-row"><div class="logo-prev" id="lp">—</div><input type="file" id="logo" accept="image/*" /></div>
+      <p class="hint">Resized in your browser to a small square, so any photo works.</p>
+      <label class="f" for="w">Welcome line <span>(optional)</span></label>
+      <input class="field" id="w" maxlength="120" placeholder="Karibu to Mama Oliech." />
+      <div id="storyBox" hidden><label class="f" for="s">Their story <span>(Signature, optional)</span></label>
+      <textarea class="field" id="s" maxlength="240" style="min-height:80px;font-family:inherit" placeholder="Two lines about the venue: where the food comes from, who cooks it."></textarea></div>
+    </div>
+    <div class="card pad">
+      <label class="f" for="m">Menu <span>(type it from their photo, or paste from a PDF)</span></label>
+      <textarea class="field" id="m" placeholder="STARTERS&#10;Beef Samosas (3) ..... 450&#10;Crisp pastry, spiced beef&#10;Masala Chips (v) 450&#10;&#10;GRILL&#10;Nyama Choma 500g* 1,400&#10;Half Chicken | Herb marinated | 1,100&#10;&#10;DRINKS&#10;Tusker 500ml 350"></textarea>
+      <p class="hint">Sections in CAPITALS or ending with ":". Each dish ends with its price. The line under a dish is its description. Tags: (v) (spicy) (chef), or * for chef's pick.</p>
+      <div class="preview" id="pv"></div>
+      <button class="btn primary block lg" id="go" style="margin-top:14px">Build sample</button>
+    </div>
+  </form>
+  <div class="card pad list" style="margin-top:16px"><h2 style="font-size:18px">Samples</h2><div id="list"><p class="muted small">Loading…</p></div></div>`;
+
+  document.getElementById("out").onclick = () => { localStorage.removeItem(KEY); gate(); };
+  const sw = document.getElementById("sw");
+  const drawSw = () => {
+    sw.innerHTML = SWATCHES.map(([c, n]) => `<button type="button" class="sw ${st.color.toLowerCase() === c.toLowerCase() ? "on" : ""}" style="background:${c}" data-c="${c}" title="${n}" aria-label="${n}"></button>`).join("")
+      + `<label class="sw custom ${SWATCHES.some(([c]) => c.toLowerCase() === st.color.toLowerCase()) ? "" : "on"}" title="Pick from their logo"><input type="color" id="cc" value="${st.color}" aria-label="Custom colour" /></label><span class="mono">${esc(st.color)}</span>`;
+    sw.querySelectorAll("[data-c]").forEach((b) => b.onclick = () => { st.color = b.dataset.c; drawSw(); });
+    document.getElementById("cc").oninput = (e) => { st.color = e.target.value.toUpperCase(); drawSw(); };
+  };
+  drawSw();
+  document.querySelectorAll("#look button").forEach((b) => b.onclick = () => {
+    st.look = b.dataset.v;
+    document.querySelectorAll("#look button").forEach((x) => x.classList.toggle("on", x === b));
+    document.getElementById("storyBox").hidden = st.look !== "signature";
+    if (st.look === "signature" && st.color === "#13464A") { st.color = "#7A2E2A"; drawSw(); }
+  });
+  document.getElementById("logo").onchange = (e) => readLogo(e.target.files[0]);
+
+  let tmr;
+  document.getElementById("m").oninput = () => { clearTimeout(tmr); tmr = setTimeout(preview, 350); };
+  document.getElementById("f").onsubmit = build;
+  loadList();
+}
+
+function readLogo(file) {
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const s = 320, c = document.createElement("canvas"); c.width = c.height = s;
+    const g = c.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, s, s);
+    const k = Math.min(s / img.width, s / img.height); const w = img.width * k, h = img.height * k;
+    g.drawImage(img, (s - w) / 2, (s - h) / 2, w, h);
+    st.logo = c.toDataURL("image/png");
+    if (st.logo.length > 280000) st.logo = c.toDataURL("image/jpeg", 0.85);
+    document.getElementById("lp").innerHTML = `<img src="${st.logo}" alt="Logo preview" />`;
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror = () => toast("That file isn't an image we can read");
+  img.src = URL.createObjectURL(file);
+}
+
+async function preview() {
+  const pv = document.getElementById("pv"), text = document.getElementById("m").value;
+  if (!text.trim()) { pv.innerHTML = ""; return; }
+  try {
+    const r = await sapi("/api/studio/parse", { method: "POST", body: { menu: text } });
+    const n = r.sections.reduce((a, s) => a + s.items.length, 0);
+    pv.innerHTML = `<p class="small" style="margin-top:12px"><b>${r.sections.length} sections, ${n} dishes</b> found</p>`
+      + r.sections.map((s) => `<h3>${esc(s.name)}</h3>` + s.items.map((i) => `<div class="it"><div>${esc(i.name)}${i.tags.map((t) => `<span class="tg">${esc(t)}</span>`).join("")}${i.description ? `<small>${esc(i.description)}</small>` : ""}</div><b>KSh ${i.price.toLocaleString("en-KE")}</b></div>`).join("")).join("")
+      + (r.skipped.length ? `<div class="warn"><b>Not used:</b> ${r.skipped.map(esc).join(" · ")}<br/>Add a price at the end of a dish line, or put section names in CAPITALS.</div>` : "");
+  } catch (e) { if (e.status === 401) return gate(e.message); pv.innerHTML = `<div class="warn">${esc(e.message)}</div>`; }
+}
+
+async function build(e) {
+  e.preventDefault();
+  const btn = document.getElementById("go"); btn.disabled = true; btn.textContent = "Building…";
+  try {
+    const r = await sapi("/api/studio/venues", { method: "POST", body: {
+      name: document.getElementById("n").value, branch: document.getElementById("b").value, tables: Number(document.getElementById("t").value),
+      look: st.look, brand_color: st.color, logo_url: st.logo, welcome: document.getElementById("w").value,
+      story: document.getElementById("s").value, menu: document.getElementById("m").value } });
+    showResult(r); loadList();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (err) { if (err.status === 401) return gate(err.message); toast(err.message, 4200); }
+  finally { btn.disabled = false; btn.textContent = "Build sample"; }
+}
+
+function waText(r) {
+  return `Hi! Here's ${r.name} on TablePay, made from your menu: ${r.url}\n\nOpen it on your phone. This is what your guests see when they tap or scan the talker on your table. Shall we put it on your tables?`;
+}
+
+function showResult(r) {
+  document.getElementById("res").innerHTML = `<div class="card pad" style="margin-bottom:16px;border:2px solid var(--accent)">
+    <div class="result">
+      <div>${r.qr}</div>
+      <div>
+        <h2 style="font-size:20px">${esc(r.name)} is ready</h2>
+        <p class="muted small">${r.sections} sections, ${r.dishes} dishes · ${r.look === "signature" ? "Signature look" : "Standard look"}</p>
+        <p class="mono" style="margin-top:8px">${esc(r.url)}</p>
+        <div class="acts">
+          <a class="btn primary sm" href="${esc(r.url)}" target="_blank" rel="noopener">Open sample</a>
+          <button class="btn sm" data-copy="${esc(r.url)}">Copy link</button>
+        </div>
+        <label class="f" for="ph">Send to the prospect <span>(their WhatsApp number, optional)</span></label>
+        <div class="row"><input class="field" id="ph" inputmode="tel" placeholder="0712 345 678" style="max-width:220px" /><a class="btn primary sm" id="wa" target="_blank" rel="noopener">Send on WhatsApp</a></div>
+        <p class="hint">Fine-tune dishes, photos and prices in the venue's manager screen: <a href="${esc(r.admin_url)}" target="_blank" rel="noopener">open it</a>, PIN <b class="mono">${esc(r.admin_pin)}</b>.</p>
+        ${r.skipped && r.skipped.length ? `<div class="warn"><b>Lines not used:</b> ${r.skipped.map(esc).join(" · ")}</div>` : ""}
+      </div>
+    </div></div>`;
+  const wa = document.getElementById("wa"), ph = document.getElementById("ph");
+  const upd = () => {
+    let d = ph.value.replace(/\D/g, "");
+    if (d.startsWith("0")) d = "254" + d.slice(1); else if (d.length === 9) d = "254" + d;
+    wa.href = `https://wa.me/${d}?text=${encodeURIComponent(waText(r))}`;
+  };
+  ph.oninput = upd; upd();
+  bindCopy(document.getElementById("res"));
+}
+
+function bindCopy(root) {
+  root.querySelectorAll("[data-copy]").forEach((b) => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); toast("Link copied"); } catch { toast(b.dataset.copy, 5000); }
+  });
+}
+
+async function loadList() {
+  const el = document.getElementById("list");
+  try {
+    const rows = await sapi("/api/studio/venues");
+    if (!rows.length) { el.innerHTML = `<p class="muted small">No samples yet. Build the first one above.</p>`; return; }
+    el.innerHTML = rows.map((r) => `<div class="s">${r.qr}
+      <div><b><span class="dot" style="background:${esc(r.brand_color || "#13464A")}"></span>${esc(r.name)}</b>
+        <div class="muted small">${esc(r.branch || "")}${r.branch ? " · " : ""}${r.dishes} dishes · ${r.look === "signature" ? "Signature" : "Standard"} · ${TP.dateTime ? TP.dateTime(r.created_at) : esc(r.created_at)}</div>
+        <div class="mono">${esc(r.url)}</div></div>
+      <div class="acts" style="margin:0"><a class="btn sm" href="${esc(r.url)}" target="_blank" rel="noopener">Open</a>
+        <button class="btn sm" data-copy="${esc(r.url)}">Copy link</button>
+        <a class="btn sm ghost" href="${esc(r.admin_url)}" target="_blank" rel="noopener" title="Manager PIN ${esc(r.admin_pin)}">Edit (PIN ${esc(r.admin_pin)})</a>
+        <button class="btn sm danger" data-del="${r.id}" data-name="${esc(r.name)}">Delete</button></div></div>`).join("");
+    bindCopy(el);
+    el.querySelectorAll("[data-del]").forEach((b) => b.onclick = async () => {
+      if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to delete"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Delete"; }, 3500); return; }
+      try { await sapi(`/api/studio/venues/${b.dataset.del}`, { method: "DELETE" }); toast(`${b.dataset.name} deleted`); loadList(); }
+      catch (err) { toast(err.message); }
+    });
+  } catch (e) { if (e.status === 401) return gate(e.message); el.innerHTML = `<div class="warn">${esc(e.message)}</div>`; }
+}
+
+localStorage.getItem(KEY) ? sapi("/api/studio/check", { method: "POST" }).then(main).catch((e) => gate(e.status === 401 ? "" : e.message)) : gate();
+</script>
+</body>
+</html>

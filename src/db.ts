@@ -132,6 +132,8 @@ addColumn("restaurants", "story", "TEXT");
 addColumn("restaurants", "hours", "TEXT");
 addColumn("restaurants", "welcome", "TEXT");
 addColumn("restaurants", "house_note", "TEXT");
+// Branded samples built in the studio for prospects (listed and deletable there)
+addColumn("restaurants", "is_sample", "INTEGER NOT NULL DEFAULT 0");
 
 // Small typed helpers around node:sqlite
 export function all<T = any>(sql: string, ...params: any[]): T[] {
