@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TablePay for hotels · A better digital experience for every guest</title>
+<meta name="description" content="TablePay gives your hotel its own digital guest companion: dining, services, hotel information and local tips on every guest's phone, from the room to the restaurant. No app to download.">
+<meta name="theme-color" content="#0B2A2D">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/site.css">
+<style>
+.hero.hotel .hero-photo img { object-position: 62% 40%; }
+.areas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.area { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 26px; display: flex; flex-direction: column; gap: 12px; }
+.area .mi { width: 46px; height: 46px; border-radius: 13px; background: var(--mint); color: var(--green); display: inline-flex; align-items: center; justify-content: center; }
+.area ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.area li { display: flex; gap: 10px; align-items: flex-start; color: var(--muted); }
+.area li .tick { width: 20px; height: 20px; }
+.why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.why div { border-top: 3px solid var(--brass); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+.why p { color: var(--on-dark-muted); }
+.boutique { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; align-items: center; background: #1D1915; color: #F3ECE1; border-radius: 24px; padding: 40px; }
+.boutique h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 600; letter-spacing: 0; font-size: clamp(32px, 4vw, 46px); }
+.boutique p { color: #D8CDBD; }
+.boutique .eyebrow { color: #D9A35B; }
+.boutique .pair { display: flex; gap: 16px; justify-content: center; align-items: flex-end; }
+.boutique .pair > img { width: 46%; max-width: 230px; border-radius: 8px; }
+.boutique .pair .phone { width: 40%; max-width: 200px; }
+.boutique .btn { background: #D9A35B; color: #1D1915; margin-top: 8px; }
+@media (max-width: 960px) { .areas, .why, .boutique { grid-template-columns: minmax(0, 1fr); } .boutique { padding: 28px 20px; } }
+</style>
+</head>
+<body>
+
+<header class="hero hotel">
+  <div class="hero-photo"><img src="/assets/photo-hotel.jpg" alt="A hotel guest in a lobby lounge using his phone, suitcase beside him" width="819" height="468" fetchpriority="high"></div>
+  <div class="wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="/">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.8" width="12" height="15.4" rx="2.6"/><circle cx="12" cy="12.4" r="2.7"/><path d="M3.5 21.2h17"/></svg>
+        <span class="lock"><span class="wm">TablePay</span><span class="desc">Digital hospitality</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="/#journey">Restaurants</a>
+        <a href="/hotels/" aria-current="page">Hotels</a>
+        <a href="/#platform">Platform</a>
+        <a href="/#packages">Packages</a>
+        <a class="btn btn-brass" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo%20for%20our%20hotel" target="_blank" rel="noopener">Book a demo <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </nav>
+    <div class="hero-body">
+      <span class="eyebrow">TablePay for hotels and lodges</span>
+      <h1>A better digital experience for <em>every hotel guest.</em></h1>
+      <p class="lead">Give guests a convenient way to discover your hotel's services, explore dining, find information and interact with your property, all from their own phone.</p>
+      <p class="sub">A digital guest companion that evolves with your property. One brand across every room and outlet. Nothing to download.</p>
+      <div class="ctas">
+        <a class="btn btn-brass" href="https://tablepay.onrender.com/t/premium" target="_blank" rel="noopener">See a boutique experience <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo%20for%20our%20hotel" target="_blank" rel="noopener">Ask for a hotel demo</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="band" id="today">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="rule" aria-hidden="true"></span>
+        <h2>From the room to the restaurant</h2>
+        <p class="lead">Replace the printed guest folder and outlet menus with your hotel's own experience, updated in seconds.</p>
+      </div>
+      <div class="areas">
+        <div class="area rv">
+          <span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 18h18"/><path d="M6 10V7a2 2 0 0 1 2-2h3v5"/></svg></span>
+          <h3>In the room</h3>
+          <ul>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Room-service menu with photos and prices</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Restaurant, bar and spa hours</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Wi-Fi, house rules and checkout time</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Local experiences and concierge tips</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>A tent card or stand in every room</li>
+          </ul>
+        </div>
+        <div class="area rv">
+          <span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-6h6v6"/></svg></span>
+          <h3>Around the property</h3>
+          <ul>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Restaurant, pool bar, rooftop and spa, each with its own menu</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Talkers on every table and lounger, under one brand</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Live sold-out and price changes across every outlet</li>
+            <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>Monthly Insights on what guests look at, outlet by outlet</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band dark">
+    <div class="wrap">
+      <div class="head left rv" style="max-width: 680px;">
+        <span class="eyebrow">Why hotels choose TablePay</span>
+        <h2>One guest companion, every touchpoint</h2>
+      </div>
+      <div class="why">
+        <div class="rv"><h3>One brand everywhere</h3><p>Rooms, restaurant, bar and spa share one experience in your hotel's look, instead of a different PDF for each outlet.</p></div>
+        <div class="rv"><h3>Always up to date</h3><p>Change a price, a spa slot or the breakfast hours once, and every room and table sees it at once. No reprinting folders.</p></div>
+        <div class="rv"><h3>Your own guest channel</h3><p>A direct, branded link between your property and your guests, rather than relying entirely on third-party platforms.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="next">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Growing with your property</span>
+        <h2>Hotel services that switch on next</h2>
+        <p class="lead">These roll out to partner properties in the same experience, on the same talkers. They are not part of today's packages or prices.</p>
+      </div>
+      <div class="modules">
+        <div class="module next rv"><div class="top"><span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16h16"/><path d="M6 16a6 6 0 0 1 12 0"/><path d="M12 7V5"/><path d="M3 19h18"/></svg></span><span class="tag next">Coming next</span></div><h3>Room service ordering</h3><p>Guests order from the room, charged to the room.</p></div>
+        <div class="module next rv"><div class="top"><span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M9 10h6"/></svg></span><span class="tag next">Coming next</span></div><h3>Guest service requests</h3><p>Towels, housekeeping or a late checkout, straight to the right team.</p></div>
+        <div class="module next rv"><div class="top"><span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14l-7 8z"/><path d="M12 12v8"/><path d="M8 20h8"/></svg></span><span class="tag next">Coming next</span></div><h3>Poolside and bar orders</h3><p>Order from the lounger without waving for a waiter.</p></div>
+        <div class="module next rv"><div class="top"><span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/></svg></span><span class="tag next">Coming next</span></div><h3>Digital payments</h3><p>Pay and split bills at any outlet, including M-Pesa, as integrations become available.</p></div>
+        <div class="module next rv"><div class="top"><span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span><span class="tag next">Coming next</span></div><h3>Loyalty across outlets</h3><p>One reward for the restaurant, bar and spa.</p></div>
+        <div class="module next rv"><div class="top"><span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span class="tag next">Coming next</span></div><h3>Feedback before checkout</h3><p>Hear about a problem before it becomes a review.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt">
+    <div class="wrap">
+      <div class="boutique rv">
+        <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start;">
+          <span class="eyebrow">TablePay Signature</span>
+          <h2>Designed around your property</h2>
+          <p>A bespoke experience with your property photo, a serif chosen for your brand, your story and dining set like a printed menu. Premium talkers in card, wood or brass, Insights for every outlet, and a quarterly review with your team to plan what to switch on next.</p>
+          <a class="btn" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20Signature%20quote%20for%20our%20hotel" target="_blank" rel="noopener">Ask for a quote</a>
+        </div>
+        <div class="pair">
+          <div class="phone"><img src="/assets/screen-ember-home.jpg" alt="A boutique experience on cream paper with a serif heading" width="585" height="996" loading="lazy"></div>
+          <img src="/assets/talker-premium.jpg" alt="A boutique talker on cream with a serif heading" width="827" height="1165" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="closer">
+  <div class="wrap in">
+    <div>
+      <h2>Your hotel, in every guest's hand.</h2>
+      <p>Book a demo for your property. We'll show you your own experience and give you a clear quote.</p>
+    </div>
+    <div class="ctas" style="margin-top: 0;">
+      <a class="btn btn-brass" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20a%20TablePay%20demo%20for%20our%20hotel" target="_blank" rel="noopener">Book a demo <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn-ghost" href="tel:+254797334783">Call 0797 334 783</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.8" width="12" height="15.4" rx="2.6"/><circle cx="12" cy="12.4" r="2.7"/><path d="M3.5 21.2h17"/></svg>
+      <span class="lock"><span class="wm">TablePay</span><span class="desc">Digital hospitality</span></span>
+    </a>
+    <div class="links">
+      <a href="/">Restaurants</a>
+      <a href="/demo/">Demo</a>
+      <a href="/#packages">Packages</a>
+      <a href="https://wa.me/254797334783" target="_blank" rel="noopener">WhatsApp +254 797 334 783</a>
+    </div>
+    <span>Digital hospitality, built in Nairobi</span>
+  </div>
+</footer>
+
+<a class="wa" href="https://wa.me/254797334783?text=Hi%20Samuel%2C%20I%27d%20like%20to%20know%20more%20about%20TablePay%20for%20hotels" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg>
+  <span>WhatsApp us</span>
+</a>
+
+<script>
+(function () {
+  var els = document.querySelectorAll('.rv');
+  if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
+  els.forEach(function (e) { io.observe(e); });
+})();
+</script>
+</body>
+</html>
