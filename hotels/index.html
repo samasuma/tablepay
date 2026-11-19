@@ -12,7 +12,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/site.css">
 <style>
-.hero.hotel .hero-photo img { object-position: 62% 40%; }
+.hero.hotel .hero-photo img { object-position: 74% 40%; }
+.area .shot { margin: -26px -26px 6px; border-radius: 18px 18px 0 0; overflow: hidden; aspect-ratio: 16 / 9; }
+.area .shot img { width: 100%; height: 100%; object-fit: cover; object-position: 40% 45%; }
 .areas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .area { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 26px; display: flex; flex-direction: column; gap: 12px; }
 .area .mi { width: 46px; height: 46px; border-radius: 13px; background: var(--mint); color: var(--green); display: inline-flex; align-items: center; justify-content: center; }
@@ -36,7 +38,7 @@
 <body>
 
 <header class="hero hotel">
-  <div class="hero-photo"><img src="/assets/photo-hotel.jpg" alt="A hotel guest in a lobby lounge using his phone, suitcase beside him" width="819" height="468" fetchpriority="high"></div>
+  <div class="hero-photo"><img src="/assets/photo-hotel.jpg" alt="A business traveller in a hotel lobby lounge smiling at his phone, suitcase beside him" width="1536" height="858" fetchpriority="high"></div>
   <div class="wrap">
     <nav class="nav" aria-label="Main">
       <a class="brand" href="/">
@@ -74,6 +76,7 @@
       </div>
       <div class="areas">
         <div class="area rv">
+          <div class="shot"><img src="/assets/photo-room.jpg" alt="A guest in a hotel robe browsing her phone on the bed, city lights through the window" width="1536" height="1030" loading="lazy"></div>
           <span class="mi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 18h18"/><path d="M6 10V7a2 2 0 0 1 2-2h3v5"/></svg></span>
           <h3>In the room</h3>
           <ul>

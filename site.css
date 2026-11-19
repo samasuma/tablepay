@@ -67,7 +67,7 @@ p { margin: 0; text-wrap: pretty; }
 /* ---------- Header + hero ---------- */
 .hero { position: relative; background: var(--night); color: var(--on-dark); overflow: hidden; isolation: isolate; }
 .hero-photo { position: absolute; inset: 0 0 0 auto; width: min(58%, 820px); z-index: -1; }
-.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 30% 40%; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 76% 45%; }
 .hero-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--night) 0%, rgba(11,42,45,0.7) 14%, rgba(11,42,45,0.1) 38%, rgba(11,42,45,0) 60%), linear-gradient(0deg, rgba(11,42,45,0.65), rgba(11,42,45,0) 30%); }
 .nav { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: #FFFFFF; text-decoration: none; }
@@ -113,7 +113,7 @@ p { margin: 0; text-wrap: pretty; }
 /* Journey cards */
 .journey { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; list-style: none; margin: 0; padding: 0; }
 .journey li { display: flex; flex-direction: column; }
-.journey .ph { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 418 / 352; background: var(--mint); }
+.journey .ph { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 6 / 5; background: var(--mint); }
 .journey .ph img { width: 100%; height: 100%; object-fit: cover; }
 .journey .ic { width: 46px; height: 46px; border-radius: 50%; background: var(--mint); color: var(--green); display: inline-flex; align-items: center; justify-content: center; border: 4px solid var(--ground); margin: -24px 0 0 14px; position: relative; }
 .band.alt .journey .ic { border-color: var(--surface); }
@@ -144,7 +144,7 @@ p { margin: 0; text-wrap: pretty; }
 /* Built for hospitality */
 .built { position: relative; overflow: hidden; background: var(--surface); }
 .built .bg { position: absolute; inset: 0 0 0 auto; width: 50%; }
-.built .bg img { width: 100%; height: 100%; object-fit: cover; object-position: 40% 30%; }
+.built .bg img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 35%; }
 .built .bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--surface) 0%, rgba(255,255,255,0.6) 18%, rgba(255,255,255,0) 45%); }
 .built .in { position: relative; max-width: 470px; padding: 92px 0; display: flex; flex-direction: column; gap: 16px; }
 .kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 12px 0 0; max-width: 440px; }
@@ -217,6 +217,9 @@ p { margin: 0; text-wrap: pretty; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .line .area, :root:not([data-theme="light"]) .line .stroke { --green: #7CC4BC; } :root:not([data-theme="light"]) .peakdot { border-color: #7CC4BC; } }
 
 /* Steps */
+.wide { margin: 0 0 22px; border-radius: 20px; overflow: hidden; aspect-ratio: 21 / 8; }
+.wide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
+@media (max-width: 560px) { .wide { aspect-ratio: 4 / 3; } }
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; list-style: none; margin: 0; padding: 0; counter-reset: s; }
 .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 8px; counter-increment: s; }
 .steps li::before { content: counter(s); width: 36px; height: 36px; border-radius: 50%; background: var(--green); color: #FFFFFF; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
