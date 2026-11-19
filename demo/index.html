@@ -38,7 +38,7 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; letter-spacing: -0.0
 p { margin: 0; text-wrap: pretty; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 24px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; border: 0; }
 .btn-white { background: #FFFFFF; color: #13464A; }
-.btn-wa { background: #128C4A; color: #FFFFFF; }
+.btn-wa { background: var(--navy); color: #FFFFFF; box-shadow: inset 0 0 0 1.5px #E2B865; }
 .btn-wa:hover { background: #0E7A40; }
 .btn-line { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
 
@@ -183,8 +183,9 @@ p { margin: 0; text-wrap: pretty; }
 
 /* live + close */
 .next { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 26px; }
-.next div { background: var(--surface); border: 1.5px dashed var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.next div { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
 .next b { font-family: var(--display); font-size: 17px; }
+.next em { order: -1; font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .next span { font-size: 14px; color: var(--muted); }
 .live { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
 .live a { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; gap: 6px; }
@@ -318,10 +319,10 @@ p { margin: 0; text-wrap: pretty; }
       <div class="reveal">
         <span class="step"><i>4</i>Your look</span>
         <h2>Choose your experience</h2>
-        <p class="say">Most restaurants choose the Essential or Signature Experience, in their own logo and colour. Upmarket venues choose the Premium Experience, designed around their space.</p>
+        <p class="say">Most restaurants choose TablePay Start or TablePay Plus, in their own logo and colour. Upmarket venues and hotels choose TablePay Signature, designed around their space.</p>
         <div class="switch" role="group" aria-label="Menu look">
           <button type="button" data-look="std" aria-pressed="true">Standard</button>
-          <button type="button" data-look="prem" aria-pressed="false">Premium</button>
+          <button type="button" data-look="prem" aria-pressed="false">Signature</button>
         </div>
         <p class="lookinfo" id="lookinfo"></p>
       </div>
@@ -332,16 +333,16 @@ p { margin: 0; text-wrap: pretty; }
   <section class="ch" id="c5">
     <div class="wrap ch-grid">
       <div class="reveal">
-        <span class="step"><i>5</i>Know your business</span>
-        <h2>Learn what your guests look at</h2>
-        <p class="say">With the Signature or Premium Experience you get a TablePay Insights report every month: when guests visit, which dishes they look at most, and which tables are busiest. Use it to plan staff and stock.</p>
+        <span class="step"><i>5</i>Know your guests</span>
+        <h2>See how guests use your menu</h2>
+        <p class="say">With TablePay Plus or Signature you get a TablePay Insights report every month: menu views by table, peak browsing times, the dishes guests look at most and the sections they explore.</p>
       </div>
       <div class="stage reveal">
         <div class="report" aria-label="Example monthly report">
           <div class="report-head"><b data-name></b><span>Example · October</span></div>
           <div class="kpis">
             <div class="kpi"><span>Menu views</span><b>3,120</b><em>+18% on September</em></div>
-            <div class="kpi"><span>Busiest table</span><b>Table 4</b><em>Fridays, 8 pm</em></div>
+            <div class="kpi"><span>Most views</span><b>Table 4</b><em>Peak Fridays, 8 pm</em></div>
           </div>
           <div>
             <svg class="chart" viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true">
@@ -351,7 +352,7 @@ p { margin: 0; text-wrap: pretty; }
             </svg>
             <div class="xl"><span>11 am</span><span>2 pm</span><span>5 pm</span><span>8 pm</span><span>10 pm</span></div>
           </div>
-          <p class="r-note">Most looked at: <b id="topdish">Nyama Choma</b>. Guests peak at <b>8 pm</b>.</p>
+          <p class="r-note">Most viewed: <b id="topdish">Nyama Choma</b>. Menu views peak at <b>8 pm</b>.</p>
         </div>
       </div>
     </div>
@@ -360,19 +361,19 @@ p { margin: 0; text-wrap: pretty; }
   <section class="ch alt" id="cnext">
     <div class="wrap">
       <div class="reveal">
-        <span class="step"><i>6</i>What's next</span>
-        <h2>Your app grows with you</h2>
-        <p class="say">The experience is where it starts. Every new feature lands on the talkers already on your tables, and you switch it on when you're ready.</p>
+        <span class="step"><i>6</i>Grow into</span>
+        <h2>One platform, growing with you</h2>
+        <p class="say">The TablePay Experience is where every venue starts. As your business grows, new capabilities are added as modules, in the same branded experience and on the talkers already on your tables.</p>
       </div>
       <div class="next reveal">
-        <div><b>Ordering from the table</b><span>Guests order without waiting, and orders reach your team instantly.</span></div>
-        <div><b>M-Pesa payments</b><span>Guests pay and split the bill from their phone, straight to your till.</span></div>
-        <div><b>Loyalty for regulars</b><span>Reward guests for coming back, kept on their own phone.</span></div>
-        <div><b>Guest engagement</b><span>Offers and news by WhatsApp or SMS to guests who opt in.</span></div>
-        <div><b>Delivery and pick-up</b><span>Orders through your own branded experience, so you rely less on delivery apps.</span></div>
-        <div><b>Built with you</b><span>Every quarter we review your numbers with you and plan what to switch on next.</span></div>
+        <div><b>TablePay Order</b><em>Partner rollout</em><span>Guests order from the table, and orders reach your team instantly.</span></div>
+        <div><b>TablePay Pay</b><em>Planned capability</em><span>Guests pay by M-Pesa and split the bill from their phone, straight to your till.</span></div>
+        <div><b>TablePay Loyalty</b><em>Planned capability</em><span>Reward guests for coming back, kept on their own phone.</span></div>
+        <div><b>Guest engagement</b><em>Planned capability</em><span>Offers and news by WhatsApp or SMS to guests who opt in.</span></div>
+        <div><b>Delivery and pick-up</b><em>Planned capability</em><span>Orders through your own branded experience, so you rely less on delivery apps.</span></div>
+        <div><b>Built with you</b><span>Every quarter we review your numbers with you and plan what to add next.</span></div>
       </div>
-      <p class="say" style="font-size: 14px;">Coming next: each module rolls out to partner venues as it's ready. Not part of today's packages or prices.</p>
+      <p class="say" style="font-size: 14px;">Partner rollout and planned capabilities are activated with partner venues as they become available for your business. They are not part of today's packages or prices and are quoted separately.</p>
     </div>
   </section>
 
@@ -384,8 +385,8 @@ p { margin: 0; text-wrap: pretty; }
         <p class="say">These are working TablePay experiences for two demo restaurants. They open in a new tab and can take a few seconds to load the first time.</p>
       </div>
       <div class="live reveal">
-        <a href="https://tablepay.onrender.com/t/b64jfbgt" target="_blank" rel="noopener"><b>Kaya Kitchen &amp; Bar</b><span>Essential Experience, the look most restaurants choose</span><em>Open live menu →</em></a>
-        <a href="https://tablepay.onrender.com/t/premium" target="_blank" rel="noopener"><b>Ember &amp; Salt</b><span>Premium Experience, the boutique look</span><em>Open live menu →</em></a>
+        <a href="https://tablepay.onrender.com/t/b64jfbgt" target="_blank" rel="noopener"><b>Kaya Kitchen &amp; Bar</b><span>TablePay Start and Plus, the look most restaurants choose</span><em>Open live menu →</em></a>
+        <a href="https://tablepay.onrender.com/t/premium" target="_blank" rel="noopener"><b>Ember &amp; Salt</b><span>TablePay Signature, the boutique look</span><em>Open live menu →</em></a>
       </div>
     </div>
   </section>
@@ -553,8 +554,8 @@ document.documentElement.classList.add('js');
 
   // look switch
   var INFO = {
-    std: 'Essential and Signature: your logo and brand colour, with dish photos or a clean text layout. Signature adds a monthly Insights report.',
-    prem: 'Premium Experience: your venue photo, an elegant serif, your story, and courses that each open with one signature dish, with wood or metal talkers. Tap the courses to browse.'
+    std: 'TablePay Start and Plus: your logo and brand colour, with dish photos or a clean text layout. Plus adds a monthly Insights report.',
+    prem: 'TablePay Signature: your venue photo, an elegant serif, your story, and courses that each open with one signature dish, with wood or metal talkers. Tap the courses to browse.'
   };
   document.querySelectorAll('[data-look]').forEach(function (b) {
     b.addEventListener('click', function () { state.look = b.dataset.look; renderAll(); });
